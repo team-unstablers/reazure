@@ -9,9 +9,21 @@ import SwiftUI
 
 @main
 struct reazureApp: App {
+    
+    @StateObject
+    private var accountManager = AccountManager()
+    
+    @StateObject
+    private var sharedClient = SharedClient()
+
+    @UIApplicationDelegateAdaptor
+    private var appDelegate: AppDelegate
+    
     var body: some Scene {
         WindowGroup {
-            ContentView()
+            AppRootView()
+                .environmentObject(accountManager)
+                .environmentObject(sharedClient)
         }
     }
 }
