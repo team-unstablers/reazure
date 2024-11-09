@@ -36,7 +36,7 @@ extension HTMLElement {
         }.joined()
     }
     
-    func asNSAttributedString() -> NSAttributedString {
+    func asNSAttributedString(emojis: [CustomEmoji]) -> NSAttributedString {
         
         if (name == "__TEXT__") {
             let string = NSMutableAttributedString(string: text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
@@ -45,20 +45,30 @@ extension HTMLElement {
             
             return string
         } else if (name == "__EMOJO__") {
-            /*
-            let emojo = NSTextAttachment()
-            emojo.image = NSImage(named: text)
-            return NSAttributedString(attachment: emojo)
-             */
+            // FIXME: 비동기 처리가 필요함
+            guard let emojoDef = emojis.first(where: { $0.shortcode == text }),
+                  let emojoData = try? Data(contentsOf: URL(string: emojoDef.static_url)!)
+            else {
+                return NSAttributedString(string: ":\(text):")
+            }
             
-            return NSAttributedString(string: "<emojo>\(text)</emojo>")
+            let emojo = NSTextAttachment()
+            let emojoImage = UIImage(data: emojoData)!
+            emojo.image = emojoImage
+            
+            // emojo.bounds = CGRect(x: 0, y: -4, width: 16, height: 16)
+            emojo.bounds = CGRect(x: 0, y: -3, width: emojoImage.size.width, height: emojoImage.size.height)
+            
+            print(emojo)
+            
+            return NSAttributedString(attachment: emojo)
         } else if (name == "br") {
             return NSAttributedString(string: "\n")
         } else if (name == "strong" || name == "b") {
             let result = NSMutableAttributedString()
             
             for child in children {
-                result.append(child.asNSAttributedString())
+                result.append(child.asNSAttributedString(emojis: emojis))
             }
             
             result.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: NSRange(location: 0, length: result.length))
@@ -68,7 +78,7 @@ extension HTMLElement {
             let result = NSMutableAttributedString()
             
             for child in children {
-                result.append(child.asNSAttributedString())
+                result.append(child.asNSAttributedString(emojis: emojis))
             }
             
             result.addAttributes([.link: attributes["href"] ?? ""], range: NSRange(location: 0, length: result.length))
@@ -78,7 +88,60 @@ extension HTMLElement {
             let result = NSMutableAttributedString()
             
             for child in children {
-                result.append(child.asNSAttributedString())
+                result.append(child.asNSAttributedString(emojis: emojis))
+            }
+            
+            return result
+        }
+    }
+    
+    func asSwiftUIView(emojis: [CustomEmoji]) -> Text {
+        if (name == "__TEXT__") {
+            return Text(text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
+        } else if (name == "__EMOJO__") {
+            // FIXME: 비동기 처리가 필요함
+            guard let emojoDef = emojis.first(where: { $0.shortcode == text }),
+                  let emojoData = try? Data(contentsOf: URL(string: emojoDef.static_url)!)
+            else {
+                return Text(":\(text):")
+            }
+            
+            let emojoImage = UIImage(data: emojoData)!
+            let height = 24.0
+            let scale = emojoImage.size.height / height
+            
+            let scaledImage = UIImage(cgImage: emojoImage.cgImage!, scale: scale, orientation: emojoImage.imageOrientation)
+            
+            return Text(
+                Image(uiImage: scaledImage)
+                    .resizable()
+            )
+        } else if (name == "br") {
+            return Text("\n")
+        } else if (name == "strong" || name == "b") {
+            var result: Text = Text("")
+            
+            for child in children {
+                result = result + child.asSwiftUIView(emojis: emojis)
+            }
+            
+            return result.bold()
+        } else if (name == "a") {
+            // FIXME: a 태그 안에 emoji 있으면 표시 안됨
+            let result = NSMutableAttributedString()
+            
+            for child in children {
+                result.append(child.asNSAttributedString(emojis: emojis))
+            }
+            
+            result.addAttributes([.link: attributes["href"] ?? ""], range: NSRange(location: 0, length: result.length))
+            
+            return Text(AttributedString(result))
+        } else {
+            var result: Text = Text("")
+            
+            for child in children {
+                result = result + child.asSwiftUIView(emojis: emojis)
             }
             
             return result
@@ -257,7 +320,7 @@ struct ActivityPubMarkupText: UIViewRepresentable {
         label.numberOfLines = 0
         // label.text = "test"
         
-        label.attributedText = rootElement.asNSAttributedString()
+        label.attributedText = rootElement.asNSAttributedString(emojis: [])
         // label.backgroundColor = .blue
 
         label.setContentHuggingPriority(.defaultHigh, for: .vertical)
@@ -278,7 +341,7 @@ struct ActivityPubMarkupText: UIViewRepresentable {
     func updateUIView(_ uiView: UILabel, context: Context) {
         let rootElement = parseHTML(text)
         
-        uiView.attributedText = rootElement.asNSAttributedString()
+        uiView.attributedText = rootElement.asNSAttributedString(emojis: [])
         // uiView.text = "\(uiView.topAnchor)"
         uiView.sizeToFit()
         

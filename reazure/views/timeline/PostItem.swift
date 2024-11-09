@@ -17,10 +17,12 @@ struct PostItem: View {
             HStack(alignment: .top) {
                 ProfileImage(url: status.account.avatar)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(verbatim: "\(status.account.display_name) (@\(status.account.acct))")
+                    parseHTML("\(status.account.display_name) (@\(status.account.acct))")
+                        .asSwiftUIView(emojis: status.account.emojis)
                         .bold()
-                    Text(AttributedString(parseHTML(status.content).asNSAttributedString()))
-                    Text(verbatim: "2022-11-02 00:00:00 / via reazure")
+                    parseHTML(status.content)
+                        .asSwiftUIView(emojis: status.emojis)
+                    Text(verbatim: status.footerContent)
                         .foregroundColor(.secondary)
                 }
             }
@@ -33,9 +35,44 @@ struct PostItem: View {
     }
 }
 
+fileprivate extension Status {
+    var footerContent: String {
+        let prettyDate = created_at.prettyDate()
+        
+        if let application = application {
+            return "\(prettyDate) / via \(application.name)"
+        }
+        
+        return prettyDate
+    }
+}
+
+fileprivate extension String {
+    func parseDate() -> Date? {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        
+        return formatter.date(from: self)
+    }
+    
+    func prettyDate() -> String {
+        guard let date = parseDate() else {
+            return self
+        }
+        
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        
+        return formatter.string(from: date)
+    }
+}
+
 #Preview {
     let status = Status(
         id: "1",
+        created_at: "2019-11-26T23:27:32.000Z",
+        visibility: "public",
         content: "Hello, World!",
         account: UserProfile(
             id: "1",
@@ -44,10 +81,15 @@ struct PostItem: View {
             
             display_name: "치즈군★",
             
-            avatar: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
+            avatar: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
+            emojis: []
         ),
-        reblog: nil
+        reblog: nil,
+        emojis: [],
+        application: Application(name: "re;azure")
     )
     
     PostItem(status: status)
 }
+
+
