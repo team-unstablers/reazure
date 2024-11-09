@@ -41,9 +41,9 @@ struct AppRootView: View {
     var body: some View {
         NavigationStack(path: $navState) {
             VStack(spacing: 0) {
-                Text("")
-                TextField(text: $text) {}
-                    .background(.white)
+                PostArea { request in
+                    print(request)
+                }
                 TabView(selection: $tabSelection) {
                     Group {
                         TimelineView(type: .home)
@@ -64,7 +64,7 @@ struct AppRootView: View {
                 }
                 ExtKeypad()
             }
-            .background(Color(uiColor: .init(r8: 235, g8: 235, b8: 235)))
+            .background(AzureaTheme.win32Background)
             .watchAccountManager {
                 navState.append(.signin)
             }

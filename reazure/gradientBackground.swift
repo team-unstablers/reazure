@@ -5,10 +5,13 @@
 //  Created by cheesekun on 11/2/24.
 //
 
+import SwiftUI
 import UIKit
 
 /// Azurea-like theme
 struct AzureaTheme {
+    static let win32Background = Color(uiColor: .init(r8: 235, g8: 235, b8: 235))
+    
     static let bgGradient: [(UIColor, CGFloat)] = [
         (.init(r8: 112, g8: 156, b8: 217), 0),
         (.init(r8: 50,  g8: 102, b8: 163), 0.49),
