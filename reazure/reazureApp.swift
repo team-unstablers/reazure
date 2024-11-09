@@ -11,6 +11,9 @@ import SwiftUI
 struct reazureApp: App {
     
     @StateObject
+    private var preferencesManager = PreferencesManager()
+    
+    @StateObject
     private var accountManager = AccountManager()
     
     @StateObject
@@ -22,6 +25,7 @@ struct reazureApp: App {
     var body: some Scene {
         WindowGroup {
             AppRootView()
+                .environmentObject(preferencesManager)
                 .environmentObject(accountManager)
                 .environmentObject(sharedClient)
         }

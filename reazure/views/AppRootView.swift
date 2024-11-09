@@ -20,6 +20,9 @@ struct AppRootView: View {
     }
     
     @EnvironmentObject
+    var preferencesManager: PreferencesManager
+
+    @EnvironmentObject
     var accountManager: AccountManager
     
     @EnvironmentObject
@@ -62,7 +65,10 @@ struct AppRootView: View {
                 Navbar(tabSelection: $tabSelection) { tab in
                     tabSelection = tab
                 }
-                ExtKeypad()
+                
+                if preferencesManager.showExtKeypad {
+                    ExtKeypad()
+                }
             }
             .background(AzureaTheme.win32Background)
             .watchAccountManager {

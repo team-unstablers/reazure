@@ -13,57 +13,60 @@ struct AboutAppView: View {
     var addAccountHandler: () -> Void
     
     @EnvironmentObject
+    var preferencesManager: PreferencesManager
+
+    @EnvironmentObject
     var accountManager: AccountManager
     
     var body: some View {
         VStack {
             VStack {
-                Text("reazure")
+                Text("PRODUCT_NAME")
                     .font(.largeTitle)
-                Text("version 1")
+                Text("PRODUCT_DISPLAY_VERSION")
                     .padding(.bottom, 8)
                 
-                Text("이제 [새로운 집](https://joinmastodon.org)을 찾아 떠나자.")
+                Text("PRODUCT_SLOGAN")
             }
             .frame(minHeight: 192)
             
             Form {
-                Section("기본 설정") {
+                Section("SETTINGS_CATEGORY_DEFAULT") {
                     Toggle(isOn: .constant(true)) {
-                        Text("알림 수신 시 소리 재생")
+                        Text("SETTINGS_KEY_PLAY_SOUND")
                     }
                     Toggle(isOn: .constant(true)) {
-                        Text("알림 수신 시 진동")
+                        Text("SETTINGS_KEY_VIBRATE")
                     }
                 }
                 
                 Section {
-                    Toggle(isOn: .constant(false)) {
-                        Text("확장 키보드 표시")
+                    Toggle(isOn: $preferencesManager.showExtKeypad) {
+                        Text("SETTINGS_KEY_SHOW_EXT_KEYPAD")
                     }
                 } footer: {
-                    Text("Azurea-like한 단축키를 사용할 수 있도록 확장 키보드를 표시합니다.")
+                    Text("SETTINGS_FOOTER_SHOW_EXT_KEYPAD")
                 }
                 
                 Section {
-                    Toggle(isOn: .constant(false)) {
-                        Text("항상 소프트웨어 키보드 표시")
+                    Toggle(isOn: $preferencesManager.alwaysShowSoftwareKeyboard) {
+                        Text("SETTINGS_KEY_ALWAYS_SHOW_SOFT_KEYBOARD")
                     }
                 } footer: {
-                    Text("물리 자판이 탑재된 스마트폰과 유사한 경험을 할 수 있도록 앱 내에서 항상 소프트웨어 키보드를 표시합니다.")
+                    Text("SETTINGS_FOOTER_ALWAYS_SHOW_SOFT_KEYBOARD")
                 }
                 
                 
                 ForEach(accountManager.accounts) { account in
                     Section(header: Text("\(account.username)@\(account.server.address)")) {
-                        Button("로그아웃") {
+                        Button("ACTION_LOGOUT") {
                         }
                         .foregroundColor(.red)
                     }
                 }
                 
                 Section {
-                    Button("새 계정 추가하기") {
+                    Button("ACTION_ADD_ACCOUNT") {
                         addAccountHandler()
                     }
                 }

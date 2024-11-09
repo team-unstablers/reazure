@@ -37,9 +37,9 @@ struct WatchAccountManager: ViewModifier {
             }
             .alert(isPresented: $showAlert) {
                 Alert(
-                    title: Text("Fediverse 계정 없음"),
-                    message: Text("새 Fediverse 계정을 추가합니까?"),
-                    primaryButton: .default(Text("예")) {
+                    title: Text("WATCH_ACCOUNT_MANAGER_NO_ACCOUNT_TITLE"),
+                    message: Text("WATCH_ACCOUNT_MANAGER_NO_ACCOUNT_MESSAGE"),
+                    primaryButton: .default(Text("DIALOG_YES")) {
                         addAccountHandler()
                     },
                     secondaryButton: .cancel()

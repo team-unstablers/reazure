@@ -168,14 +168,14 @@ struct AddAccountView: View {
     var body: some View {
         Form {
             Section {
-                TextField("서버 주소 (예: mastodon.online)", text: $viewModel.serverAddress)
+                TextField("ADD_ACCOUNT_SERVER_ADDRESS", text: $viewModel.serverAddress)
                     .keyboardType(.URL)
                     .autocapitalization(.none)
                     .fontDesign(.monospaced)
                     .disabled(viewModel.isBusy || viewModel.phase == .afterAuthorize)
                 
                 HStack {
-                    Button("OAuth 인증 시작") {
+                    Button("ACTION_START_OAUTH") {
                         viewModel.performAddAccount()
                     }
                     .disabled(!viewModel.validated || viewModel.isBusy || viewModel.phase == .afterAuthorize)
@@ -187,14 +187,14 @@ struct AddAccountView: View {
                 }
                 
             } header: {
-                Text("Fediverse 서버 정보")
+                Text("ADD_ACCOUNT_HEADER_SERVER_INFO")
             } footer: {
                 VStack {
                     if let error = viewModel.error {
-                        Text("오류: \(error.localizedDescription)")
+                        Text("ERROR: \(error.localizedDescription)")
                             .foregroundColor(.red)
                     } else {
-                        Text("reazure는 현재 Mastodon v4 계열 서버만 지원합니다. Mastodon 계정을 가지고 있지 않은 경우, https://joinmastodon.org 에서 새 계정을 생성할 수 있습니다.")
+                        Text("ADD_ACCOUNT_FOOTER_NOTICE")
                     }
                     
                 }
@@ -202,14 +202,14 @@ struct AddAccountView: View {
             }
             if viewModel.phase == .afterAuthorize {
                 Section {
-                    TextField("인증 코드", text: $viewModel.oauthCode)
+                    TextField("ADD_ACCOUNT_OAUTH_CODE", text: $viewModel.oauthCode)
                         .keyboardType(.URL)
                         .autocapitalization(.none)
                         .fontDesign(.monospaced)
                         .disabled(viewModel.isBusy)
                     
                     HStack {
-                        Button("OAuth 인증 끝마치기") {
+                        Button("ACTION_FINISH_OAUTH") {
                             viewModel.finalizeAddAccount()
                         }
                         .disabled(!viewModel.validated || viewModel.isBusy)
@@ -220,43 +220,35 @@ struct AddAccountView: View {
                         }
                     }
                 } header: {
-                    Text("OAuth 인증 코드 입력")
+                    Text("ADD_ACCOUNT_HEADER_OAUTH_CODE")
                 } footer: {
-                    Text("인증 화면에 표시된 인증 코드를 입력해주세요.")
+                    Text("ADD_ACCOUNT_FOOTER_OAUTH_CODE")
                 }
             }
             
             Section {
-                Toggle("클라이언트 ID를 수동으로 지정", isOn: $viewModel.manualClientID)
+                Toggle("ADD_ACCOUNT_EXTRA_MANUAL_CLIENT_ID", isOn: $viewModel.manualClientID)
                     .disabled(viewModel.isBusy)
                 
                 if viewModel.manualClientID {
-                    TextField("클라이언트 ID", text: $viewModel.clientID)
+                    TextField("ADD_ACCOUNT_CLIENT_ID", text: $viewModel.clientID)
                         .fontDesign(.monospaced)
                         .autocapitalization(.none)
                         .disabled(viewModel.isBusy)
                     
-                    TextField("클라이언트 시크릿", text: $viewModel.clientSecret)
+                    TextField("ADD_ACCOUNT_CLIENT_SECRET", text: $viewModel.clientSecret)
                         .fontDesign(.monospaced)
                         .autocapitalization(.none)
                         .disabled(viewModel.isBusy)
                 }
             } header: {
-                Text("고급 설정")
+                Text("ADD_ACCOUNT_HEADER_EXTRA_SETTINGS")
             } footer: {
                 VStack {
-                    Text(
-"""
-필요한 경우 클라이언트 ID를 수동으로 지정할 수 있습니다. via芸 등을 해야 할 때 유용합니다.
-
-참고 사항:
-- profile, read, write에 대한 OAuth scope가 필요합니다.
-
-"""
-                    )
+                    Text("ADD_ACCOUNT_FOOTER_EXTRA_SETTINGS")
                 }
             }
-            .navigationTitle("새 계정 추가")
+            .navigationTitle("ADD_ACCOUNT_NAVIGATION_TITLE")
         }
         .onAppear {
             viewModel.setup(accountManager: accountManager)
