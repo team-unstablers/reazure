@@ -17,11 +17,10 @@ struct PostItem: View {
             HStack(alignment: .top) {
                 ProfileImage(url: status.account.avatar)
                 VStack(alignment: .leading, spacing: 2) {
-                    parseHTML("\(status.account.display_name) (@\(status.account.acct))")
-                        .asSwiftUIView(emojis: status.account.emojis)
+                    ActivityPubMarkupText(content: "\(status.account.display_name) (@\(status.account.acct))",
+                                          emojos: status.account.emojis)
                         .bold()
-                    parseHTML(status.content)
-                        .asSwiftUIView(emojis: status.emojis)
+                    ActivityPubMarkupText(content: status.content, emojos: status.emojis)
                     Text(verbatim: status.footerContent)
                         .foregroundColor(.secondary)
                 }

@@ -304,58 +304,92 @@ func parseHTML(_ html: String) -> HTMLElement {
 }
 
 
-
 // CustomText에서 UIImage를 포함하는 NSAttributedString 생성 예시
-struct ActivityPubMarkupText: UIViewRepresentable {
-    var text: String
-    var maxWidth: CGFloat
-
-    func makeUIView(context: Context) -> UILabel {
-        let rootElement = parseHTML(text)
+struct ActivityPubMarkupText: View {
+    var content: String
+    var emojos: [CustomEmoji]
+    
+    @State
+    var resolvedEmojos: [String: UIImage] = [:]
+    
+    var body: some View {
+        buildTextView(element: parseHTML(content), emojis: emojos)
+    }
+    
+    func resolveEmojo(url: String, for code: String) async {
+        guard let image = try? await CachedImageLoader.shared.loadImage(url: url) else {
+            print("failed to resolve emojo \"\(code)\": (\(url))")
+            return
+        }
         
-        let rootView = UIView()
-        
-        let label = UILabel()
-        label.lineBreakMode = .byWordWrapping
-        label.numberOfLines = 0
-        // label.text = "test"
-        
-        label.attributedText = rootElement.asNSAttributedString(emojis: [])
-        // label.backgroundColor = .blue
+        let height = 6.0 // 이거 뭔가 이상해... X(
+        let scale = image.size.height / height
+        print("\(image.size.height), \(height), \(scale)")
 
-        label.setContentHuggingPriority(.defaultHigh, for: .vertical)
-        label.setContentCompressionResistancePriority(.defaultHigh, for: .vertical)
-        // label.setContentHuggingPriority(.defaultHigh, for: .horizontal)
-        // label.setContentCompressionResistancePriority(.defaultHigh, for: .horizontal)
+        let scaledImage = UIImage(cgImage: image.cgImage!, scale: scale, orientation: image.imageOrientation)
 
-        /*
-        label.setContentCompressionResistancePriority(.defaultLow, for: .horizontal)
-         */
+        resolvedEmojos[code] = scaledImage
+    }
+    
+    func buildTextView(element: HTMLElement, emojis: [CustomEmoji]) -> Text {
+        if (element.name == "__TEXT__") {
+            return Text(element.text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
+        } else if (element.name == "__EMOJO__") {
+            guard let emojoDef = emojis.first(where: { $0.shortcode == element.text }) else {
+                return Text(":\(element.text):")
+            }
+            
+            guard let emojoImage = self.resolvedEmojos[element.text] else {
+                Task {
+                    await resolveEmojo(url: emojoDef.static_url, for: element.text)
+                }
+                return Text(":\(element.text):")
+            }
 
-        label.preferredMaxLayoutWidth = maxWidth
-        label.sizeToFit()
-
-        return label
+            
+            return Text(
+                Image(uiImage: emojoImage)
+                    .resizable()
+            )
+        } else if (element.name == "br") {
+            return Text("\n")
+        } else if (element.name == "strong" || element.name == "b") {
+            var result: Text = Text("")
+            
+            for child in element.children {
+                result = result + buildTextView(element: child, emojis: emojis)
+            }
+            
+            return result.bold()
+        } else if (element.name == "a") {
+            // FIXME: a 태그 안에 emoji 있으면 표시 안됨
+            let result = NSMutableAttributedString()
+            
+            for child in element.children {
+                result.append(child.asNSAttributedString(emojis: emojis))
+            }
+            
+            result.addAttributes([.link: element.attributes["href"] ?? ""], range: NSRange(location: 0, length: result.length))
+            
+            return Text(AttributedString(result))
+        } else {
+            var result: Text = Text("")
+            
+            for child in element.children {
+                result = result + buildTextView(element: child, emojis: emojis)
+            }
+            
+            return result
+        }
     }
 
-    func updateUIView(_ uiView: UILabel, context: Context) {
-        let rootElement = parseHTML(text)
-        
-        uiView.attributedText = rootElement.asNSAttributedString(emojis: [])
-        // uiView.text = "\(uiView.topAnchor)"
-        uiView.sizeToFit()
-        
-        // uiView.preferredMaxLayoutWidth = uiView.frame.width
-        uiView.preferredMaxLayoutWidth = maxWidth
-
-    }
 }
 
 #Preview {
     GeometryReader { geometry in
         VStack(spacing: 2) {
             Text(verbatim: "Test")
-            ActivityPubMarkupText(text:
+            ActivityPubMarkupText(content:
 """
 <p>
 안녕, 나는 <strong>치즈군★</strong>이야. :smile:<br>
@@ -363,7 +397,7 @@ struct ActivityPubMarkupText: UIViewRepresentable {
 ㅁㄴ이ㅏ러미ㅏㄴㅇ러ㅏ민ㅇ러ㅏㅣㄴㅁㅇ러ㅏㅣㅁㄴㅇ러ㅏㅣㅁㄴ어라ㅣㅁㄴ어라ㅣㅁ너라ㅣㅁㄴ어리먼아ㅣ러ㅏㅣㅇㄴㅁ
 </p>
 """,
-                                  maxWidth: geometry.size.width
+                                  emojos: []
             )
             Text(verbatim: "Test")
         }
