@@ -13,6 +13,8 @@ struct UserProfile: Codable {
     let display_name: String
     
     let avatar: String
+    
+    let emojis: [CustomEmoji]
 }
 
 

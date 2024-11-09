@@ -16,12 +16,30 @@ class Box<T: Codable>: Codable {
     }
 }
 
+struct CustomEmoji: Codable {
+    let shortcode: String
+    let url: String
+    let static_url: String
+}
+
+struct Application: Codable {
+    let name: String
+}
+
 struct Status: Codable {
     let id: String
+    let created_at: String
+    
+    let visibility: String
+
     let content: String
     let account: UserProfile
     
+
     let reblog: Box<Status>?
+    
+    let emojis: [CustomEmoji]
+    let application: Application?
 }
 
 
