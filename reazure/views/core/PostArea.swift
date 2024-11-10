@@ -16,6 +16,9 @@ struct PostRequest: Codable {
 typealias PostSubmitHandler = (PostRequest) -> Void
 
 struct PostArea: View {
+    @EnvironmentObject
+    var sharedClient: SharedClient
+    
     var handler: PostSubmitHandler
     
     @State
@@ -48,7 +51,7 @@ struct PostArea: View {
             HStack {
                 Text("\(remaining)")
                 Spacer()
-                Text("스트리밍 연결됨")
+                Text(sharedClient.streamingState.asLocalizedText)
             }
                 .padding(.horizontal, 4)
             TextField(text: $content) {}
@@ -66,6 +69,19 @@ struct PostArea: View {
                 }
         }
         .background(AzureaTheme.win32Background)
+    }
+}
+
+fileprivate extension StreamingState {
+    var asLocalizedText: String {
+        switch self {
+        case .connecting:
+            return NSLocalizedString("STREAMING_STATE_CONNECTING", comment: "")
+        case .connected:
+            return NSLocalizedString("STREAMING_STATE_CONNECTED", comment: "")
+        case .disconnected:
+            return NSLocalizedString("STREAMING_STATE_DISCONNECTED", comment: "")
+        }
     }
 }
 

@@ -44,6 +44,6 @@ public struct JSONEncDec {
 }
 
 public let JSON = JSONEncDec(
-    keyEncodingStrategy: .convertToSnakeCase,
-    keyDecodingStrategy: .convertFromSnakeCase
+    keyEncodingStrategy: .useDefaultKeys,
+    keyDecodingStrategy: .useDefaultKeys
 )

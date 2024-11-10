@@ -21,6 +21,8 @@ struct MastodonEndpoint: RawRepresentable {
     static let verifyCredentials = MastodonEndpoint(rawValue: "/api/v1/accounts/verify_credentials")
     
     static let homeTimeline = MastodonEndpoint(rawValue: "/api/v1/timelines/home")
+    
+    static let streaming = MastodonEndpoint(rawValue: "/api/v1/streaming")
 
     func urlString(for server: String) -> String {
         return "https://\(server.sanitizeServerAddress())\(self.rawValue)"

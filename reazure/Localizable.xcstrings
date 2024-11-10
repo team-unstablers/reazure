@@ -496,6 +496,54 @@
         }
       }
     },
+    "STREAMING_STATE_CONNECTED" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続済み"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결됨"
+          }
+        }
+      }
+    },
+    "STREAMING_STATE_CONNECTING" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "接続中"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결 중"
+          }
+        }
+      }
+    },
+    "STREAMING_STATE_DISCONNECTED" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "切断"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "연결 끊김"
+          }
+        }
+      }
+    },
     "WATCH_ACCOUNT_MANAGER_NO_ACCOUNT_MESSAGE" : {
       "localizations" : {
         "ja" : {
@@ -524,16 +572,6 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Fediverse 계정 없음"
-          }
-        }
-      }
-    },
-    "스트리밍 연결됨" : {
-      "localizations" : {
-        "ja" : {
-          "stringUnit" : {
-            "state" : "translated",
-            "value" : "リアルタイム更新中"
           }
         }
       }

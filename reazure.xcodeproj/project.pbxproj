@@ -10,6 +10,8 @@
 		F6444CD22CD74CFA00EE4FD7 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = F6444CD12CD74CFA00EE4FD7 /* Alamofire */; };
 		F6444CEB2CD7686400EE4FD7 /* AlamofireImage in Frameworks */ = {isa = PBXBuildFile; productRef = F6444CEA2CD7686400EE4FD7 /* AlamofireImage */; };
 		F6DAEA842CDF3BFB0022FA6A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F6DAEA832CDF3BFB0022FA6A /* Localizable.xcstrings */; };
+		F6DAEA912CDF4CDF0022FA6A /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = F6DAEA902CDF4CDF0022FA6A /* Starscream */; };
+		F6DAEA942CDF4CF20022FA6A /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = F6DAEA932CDF4CF20022FA6A /* Collections */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -61,6 +63,8 @@
 			files = (
 				F6444CD22CD74CFA00EE4FD7 /* Alamofire in Frameworks */,
 				F6444CEB2CD7686400EE4FD7 /* AlamofireImage in Frameworks */,
+				F6DAEA942CDF4CF20022FA6A /* Collections in Frameworks */,
+				F6DAEA912CDF4CDF0022FA6A /* Starscream in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -124,6 +128,8 @@
 			packageProductDependencies = (
 				F6444CD12CD74CFA00EE4FD7 /* Alamofire */,
 				F6444CEA2CD7686400EE4FD7 /* AlamofireImage */,
+				F6DAEA902CDF4CDF0022FA6A /* Starscream */,
+				F6DAEA932CDF4CF20022FA6A /* Collections */,
 			);
 			productName = reazure;
 			productReference = F6F892E62CD6388100182F17 /* reazure.app */;
@@ -212,6 +218,8 @@
 			packageReferences = (
 				F6444CD02CD74CFA00EE4FD7 /* XCRemoteSwiftPackageReference "Alamofire" */,
 				F6444CE92CD7686400EE4FD7 /* XCRemoteSwiftPackageReference "AlamofireImage" */,
+				F6DAEA8F2CDF4CDF0022FA6A /* XCRemoteSwiftPackageReference "Starscream" */,
+				F6DAEA922CDF4CF20022FA6A /* XCRemoteSwiftPackageReference "swift-collections" */,
 			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = F6F892E72CD6388100182F17 /* Products */;
@@ -638,6 +646,22 @@
 				minimumVersion = 4.3.0;
 			};
 		};
+		F6DAEA8F2CDF4CDF0022FA6A /* XCRemoteSwiftPackageReference "Starscream" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/daltoniam/Starscream.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 4.0.8;
+			};
+		};
+		F6DAEA922CDF4CF20022FA6A /* XCRemoteSwiftPackageReference "swift-collections" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/apple/swift-collections.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.1.4;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -650,6 +674,16 @@
 			isa = XCSwiftPackageProductDependency;
 			package = F6444CE92CD7686400EE4FD7 /* XCRemoteSwiftPackageReference "AlamofireImage" */;
 			productName = AlamofireImage;
+		};
+		F6DAEA902CDF4CDF0022FA6A /* Starscream */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F6DAEA8F2CDF4CDF0022FA6A /* XCRemoteSwiftPackageReference "Starscream" */;
+			productName = Starscream;
+		};
+		F6DAEA932CDF4CF20022FA6A /* Collections */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = F6DAEA922CDF4CF20022FA6A /* XCRemoteSwiftPackageReference "swift-collections" */;
+			productName = Collections;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};
