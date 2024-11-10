@@ -20,6 +20,8 @@ struct MastodonEndpoint: RawRepresentable {
     
     static let verifyCredentials = MastodonEndpoint(rawValue: "/api/v1/accounts/verify_credentials")
     
+    static let statuses = MastodonEndpoint(rawValue: "/api/v1/statuses")
+
     static let homeTimeline = MastodonEndpoint(rawValue: "/api/v1/timelines/home")
     
     static let streaming = MastodonEndpoint(rawValue: "/api/v1/streaming")
@@ -112,6 +114,26 @@ class MastodonClient {
         }
         
         return value
+    }
+    
+    func postStatus(_ status: String) async throws -> Status {
+        let url = MastodonEndpoint.statuses.url(for: account.server.address)
+            
+        let response = await AF.request(url, method: .post, parameters: [
+            "status": status
+        ], headers: [
+            "Authorization": "Bearer \(account.accessToken)"
+        ])
+            .validate()
+            .serializingDecodable(Status.self)
+            .response
+        
+        guard let value = response.value else {
+            throw response.error!
+        }
+        
+        return value
+
     }
     
     func homeTimeline() async throws -> [Status] {

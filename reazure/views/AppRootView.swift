@@ -45,7 +45,13 @@ struct AppRootView: View {
         NavigationStack(path: $navState) {
             VStack(spacing: 0) {
                 PostArea { request in
-                    print(request)
+                    Task {
+                        do {
+                            let _ = try await sharedClient.client?.postStatus(request.content)
+                        } catch {
+                            print(error)
+                        }
+                    }
                 }
                 TabView(selection: $tabSelection) {
                     Group {
