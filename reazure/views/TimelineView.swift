@@ -19,7 +19,7 @@ struct TimelineView: View {
     var body: some View {
         List {
             ForEach(sharedClient.timeline[type]!) { status in
-                PostItem(status: status)
+                PostItem(status: status, selfId: sharedClient.account?.id ?? "")
                     .listRowInsets(EdgeInsets())
                     .listRowSeparator(.hidden)
                     .focusable()

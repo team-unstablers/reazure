@@ -7,8 +7,13 @@
 
 class Box<T: Codable>: Codable {
     let wrappedValue: T
+    
     required init(from decoder: Decoder) throws {
         wrappedValue = try T(from: decoder)
+    }
+    
+    init(_ value: T) {
+        self.wrappedValue = value
     }
     
     func encode(to encoder: Encoder) throws {
@@ -26,6 +31,12 @@ struct Application: Codable {
     let name: String
 }
 
+struct Mention: Codable {
+    let id: String
+    let username: String
+    let acct: String
+}
+
 struct Status: Codable {
     let id: String
     let created_at: String
@@ -39,6 +50,8 @@ struct Status: Codable {
     let reblog: Box<Status>?
     
     let emojis: [CustomEmoji]
+    let mentions: [Mention]
+    
     let application: Application?
 }
 
@@ -50,5 +63,11 @@ extension Status: Hashable, Equatable, Identifiable {
     
     static func ==(lhs: Status, rhs: Status) -> Bool {
         return lhs.id == rhs.id
+    }
+}
+
+extension Status {
+    func mentions(id: String) -> Bool {
+        return mentions.contains(where: { $0.id == id })
     }
 }

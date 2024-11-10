@@ -18,8 +18,12 @@ struct ProfileImage: View {
         }
     }
     
-    init(url: String) {
+    var size: CGFloat
+
+    init(url: String, size: CGFloat = 56.0) {
         self.url = url
+        self.size = size
+        
         self.fetchImage()
     }
     
@@ -31,7 +35,7 @@ struct ProfileImage: View {
     var body: some View {
         Image(uiImage: image)
             .resizable()
-            .frame(width: 56, height: 56)
+            .frame(width: size, height: size)
             .clipShape(.rect(cornerRadius: 4))
             .onReceive(didFetch) { image in
                 self.image = image
