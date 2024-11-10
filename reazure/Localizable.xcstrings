@@ -20,9 +20,6 @@
         }
       }
     },
-    "%lld" : {
-
-    },
     "ACTION_ADD_ACCOUNT" : {
       "localizations" : {
         "en" : {
@@ -347,6 +344,73 @@
         }
       }
     },
+    "Left: %lld" : {
+
+    },
+    "POST_VISIBILITY_DIRECT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Direct"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다이렉트"
+          }
+        }
+      }
+    },
+    "POST_VISIBILITY_PRIVATE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Private"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "비공개"
+          }
+        }
+      }
+    },
+    "POST_VISIBILITY_PUBLIC" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Public"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "공개"
+          }
+        }
+      }
+    },
+    "POST_VISIBILITY_UNLISTED" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlisted"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "조용한 공개"
+          }
+        }
+      }
+    },
     "PRODUCT_DISPLAY_VERSION" : {
       "localizations" : {
         "ja" : {
@@ -498,6 +562,12 @@
     },
     "STREAMING_STATE_CONNECTED" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Streaming"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -514,6 +584,12 @@
     },
     "STREAMING_STATE_CONNECTING" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Connecting"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -530,6 +606,12 @@
     },
     "STREAMING_STATE_DISCONNECTED" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Disconnected"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",

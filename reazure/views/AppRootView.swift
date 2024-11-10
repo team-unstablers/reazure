@@ -47,12 +47,13 @@ struct AppRootView: View {
                 PostArea { request in
                     Task {
                         do {
-                            let _ = try await sharedClient.client?.postStatus(request.content)
+                            let _ = try await sharedClient.client?.postStatus(request.content, visibility: request.visibility)
                         } catch {
                             print(error)
                         }
                     }
                 }
+                .zIndex(100)
                 TabView(selection: $tabSelection) {
                     Group {
                         TimelineView(type: .home)
@@ -94,4 +95,5 @@ struct AppRootView: View {
     AppRootView()
         .environmentObject(AccountManager())
         .environmentObject(SharedClient())
+        .environmentObject(PreferencesManager())
 }

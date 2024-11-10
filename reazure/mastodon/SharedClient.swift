@@ -103,5 +103,19 @@ extension SharedClient: StreamingClientDelegate {
     func didStateChange(state: StreamingState, client: StreamingClient) {
         print("streaming state changed: \(state)")
         self.streamingState = state
+        
+        
+        if state == .disconnected {
+            client.stop()
+            
+            DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
+                Task {
+                    await self.fetchStatuses(for: .home)
+                }
+                
+                client.start()
+                
+            }
+        }
     }
 }

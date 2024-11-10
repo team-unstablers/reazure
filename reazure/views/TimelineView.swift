@@ -37,6 +37,7 @@ struct TimelineView: View {
             }
         }
         .listStyle(.plain)
+        .listRowSpacing(0)
         .padding(0)
         .onAppear {
             Task {

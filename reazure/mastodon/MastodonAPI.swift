@@ -116,11 +116,12 @@ class MastodonClient {
         return value
     }
     
-    func postStatus(_ status: String) async throws -> Status {
+    func postStatus(_ status: String, visibility: Visibility) async throws -> Status {
         let url = MastodonEndpoint.statuses.url(for: account.server.address)
             
         let response = await AF.request(url, method: .post, parameters: [
-            "status": status
+            "status": status,
+            "visibility": visibility.rawValue
         ], headers: [
             "Authorization": "Bearer \(account.accessToken)"
         ])

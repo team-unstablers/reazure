@@ -9,6 +9,7 @@ import SwiftUI
 
 struct PostRequest: Codable {
     var content: String
+    var visibility: Visibility
     
     var replyTo: String?
 }
@@ -22,10 +23,16 @@ struct PostArea: View {
     var handler: PostSubmitHandler
     
     @State
+    var visibility: Visibility = .publicType
+    
+    @State
     var content: String = ""
     
     @State
     var replyTo: String? = nil
+    
+    @State
+    var visibilityMenuVisible: Bool = false
     
     
     var remaining: Int {
@@ -49,22 +56,62 @@ struct PostArea: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
-                Text("\(remaining)")
+                Text("Left: \(remaining)")
+                Text(visibility.asLocalizedText)
+                    .overlay {
+                        if visibilityMenuVisible {
+                            GeometryReader { geom in
+                                ContextMenu {
+                                    Group {
+                                        Text("POST_VISIBILITY_PUBLIC")
+                                            .onTapGesture {
+                                                visibility = .publicType
+                                                visibilityMenuVisible.toggle()
+                                            }
+                                        Text("POST_VISIBILITY_UNLISTED")
+                                            .onTapGesture {
+                                                visibility = .unlisted
+                                                visibilityMenuVisible.toggle()
+                                            }
+                                        Text("POST_VISIBILITY_PRIVATE")
+                                            .onTapGesture {
+                                                visibility = .privateType
+                                                visibilityMenuVisible.toggle()
+                                            }
+                                        Text("POST_VISIBILITY_DIRECT")
+                                            .onTapGesture {
+                                                visibility = .direct
+                                                visibilityMenuVisible.toggle()
+                                            }
+                                    }
+                                }
+                                .fixedSize()
+                                .offset(x: 0, y: geom.size.height)
+                                .zIndex(100)
+                            }
+                            .allowsHitTesting(true)
+                            .zIndex(100)
+                        }
+                    }
+                    .onTapGesture {
+                        visibilityMenuVisible.toggle()
+                    }
                 Spacer()
                 Text(sharedClient.streamingState.asLocalizedText)
             }
-                .padding(.horizontal, 4)
+            .padding(.horizontal, 4)
+            .zIndex(100)
             TextField(text: $content) {}
                 .padding(.horizontal, 4)
                 .padding(.vertical, 2)
                 .background(background)
                 .border(.black, width: 1)
                 .onSubmit {
-                    let request = PostRequest(content: content, replyTo: replyTo)
+                    let request = PostRequest(content: content, visibility: visibility, replyTo: replyTo)
                     
                     content = ""
                     replyTo = nil
-
+                    
                     handler(request)
                 }
         }
@@ -85,8 +132,25 @@ fileprivate extension StreamingState {
     }
 }
 
+fileprivate extension Visibility {
+    var asLocalizedText: String {
+        switch self {
+        case .publicType:
+            return NSLocalizedString("POST_VISIBILITY_PUBLIC", comment: "")
+        case .unlisted:
+            return NSLocalizedString("POST_VISIBILITY_UNLISTED", comment: "")
+        case .privateType:
+            return NSLocalizedString("POST_VISIBILITY_PRIVATE", comment: "")
+        case .direct:
+            return NSLocalizedString("POST_VISIBILITY_DIRECT", comment: "")
+        default:
+            return NSLocalizedString("POST_VISIBILITY_PUBLIC", comment: "")
+        }
+    }
+}
+
 #Preview {
     PostArea { request in
         
-    }
+    }.environmentObject(SharedClient())
 }

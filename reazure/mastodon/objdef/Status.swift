@@ -21,6 +21,29 @@ class Box<T: Codable>: Codable {
     }
 }
 
+struct Visibility: RawRepresentable, Codable, Equatable, Hashable {
+    var rawValue: String
+    
+    init(rawValue: String) {
+        self.rawValue = rawValue
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        rawValue = try container.decode(String.self)
+    }
+    
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(rawValue)
+    }
+    
+    static let publicType = Visibility(rawValue: "public")
+    static let unlisted = Visibility(rawValue: "unlisted")
+    static let privateType = Visibility(rawValue: "private")
+    static let direct = Visibility(rawValue: "direct")
+}
+
 struct CustomEmoji: Codable {
     let shortcode: String
     let url: String

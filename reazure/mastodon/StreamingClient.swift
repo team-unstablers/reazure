@@ -51,6 +51,14 @@ class StreamingClient {
         
         self.socket = socket
     }
+    
+    func stop() {
+        guard let socket = self.socket else {
+            return
+        }
+        
+        socket.disconnect()
+    }
 }
 
 extension StreamingClient: WebSocketDelegate {
