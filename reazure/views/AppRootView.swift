@@ -58,7 +58,7 @@ struct AppRootView: View {
                     Group {
                         TimelineView(type: .home)
                             .tag(Tab.home)
-                        TimelineView(type: .local)
+                        NotificationTimelineView()
                             .tag(Tab.notification)
                         TimelineView(type: .federated)
                             .tag(Tab.profile)

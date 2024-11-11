@@ -22,9 +22,27 @@ struct MastodonEndpoint: RawRepresentable {
     
     static let statuses = MastodonEndpoint(rawValue: "/api/v1/statuses")
 
+    static let notifications = MastodonEndpoint(rawValue: "/api/v1/notifications")
+    
     static let homeTimeline = MastodonEndpoint(rawValue: "/api/v1/timelines/home")
     
     static let streaming = MastodonEndpoint(rawValue: "/api/v1/streaming")
+    
+    static func favourite(of statusId: String) -> MastodonEndpoint {
+        return MastodonEndpoint(rawValue: "/api/v1/statuses/\(statusId)/favourite")
+    }
+    
+    static func unfavourite(of statusId: String) -> MastodonEndpoint {
+        return MastodonEndpoint(rawValue: "/api/v1/statuses/\(statusId)/unfavourite")
+    }
+    
+    static func reblog(of statusId: String) -> MastodonEndpoint {
+        return MastodonEndpoint(rawValue: "/api/v1/statuses/\(statusId)/reblog")
+    }
+    
+    static func unreblog(of statusId: String) -> MastodonEndpoint {
+        return MastodonEndpoint(rawValue: "/api/v1/statuses/\(statusId)/unreblog")
+    }
 
     func urlString(for server: String) -> String {
         return "https://\(server.sanitizeServerAddress())\(self.rawValue)"
@@ -134,7 +152,23 @@ class MastodonClient {
         }
         
         return value
-
+    }
+    
+    func notifications() async throws -> [Notification] {
+        let url = MastodonEndpoint.notifications.url(for: account.server.address)
+        
+        let response = await AF.request(url, headers: [
+            "Authorization": "Bearer \(account.accessToken)"
+        ])
+            .validate()
+            .serializingDecodable([Notification].self)
+            .response
+        
+        guard let value = response.value else {
+            throw response.error!
+        }
+        
+        return value
     }
     
     func homeTimeline() async throws -> [Status] {
@@ -146,6 +180,74 @@ class MastodonClient {
         ])
             .validate()
             .serializingDecodable([Status].self)
+            .response
+        
+        guard let value = response.value else {
+            throw response.error!
+        }
+        
+        return value
+    }
+    
+    func favourite(statusId: String) async throws -> Status {
+        let url = MastodonEndpoint.favourite(of: statusId).url(for: account.server.address)
+        
+        let response = await AF.request(url, method: .post, headers: [
+            "Authorization": "Bearer \(account.accessToken)"
+        ])
+            .validate()
+            .serializingDecodable(Status.self)
+            .response
+        
+        guard let value = response.value else {
+            throw response.error!
+        }
+        
+        return value
+    }
+    
+    func unfavourite(statusId: String) async throws -> Status {
+        let url = MastodonEndpoint.unfavourite(of: statusId).url(for: account.server.address)
+        
+        let response = await AF.request(url, method: .post, headers: [
+            "Authorization": "Bearer \(account.accessToken)"
+        ])
+            .validate()
+            .serializingDecodable(Status.self)
+            .response
+        
+        guard let value = response.value else {
+            throw response.error!
+        }
+        
+        return value
+    }
+    
+    func reblog(statusId: String) async throws -> Status {
+        let url = MastodonEndpoint.reblog(of: statusId).url(for: account.server.address)
+        
+        let response = await AF.request(url, method: .post, headers: [
+            "Authorization": "Bearer \(account.accessToken)"
+        ])
+            .validate()
+            .serializingDecodable(Status.self)
+            .response
+        
+        guard let value = response.value else {
+            throw response.error!
+        }
+        
+        return value
+    }
+    
+    func unreblog(statusId: String) async throws -> Status {
+        let url = MastodonEndpoint.unreblog(of: statusId).url(for: account.server.address)
+        
+        let response = await AF.request(url, method: .post, headers: [
+            "Authorization": "Bearer \(account.accessToken)"
+        ])
+            .validate()
+            .serializingDecodable(Status.self)
             .response
         
         guard let value = response.value else {

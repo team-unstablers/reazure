@@ -6,15 +6,19 @@
 //
 
 import Foundation
+
 import Collections
+import Combine
 
 enum TimelineType {
     case home
+    case notifications
     case local
     case federated
 }
 
 typealias Timeline = OrderedSet<Status>
+typealias NotificationTimeline = OrderedSet<Notification>
 
 class SharedClient: ObservableObject {
     @Published
@@ -54,8 +58,20 @@ class SharedClient: ObservableObject {
         .federated: Timeline()
     ]
     
+    @Published
+    var notifications: NotificationTimeline = []
+    
+    @Published
+    var focusState: [TimelineType: String] = [:]
+    
+    @Published
+    var postAreaFocused: Bool = false
+    
+    var replyTo = CurrentValueSubject<Status?, Never>(nil)
     
     func fetchStatuses(for type: TimelineType) async {
+        assert(type != .notifications)
+        
         do {
             // TODO
             guard let statuses = try await client?.homeTimeline() else {
@@ -71,6 +87,44 @@ class SharedClient: ObservableObject {
             // FIXME
             print(error)
         }
+    }
+    
+    func fetchNotification() async {
+        do {
+            guard let notifications = try await client?.notifications() else {
+                return
+            }
+            
+            DispatchQueue.main.async {
+                for notification in notifications.reversed() {
+                    self.notifications.insert(notification, at: 0)
+                }
+            }
+        } catch {
+            // FIXME
+            print(error)
+        }
+    }
+    
+    func focusedStatus(for type: TimelineType) -> Status? {
+        guard let focusedId = focusState[type],
+              let status = timeline[type]?.get(id: focusedId) else {
+            return nil
+        }
+        
+        return status
+    }
+    
+    func withFocusedStatus(for type: TimelineType, _ block: (Status?) -> Status?) {
+        let status = focusedStatus(for: type)
+        
+        guard let modified = block(status),
+              let index = timeline[type]?.firstIndex(where: { $0.id == modified.id })
+        else {
+            return
+        }
+        
+        timeline[type]?.update(modified, at: index)
     }
 }
 
@@ -117,5 +171,11 @@ extension SharedClient: StreamingClientDelegate {
                 
             }
         }
+    }
+}
+
+extension Timeline {
+    func get(id: String) -> Status? {
+        return self.first { $0.id == id }
     }
 }

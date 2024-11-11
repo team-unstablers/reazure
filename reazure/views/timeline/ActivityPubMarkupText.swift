@@ -322,7 +322,7 @@ struct ActivityPubMarkupText: View {
             return
         }
         
-        let height = 6.0 // 이거 뭔가 이상해... X(
+        let height = 5.0 // 이거 뭔가 이상해... X(
         let scale = image.size.height / height
         print("\(image.size.height), \(height), \(scale)")
 

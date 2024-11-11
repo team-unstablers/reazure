@@ -7,38 +7,94 @@
 
 import SwiftUI
 
+struct NoButtonStyle: ButtonStyle {
+    func makeBody(configuration: Self.Configuration) -> some View {
+        return configuration.label
+    }
+}
+
+
 struct TimelineView: View {
-    @FocusState
-    var selectedPost: String?
-    
     var type: TimelineType
     
     @EnvironmentObject
     var sharedClient: SharedClient
     
     var body: some View {
-        List {
-            ForEach(sharedClient.timeline[type]!) { status in
-                PostItem(status: status, selfId: sharedClient.account?.id ?? "")
-                    .listRowInsets(EdgeInsets())
+        ScrollViewReader { proxy in
+            List {
+                ForEach(sharedClient.timeline[type]!) { status in
+                    Button {
+                        sharedClient.focusState[type] = status.id
+                    } label: {
+                        PostItem(status: status, selfId: sharedClient.account?.id ?? "")
+                            .equatable()
+                        // .focusable()
+                        // .focused(sharedClient.focusState[type], equals: status.id)
+                            .background {
+                                if sharedClient.focusState[type] == status.id {
+                                    Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
+                                } else {
+                                    Color.clear
+                                }
+                            }
+                    }
+                    .id(status.id)
+                    .buttonStyle(NoButtonStyle())
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                     .listRowSeparator(.hidden)
-                    .focusable()
-                    .focused($selectedPost, equals: status.id)
-                    .onTapGesture {
-                        selectedPost = status.id
-                    }
-                    .background {
-                        if selectedPost == status.id {
-                            Color.red
-                        } else {
-                            Color.clear
+                }
+            }
+            .listStyle(.plain)
+            .listRowSpacing(0)
+            .padding(0)
+            .overlay {
+                /*
+                if let status = sharedClient.focusedStatus(for: .home) {
+                    GeometryReader { geom in
+                        ContextMenu {
+                            Group {
+                                ActivityPubMarkupText(content: "\(status.account.display_name) (@\(status.account.acct))",
+                                                      emojos: status.account.emojis)
+                                    .bold()
+                                    .lineLimit(1)
+                                Divider()
+                                HStack {
+                                    Text("답글 달기")
+                                    Spacer()
+                                    Text("부스트")
+                                    Spacer()
+                                    Text("페이버릿")
+                                    Spacer()
+                                    Text("스레드 불러오기")
+                                }
+                                Divider()
+                                Text(status.url ?? "(nil)")
+                                    .lineLimit(1)
+                                HStack {
+                                    Text("URL 복사")
+                                    Spacer()
+                                    Text("브라우저에서 열기")
+                                }
+                                Divider()
+                                Text("삭제")
+                                    .foregroundStyle(.gray)
+                            }
                         }
+                        .fixedSize()
+                        .offset(x: 16, y: 16)
                     }
+                    .allowsHitTesting(true)
+                }
+                 */
+            }
+            .onChange(of: sharedClient.focusState[type]) { _ in
+                print("test")
+                withAnimation {
+                    proxy.scrollTo(sharedClient.focusState[type])
+                }
             }
         }
-        .listStyle(.plain)
-        .listRowSpacing(0)
-        .padding(0)
         .onAppear {
             Task {
                 await sharedClient.fetchStatuses(for: type)

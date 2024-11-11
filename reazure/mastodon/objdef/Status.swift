@@ -60,22 +60,45 @@ struct Mention: Codable {
     let acct: String
 }
 
+struct MediaAttachment: Codable {
+    let id: String
+    let type: String
+    let url: String?
+    let preview_url: String?
+    let remote_url: String?
+}
+
 struct Status: Codable {
     let id: String
     let created_at: String
     
+    let url: String?
+
     let visibility: String
 
     let content: String
     let account: UserProfile
     
-
+    var favourited: Bool
+    var reblogged: Bool
+    
     let reblog: Box<Status>?
     
     let emojis: [CustomEmoji]
     let mentions: [Mention]
     
+    let media_attachments: [MediaAttachment]
+    
     let application: Application?
+}
+
+struct Notification: Codable {
+    let id: String
+    let type: String
+    let created_at: String
+    
+    let account: UserProfile?
+    let status: Status?
 }
 
 
@@ -92,5 +115,16 @@ extension Status: Hashable, Equatable, Identifiable {
 extension Status {
     func mentions(id: String) -> Bool {
         return mentions.contains(where: { $0.id == id })
+    }
+}
+
+
+extension Notification: Hashable, Equatable, Identifiable {
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    static func ==(lhs: Notification, rhs: Notification) -> Bool {
+        return lhs.id == rhs.id
     }
 }

@@ -34,6 +34,8 @@ struct PostArea: View {
     @State
     var visibilityMenuVisible: Bool = false
     
+    @FocusState
+    var isFocused: Bool
     
     var remaining: Int {
         // FIXME: 인스턴스마다 이 제한은 다름
@@ -102,6 +104,7 @@ struct PostArea: View {
             .padding(.horizontal, 4)
             .zIndex(100)
             TextField(text: $content) {}
+                .focused($isFocused)
                 .padding(.horizontal, 4)
                 .padding(.vertical, 2)
                 .background(background)
@@ -113,9 +116,33 @@ struct PostArea: View {
                     replyTo = nil
                     
                     handler(request)
+                    
+                    isFocused = true
                 }
         }
         .background(AzureaTheme.win32Background)
+        .onAppear {
+            isFocused = false
+        }
+        .onReceive(sharedClient.replyTo) { status in
+            guard let status = status else {
+                return
+            }
+            
+            replyTo = status.id
+            content = "@\(status.account.acct) "
+            
+            isFocused = true
+        }
+        .onChange(of: content) { content in
+            if (content.isEmpty) {
+                replyTo = nil
+            }
+        }
+        .onChange(of: sharedClient.postAreaFocused) { focused in
+            self.isFocused = focused
+        }
+        
     }
 }
 

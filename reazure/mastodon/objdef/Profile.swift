@@ -10,6 +10,8 @@ struct UserProfile: Codable {
     let username: String
     let acct: String
     
+    let url: String?
+    
     let display_name: String
     
     let avatar: String
