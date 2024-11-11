@@ -19,6 +19,9 @@ struct AppRootView: View {
         case settings
     }
     
+    @FocusState
+    var focused: Bool
+    
     @EnvironmentObject
     var preferencesManager: PreferencesManager
 
@@ -89,6 +92,7 @@ struct AppRootView: View {
             }
         }
     }
+        
 }
 
 #Preview {

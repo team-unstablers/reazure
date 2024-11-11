@@ -83,94 +83,23 @@ struct ExtKeypad: View {
             HStack {
                 KeypadButton(label: .constant("h"), sublabel: .constant("←"))
                 KeypadButton(label: .constant("j"), sublabel: .constant("↓")) {
-                    guard let focusedId = sharedClient.focusState[.home],
-                          let index = sharedClient.timeline[.home]?.firstIndex(where: { $0.id == focusedId })
-                    else {
-                        sharedClient.focusState[.home] = sharedClient.timeline[.home]?.first?.id
-                        return
-                    }
-                    
-                    let timeline = sharedClient.timeline[.home]!
-                    
-                    let nextIndex = max(0, min(index + 1, timeline.count - 1))
-                    let nextId = timeline[nextIndex].id
-                    
-                    sharedClient.focusState[.home] = nextId
+                    sharedClient.handleShortcut(key: .j)
                 }
                 KeypadButton(label: .constant("k"), sublabel: .constant("↑")) {
-                    guard let focusedId = sharedClient.focusState[.home],
-                          let index = sharedClient.timeline[.home]?.firstIndex(where: { $0.id == focusedId })
-                    else {
-                        sharedClient.focusState[.home] = sharedClient.timeline[.home]?.first?.id
-                        return
-                    }
-                    
-                    let timeline = sharedClient.timeline[.home]!
-                    
-                    let prevIndex = max(0, min(index - 1, timeline.count - 1))
-                    let prevId = timeline[prevIndex].id
-                    
-                    sharedClient.focusState[.home] = prevId
+                    sharedClient.handleShortcut(key: .k)
+
                 }
                 KeypadButton(label: .constant("l"), sublabel: .constant("→"))
             }
             HStack {
                 KeypadButton(label: .constant("r"), sublabel: .constant("reply")) {
-                    sharedClient.replyTo.send(sharedClient.focusedStatus(for: .home))
+                    sharedClient.handleShortcut(key: .r)
                 }
                 KeypadButton(label: .constant("f"), sublabel: .constant("favourite")) {
-                    sharedClient.withFocusedStatus(for: .home) { status in
-                        guard let status = status else {
-                            return nil
-                        }
-                        
-                        var modified = status
-                        
-                        // FIXME: this is a workaround for the API not updating the status object
-                        // FIXME: client.favourite() will return new status object, should implement timeline.replace(status)
-                        if (!status.favourited) {
-                            Task {
-                                try? await sharedClient.client?.favourite(statusId: status.id)
-                            }
-                            modified.favourited = true
-                            
-                            return modified
-                        } else {
-                            Task {
-                                try? await sharedClient.client?.unfavourite(statusId: status.id)
-                            }
-                            modified.favourited = false
-                            
-                            return modified
-                        }
-                    }
+                    sharedClient.handleShortcut(key: .f)
                 }
                 KeypadButton(label: .constant("t"), sublabel: .constant("boost")) {
-                    sharedClient.withFocusedStatus(for: .home) { status in
-                        guard let status = status else {
-                            return nil
-                        }
-                        
-                        var modified = status
-                        
-                        // FIXME: this is a workaround for the API not updating the status object
-                        // FIXME: client.favourite() will return new status object, should implement timeline.replace(status)
-                        if (!status.reblogged) {
-                            Task {
-                                try? await sharedClient.client?.reblog(statusId: status.id)
-                            }
-                            modified.reblogged = true
-                            
-                            return modified
-                        } else {
-                            Task {
-                                try? await sharedClient.client?.unreblog(statusId: status.id)
-                            }
-                            modified.reblogged = false
-                            
-                            return modified
-                        }
-                    }
+                    sharedClient.handleShortcut(key: .t)
                 }
                 KeypadButton(label: .constant("v"), sublabel: .constant("context"))
                 KeypadButton(label:
@@ -180,7 +109,7 @@ struct ExtKeypad: View {
                                 !sharedClient.postAreaFocused ?
                                     .constant("new post") : .constant("unfocus")
                 ) {
-                    sharedClient.postAreaFocused.toggle()
+                    sharedClient.handleShortcut(key: .u)
                 }
                 .onLongPressGesture(minimumDuration: 0.1, maximumDistance: 0) {
                     print("TODO: discard")

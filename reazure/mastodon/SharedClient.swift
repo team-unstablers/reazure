@@ -179,3 +179,143 @@ extension Timeline {
         return self.first { $0.id == id }
     }
 }
+
+enum ShortcutKey {
+    case h
+    case j
+    case k
+    case l
+    
+    case r
+    case f
+    case t
+    case v
+    case u
+}
+
+
+fileprivate extension SharedClient {
+    func down() {
+        guard let focusedId = self.focusState[.home],
+              let index = self.timeline[.home]?.firstIndex(where: { $0.id == focusedId })
+        else {
+            self.focusState[.home] = self.timeline[.home]?.first?.id
+            return
+        }
+        
+        let timeline = self.timeline[.home]!
+        
+        let nextIndex = max(0, min(index + 1, timeline.count - 1))
+        let nextId = timeline[nextIndex].id
+        
+        self.focusState[.home] = nextId
+    }
+    
+    func up() {
+        guard let focusedId = self.focusState[.home],
+              let index = self.timeline[.home]?.firstIndex(where: { $0.id == focusedId })
+        else {
+            self.focusState[.home] = self.timeline[.home]?.first?.id
+            return
+        }
+        
+        let timeline = self.timeline[.home]!
+        
+        let prevIndex = max(0, min(index - 1, timeline.count - 1))
+        let prevId = timeline[prevIndex].id
+        
+        self.focusState[.home] = prevId
+    }
+    
+    func r() {
+        self.replyTo.send(self.focusedStatus(for: .home))
+    }
+    
+    func f() {
+        self.withFocusedStatus(for: .home) { status in
+            guard let status = status else {
+                return nil
+            }
+            
+            var modified = status
+            
+            // FIXME: this is a workaround for the API not updating the status object
+            // FIXME: client.favourite() will return new status object, should implement timeline.replace(status)
+            if (!status.favourited) {
+                Task {
+                    try? await self.client?.favourite(statusId: status.id)
+                }
+                modified.favourited = true
+                
+                return modified
+            } else {
+                Task {
+                    try? await self.client?.unfavourite(statusId: status.id)
+                }
+                modified.favourited = false
+                
+                return modified
+            }
+        }
+    }
+    
+    func t() {
+        self.withFocusedStatus(for: .home) { status in
+            guard let status = status else {
+                return nil
+            }
+            
+            var modified = status
+            
+            // FIXME: this is a workaround for the API not updating the status object
+            // FIXME: client.favourite() will return new status object, should implement timeline.replace(status)
+            if (!status.reblogged) {
+                Task {
+                    try? await self.client?.reblog(statusId: status.id)
+                }
+                modified.reblogged = true
+                
+                return modified
+            } else {
+                Task {
+                    try? await self.client?.unreblog(statusId: status.id)
+                }
+                modified.reblogged = false
+                
+                return modified
+            }
+        }
+    }
+    
+    func u() {
+        self.postAreaFocused.toggle()
+    }
+}
+
+
+extension SharedClient {
+    func handleShortcut(key: ShortcutKey) {
+        switch key {
+        case .h:
+            break
+        case .j:
+            down()
+        case .k:
+            up()
+        case .l:
+            break
+        case .r:
+            r()
+        case .f:
+            f()
+        case .t:
+            t()
+        case .v:
+            break
+        case .u:
+            u()
+        default:
+            break
+        }
+    }
+}
