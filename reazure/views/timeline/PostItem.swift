@@ -145,7 +145,11 @@ struct PostItem: View, Equatable {
     }
     
     static func == (lhs: PostItem, rhs: PostItem) -> Bool {
-        return lhs.status.id == rhs.status.id
+        return (
+            lhs.status.id == rhs.status.id &&
+            lhs.status.favourited == rhs.status.favourited &&
+            lhs.status.reblogged == rhs.status.reblogged
+        )
     }
 }
 

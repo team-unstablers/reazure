@@ -124,7 +124,9 @@ class SharedClient: ObservableObject {
             return
         }
         
-        timeline[type]?.update(modified, at: index)
+        DispatchQueue.main.async {
+            self.timeline[type]?.update(modified, at: index)
+        }
     }
 }
 
@@ -295,27 +297,29 @@ fileprivate extension SharedClient {
 
 extension SharedClient {
     func handleShortcut(key: ShortcutKey) {
-        switch key {
-        case .h:
-            break
-        case .j:
-            down()
-        case .k:
-            up()
-        case .l:
-            break
-        case .r:
-            r()
-        case .f:
-            f()
-        case .t:
-            t()
-        case .v:
-            break
-        case .u:
-            u()
-        default:
-            break
+        DispatchQueue.main.async {
+            switch key {
+            case .h:
+                break
+            case .j:
+                self.down()
+            case .k:
+                self.up()
+            case .l:
+                break
+            case .r:
+                self.r()
+            case .f:
+                self.f()
+            case .t:
+                self.t()
+            case .v:
+                break
+            case .u:
+                self.u()
+            default:
+                break
+            }
         }
     }
 }
