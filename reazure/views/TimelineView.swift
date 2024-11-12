@@ -48,48 +48,7 @@ struct TimelineView: View {
                     .buttonStyle(NoButtonStyle())
                     .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                     .listRowSeparator(.hidden)
-                    
-                    .onKeyPress(.downArrow) {
-                        sharedClient.handleShortcut(key: .j)
-                        return .handled
-                    }
-                    .onKeyPress(.upArrow) {
-                        sharedClient.handleShortcut(key: .k)
-                        return .handled
-                    }
-                    .onKeyPress(.init("j")) {
-                        sharedClient.handleShortcut(key: .j)
-                        return .handled
-                    }
-                    .onKeyPress(.init("k")) {
-                        sharedClient.handleShortcut(key: .k)
-                        return .handled
-                    }
-                    .onKeyPress(.init("r")) {
-                        sharedClient.handleShortcut(key: .r)
-                        return .handled
-                    }
-                    .onKeyPress(.init("f")) {
-                        sharedClient.handleShortcut(key: .f)
-                        return .handled
-                    }
-                    .onKeyPress(.init("t")) {
-                        sharedClient.handleShortcut(key: .t)
-                        return .handled
-                    }
-                    .onKeyPress(.init("v")) {
-                        sharedClient.handleShortcut(key: .v)
-                        return .handled
-                    }
-                    .onKeyPress(.init("u")) {
-                        sharedClient.handleShortcut(key: .u)
-                        return .handled
-                    }
-                    .onKeyPress(.init("ㅕ")) {
-                        sharedClient.handleShortcut(key: .u)
-                        return .handled
-                    }
-                    
+                    .setupShortcutHandler(with: sharedClient)
                 }
             }
             .listStyle(.plain)
