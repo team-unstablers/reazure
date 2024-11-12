@@ -213,7 +213,7 @@ func parseEmojo(_ rootText: String) -> HTMLElement {
             continue
         }
         
-        guard let emojo = scanner.scanCharacters(from: .lowercaseLetters.union(.init(charactersIn: "1234567890_"))) else {
+        guard let emojo = scanner.scanCharacters(from: .letters.union(.init(charactersIn: "1234567890_"))) else {
             let textElement = HTMLElement(name: "__TEXT__")
             textElement.text = ":"
             
