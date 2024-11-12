@@ -311,8 +311,15 @@ struct ActivityPubMarkupText: View {
     @State
     var resolvedEmojos: [String: UIImage] = [:]
     
+    var element: HTMLElement {
+        let element = parseHTML(content)
+        insertLineBreak(element: element)
+        
+        return element
+    }
+    
     var body: some View {
-        buildTextView(element: parseHTML(content), emojis: emojos)
+        buildTextView(element: element, emojis: emojos)
     }
     
     func resolveEmojo(url: String, for code: String) async {
@@ -328,6 +335,29 @@ struct ActivityPubMarkupText: View {
         let scaledImage = UIImage(cgImage: image.cgImage!, scale: scale, orientation: image.imageOrientation)
 
         resolvedEmojos[code] = scaledImage
+    }
+    
+    /// 웹 브라우저의 display: block; 속성을 흉내내기 위해 p, div 태그 뒤에 두 개의 br 태그를 추가합니다.
+    /// FIXME: 이 함수는 여러 depth의 요소를 가진 HTML을 처리하지 못합니다.
+    func insertLineBreak(element: HTMLElement) {
+        if (element.name == "body") {
+            for (index, child) in element.children.enumerated() {
+                if (index == element.children.count - 1) {
+                    break
+                }
+                
+                insertLineBreak(element: child)
+            }
+        }
+        
+        if (element.name == "__TEXT__" || element.name == "__EMOJO__") {
+            return
+        }
+        
+        if (element.name == "p" || element.name == "div") {
+            element.children.append(.init(name: "br"))
+            element.children.append(.init(name: "br"))
+        }
     }
     
     func buildTextView(element: HTMLElement, emojis: [CustomEmoji]) -> Text {
