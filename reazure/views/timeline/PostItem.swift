@@ -49,22 +49,24 @@ struct PostItem: View, Equatable {
             PostItem(status: reblog.wrappedValue, type: .reblog, relatedUser: status.account)
         } else {
             HStack(alignment: .top) {
-                if let relatedUser = self.relatedUser {
-                    ZStack {
-                        Rectangle()
-                            .foregroundStyle(.clear)
-                            .frame(width: 56, height: 56)
-                        ProfileImage(url: status.account.avatar, size: 48)
+                VStack {
+                    if let relatedUser = self.relatedUser {
+                        ZStack {
+                            Rectangle()
+                                .foregroundStyle(.clear)
+                                .frame(width: 56, height: 56)
+                            ProfileImage(url: status.account.avatar, size: 48)
+                                .equatable()
+                                .offset(x: -4, y: -4)
+                            ProfileImage(url: relatedUser.avatar, size: 32)
+                                .equatable()
+                                .offset(x: 12, y: 12)
+                        }
+                    } else {
+                        ProfileImage(url: status.account.avatar)
                             .equatable()
-                            .offset(x: -4, y: -4)
-                        ProfileImage(url: relatedUser.avatar, size: 32)
-                            .equatable()
-                            .offset(x: 12, y: 12)
                     }
-                } else {
-                    ProfileImage(url: status.account.avatar)
-                        .equatable()
-                }
+                }.padding(.trailing, 4)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline) {
                         ActivityPubMarkupText(content: "\(status.account.display_name) (@\(status.account.acct))",

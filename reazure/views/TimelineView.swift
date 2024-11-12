@@ -43,8 +43,8 @@ struct TimelineView: View {
                             }
                     }
                     .id(status.id)
-                    .focusable(interactions: [.activate, .edit])
-                    .focused($focusedId, equals: status.id)
+                    // .focusable(interactions: [.activate, .edit])
+                    // .focused($focusedId, equals: status.id)
                     .buttonStyle(NoButtonStyle())
                     .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                     .listRowSeparator(.hidden)
@@ -94,14 +94,17 @@ struct TimelineView: View {
                 }
                  */
             }
-            .onChange(of: sharedClient.focusState[type]) { _ in
-                print("test")
-                focusedId = sharedClient.focusState[type]
+            .onChange(of: sharedClient.focusState[type]) { value in
+                // proxy.scrollTo가 먼저 실행되어야 함: 왜냐하면 focusedId가 현재 표시 바깥에 있으면 포커스 안됨 / 숏컷 핸들러 안 먹게 됨
+                proxy.scrollTo(sharedClient.focusState[type])
+                
+                DispatchQueue.main.async {
+                    focusedId = sharedClient.focusState[type]
+                }
+                
                 // withAnimation {
-                    proxy.scrollTo(sharedClient.focusState[type])
                 // }
             }
-
         }
         .onAppear {
             Task {

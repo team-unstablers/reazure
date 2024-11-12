@@ -17,7 +17,9 @@ extension View {
             }
         }
         
+        
         return self
+        /*
             .onKeyPress(.leftArrow, action: handler(for: .h))
             .onKeyPress(.downArrow, action: handler(for: .j))
             .onKeyPress(.upArrow, action: handler(for: .k))
@@ -55,5 +57,6 @@ extension View {
             .onKeyPress(.init("ㅅ"), action: handler(for: .t))
             .onKeyPress(.init("ㅍ"), action: handler(for: .v))
             .onKeyPress(.init("ㅕ"), action: handler(for: .u))
+         */
     }
 }
