@@ -101,9 +101,11 @@ struct PostArea: View {
                 Spacer()
                 Text(sharedClient.streamingState.asLocalizedText)
             }
+            .foregroundStyle(.black)
             .padding(.horizontal, 4)
             .zIndex(100)
             TextField(text: $content) {}
+                .foregroundStyle(.black)
                 .focused($isFocused)
                 .padding(.horizontal, 4)
                 .padding(.vertical, 2)
@@ -118,6 +120,12 @@ struct PostArea: View {
                     handler(request)
                     
                     isFocused = true
+                }
+                .onKeyPress(.downArrow) {
+                    sharedClient.postAreaFocused = false
+                    sharedClient.handleShortcut(key: .j)
+                    
+                    return .handled
                 }
         }
         .background(AzureaTheme.win32Background)
