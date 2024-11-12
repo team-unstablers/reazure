@@ -328,11 +328,7 @@ struct ActivityPubMarkupText: View {
             return
         }
         
-        let height = 5.0 // 이거 뭔가 이상해... X(
-        let scale = image.size.height / height
-        print("\(image.size.height), \(height), \(scale)")
-
-        let scaledImage = UIImage(cgImage: image.cgImage!, scale: scale, orientation: image.imageOrientation)
+        let scaledImage = image.scale(to: 18.0)
 
         resolvedEmojos[code] = scaledImage
     }

@@ -23,7 +23,7 @@ class CachedImageLoader {
             return image
         }
         
-        let response = await AF.request(url).serializingImage().response
+        let response = await AF.request(url).serializingImage(imageScale: 1).response
         
         if let image = try? response.result.get() {
             imageCache.add(image, withIdentifier: url)
