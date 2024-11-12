@@ -51,11 +51,15 @@ struct PostItem: View, Equatable {
             HStack(alignment: .top) {
                 if let relatedUser = self.relatedUser {
                     ZStack {
-                        ProfileImage(url: status.account.avatar)
+                        Rectangle()
+                            .foregroundStyle(.clear)
+                            .frame(width: 56, height: 56)
+                        ProfileImage(url: status.account.avatar, size: 48)
                             .equatable()
+                            .offset(x: -4, y: -4)
                         ProfileImage(url: relatedUser.avatar, size: 32)
                             .equatable()
-                            .offset(x: 16, y: 16)
+                            .offset(x: 12, y: 12)
                     }
                 } else {
                     ProfileImage(url: status.account.avatar)
