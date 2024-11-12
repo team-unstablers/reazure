@@ -19,10 +19,13 @@ struct ProfileImage: View, Equatable {
     }
     
     var size: CGFloat
+    
+    var compact: Bool = false
 
-    init(url: String, size: CGFloat = 56.0) {
+    init(url: String, size: CGFloat = 56.0, compact: Bool = false) {
         self.url = url
         self.size = size
+        self.compact = compact
     }
     
     @State
@@ -33,14 +36,27 @@ struct ProfileImage: View, Equatable {
     
     var body: some View {
         VStack {
-            if self.resolved {
-                Image(uiImage: image)
-                    .resizable()
-                    .frame(width: size, height: size)
-                    .clipShape(.rect(cornerRadius: 4))
+            if (!self.compact) {
+                if self.resolved {
+                    Image(uiImage: image)
+                        .resizable()
+                        .frame(width: size, height: size)
+                        .clipShape(.rect(cornerRadius: 4))
+                } else {
+                    ProgressView()
+                        .frame(width: size, height: size)
+                }
             } else {
-                ProgressView()
-                    .frame(width: size, height: size)
+                if self.resolved {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                        .frame(width: size, height: 24)
+                        .clipped()
+                } else {
+                    ProgressView()
+                        .frame(width: size, height: 24)
+                }
             }
         }.onAppear {
             self.fetchImage()
