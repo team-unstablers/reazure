@@ -12,12 +12,6 @@ struct AppRootView: View {
         case signin
     }
     
-    enum Tab {
-        case home
-        case notification
-        case profile
-        case settings
-    }
     
     @FocusState
     var focused: Bool
@@ -37,9 +31,6 @@ struct AppRootView: View {
     @State
     var text: String = "Hello, World!"
     
-    @State
-    var tabSelection: Tab = .home
-   
     init() {
         UITabBar.appearance().unselectedItemTintColor = .white
     }
@@ -57,7 +48,7 @@ struct AppRootView: View {
                     }
                 }
                 .zIndex(100)
-                TabView(selection: $tabSelection) {
+                TabView(selection: $sharedClient.currentTab) {
                     Group {
                         TimelineView(type: .home)
                             .tag(Tab.home)
@@ -68,16 +59,21 @@ struct AppRootView: View {
                         AboutAppView {
                             navState.append(.signin)
                         }
-                            .tag(Tab.settings)
+                        .tag(Tab.settings)
                     }
                     .toolbar(.hidden, for: .tabBar)
                 }
-                Navbar(tabSelection: $tabSelection) { tab in
-                    tabSelection = tab
+                Navbar(tabSelection: $sharedClient.currentTab) { tab in
+                    sharedClient.currentTab = tab
                 }
                 
                 if preferencesManager.showExtKeypad {
                     ExtKeypad()
+                } else {
+                    // 단축키는 먹어야 하니까..
+                    ExtKeypad()
+                        .frame(width: 0, height: 0)
+                        .hidden()
                 }
             }
             .background(AzureaTheme.win32Background)

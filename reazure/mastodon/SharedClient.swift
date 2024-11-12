@@ -17,6 +17,14 @@ enum TimelineType {
     case federated
 }
 
+
+enum Tab {
+    case home
+    case notification
+    case profile
+    case settings
+}
+
 typealias Timeline = OrderedSet<Status>
 typealias NotificationTimeline = OrderedSet<Notification>
 
@@ -66,6 +74,9 @@ class SharedClient: ObservableObject {
     
     @Published
     var postAreaFocused: Bool = false
+    
+    @Published
+    var currentTab: Tab = .home
     
     var replyTo = CurrentValueSubject<Status?, Never>(nil)
     
@@ -193,6 +204,11 @@ enum ShortcutKey {
     case t
     case v
     case u
+    
+    case one
+    case two
+    case three
+    case four
 }
 
 
@@ -292,6 +308,22 @@ fileprivate extension SharedClient {
     func u() {
         self.postAreaFocused.toggle()
     }
+    
+    func one() {
+        self.currentTab = .home
+    }
+    
+    func two() {
+        self.currentTab = .notification
+    }
+    
+    func three() {
+        self.currentTab = .profile
+    }
+    
+    func four() {
+        self.currentTab = .settings
+    }
 }
 
 
@@ -317,6 +349,14 @@ extension SharedClient {
                 break
             case .u:
                 self.u()
+            case .one:
+                self.one()
+            case .two:
+                self.two()
+            case .three:
+                self.three()
+            case .four:
+                self.four()
             default:
                 break
             }

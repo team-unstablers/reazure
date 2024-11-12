@@ -10,8 +10,8 @@ import SwiftUI
 struct Navbar: View {
     
     @Binding
-    var tabSelection: AppRootView.Tab
-    var tabChange: (AppRootView.Tab) -> Void
+    var tabSelection: Tab
+    var tabChange: (Tab) -> Void
     
     var body: some View {
         HStack {
@@ -22,6 +22,7 @@ struct Navbar: View {
                     Image(systemName: "house")
                 }
                 .shadow(color: .white, radius: tabSelection == .home ? 4 : 0)
+                .keyboardShortcut("1", modifiers: [])
                 
                 Spacer()
                 
@@ -31,6 +32,7 @@ struct Navbar: View {
                     Image(systemName: "house")
                 }
                 .shadow(color: .white, radius: tabSelection == .notification ? 4 : 0)
+                .keyboardShortcut("2", modifiers: [])
 
                 Spacer()
                 
@@ -40,6 +42,7 @@ struct Navbar: View {
                     Image(systemName: "globe")
                 }
                 .shadow(color: .white, radius: tabSelection == .profile ? 4 : 0)
+                .keyboardShortcut("3", modifiers: [])
 
                 Spacer()
                 
@@ -49,6 +52,7 @@ struct Navbar: View {
                     Image(systemName: "globe")
                 }
                 .shadow(color: .white, radius: tabSelection == .settings ? 4 : 0)
+                .keyboardShortcut("4", modifiers: [])
 
             }
             .foregroundColor(.white)
