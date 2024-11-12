@@ -37,7 +37,6 @@ extension HTMLElement {
     }
     
     func asNSAttributedString(emojis: [CustomEmoji]) -> NSAttributedString {
-        
         if (name == "__TEXT__") {
             let string = NSMutableAttributedString(string: text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
             
@@ -253,7 +252,7 @@ func parseHTML(_ html: String) -> HTMLElement {
         if let text = scanner.scanUpToString("<") {
             print("text: \(text)")
             
-            let containerElement = parseEmojo(text)
+            let containerElement = parseEmojo(text.decodeHTMLEntity())
             currentElement.children.append(containerElement)
         }
         scanner.scanString("<")
