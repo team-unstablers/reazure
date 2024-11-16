@@ -31,8 +31,7 @@ struct PostArea: View {
     var replyTo: StatusAdaptor? = nil {
         didSet {
             if let replyTo = replyTo {
-                fatalError("FIXME")
-                // visibilityMask = replyTo.visibility
+                visibilityMask = replyTo.visibility.__DONOTUSE__asMastodonVisibility()
             } else {
                 visibilityMask = nil
             }
@@ -177,15 +176,11 @@ struct PostArea: View {
                 return
             }
             
-            fatalError("FIXME")
-            
-            /*
-            replyTo = status.status
+            replyTo = status
             
             let mentions = ([status.account.acct] + status.mentions.map { $0.acct }).map { "@" + $0 }
             
             content = "\(mentions.joined(separator: " ")) "
-             */
             
             isFocused = true
         }

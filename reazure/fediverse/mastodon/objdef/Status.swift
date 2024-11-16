@@ -133,6 +133,20 @@ extension StatusVisibility {
             self = .publicType
         }
     }
+    
+    // FIXME: 임시 대응
+    func __DONOTUSE__asMastodonVisibility() -> Mastodon.Visibility {
+        switch self {
+        case .publicType:
+            return .publicType
+        case .unlisted:
+            return .unlisted
+        case .privateType:
+            return .privateType
+        case .direct:
+            return .direct
+        }
+    }
 }
 
 class MastodonEmojiAdaptor: EmojiAdaptor {

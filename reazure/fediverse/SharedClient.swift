@@ -88,7 +88,7 @@ class SharedClient: ObservableObject {
     @Published
     var currentTab: Tab = .home
     
-    var replyTo = CurrentValueSubject<StatusModel?, Never>(nil)
+    var replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
     
     func fetchStatuses(for type: TimelineType) async {
         assert(type != .notifications)
@@ -129,31 +129,41 @@ class SharedClient: ObservableObject {
         }
     }
     
-    func focusedStatus(for type: TimelineType) -> StatusModel? {
-        fatalError("FIXME")
+    func focusedStatus(for type: TimelineType) -> StatusAdaptor? {
         guard let focusState = focusState[type],
-              let status = timeline[type]?.get(id: focusState.id) else {
+              let model = timeline[type]?.get(id: focusState.id) else {
             return nil
         }
         
-        return status
+        if (focusState.depth == 0) {
+            return model.status
+        } else {
+            return model.parents[focusState.depth - 1]
+        }
     }
     
     func withFocusedStatus(for type: TimelineType, _ block: (StatusAdaptor?) -> StatusAdaptor?) {
-        fatalError("Not implemented")
-        /*
-        let status = focusedStatus(for: type)
+        guard let focusState = focusState[type],
+              let model = timeline[type]?.get(id: focusState.id) else {
+            return
+        }
         
-        guard let modified = block(status),
-              let index = timeline[type]?.firstIndex(where: { $0.id == modified.id })
-        else {
+        
+        let focusedStatus: any StatusAdaptor = (focusState.depth == 0) ?
+            model.status :
+            model.parents[focusState.depth - 1]
+       
+        guard let modified = block(focusedStatus) else {
             return
         }
         
         DispatchQueue.main.async {
-            self.timeline[type]?.update(modified, at: index)
+            if (focusState.depth == 0) {
+                model.status = modified
+            } else {
+                model.parents[focusState.depth - 1] = modified
+            }
         }
-         */
     }
 }
 
@@ -296,24 +306,20 @@ fileprivate extension SharedClient {
                 return nil
             }
             
-            var modified = status
-            
             // FIXME: this is a workaround for the API not updating the status object
             // FIXME: client.favourite() will return new status object, should implement timeline.replace(status)
             if (!status.favourited) {
                 Task {
                     try? await self.client?.favourite(statusId: status.id)
                 }
-                // modified.favourited = true
                 
-                return modified
+                return status.mask(favourited: true)
             } else {
                 Task {
                     try? await self.client?.unfavourite(statusId: status.id)
                 }
-                // modified.favourited = false
                 
-                return modified
+                return status.mask(favourited: false)
             }
         }
     }
@@ -324,24 +330,20 @@ fileprivate extension SharedClient {
                 return nil
             }
             
-            var modified = status
-            
             // FIXME: this is a workaround for the API not updating the status object
             // FIXME: client.favourite() will return new status object, should implement timeline.replace(status)
             if (!status.reblogged) {
                 Task {
                     try? await self.client?.reblog(statusId: status.id)
                 }
-                // modified.reblogged = true
                 
-                return modified
+                return status.mask(reblogged: true)
             } else {
                 Task {
                     try? await self.client?.unreblog(statusId: status.id)
                 }
-                // modified.reblogged = false
                 
-                return modified
+                return status.mask(reblogged: false)
             }
         }
     }
