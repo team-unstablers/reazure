@@ -24,6 +24,8 @@ struct PostGroup: View {
     
     var type: TimelineType
     
+    var focusState: FocusState<TLFocusState?>.Binding
+    
     var body: some View {
         Section {
             renderItem(model.status, depth: 0)
@@ -48,6 +50,8 @@ struct PostGroup: View {
             flags.insert(.expanded)
         }
         
+        let focusInfo = TLFocusState(id: model.id, depth: depth)
+        
         return PostItem(status: status, flags: flags) { _ in
             if (expanded) {
                 model.expandedDepth = depth
@@ -61,24 +65,23 @@ struct PostGroup: View {
         }
             .equatable()
             .padding(.leading, CGFloat(depth) * 8)
-        /*
-            .onTapGesture {
-                sharedClient.focusState[type] = status.id
-            }
-         */
-        // .focusable()
-        // .focused(sharedClient.focusState[type], equals: status.id)
             .background {
-                // FIXME: 코드 개구림
-                if sharedClient.focusState[type]?.id == model.id,
-                   sharedClient.focusState[type]?.depth == depth
+                if let focusState = sharedClient.focusState[type],
+                   focusState.id == model.id,
+                   focusState.depth == depth
                 {
                     Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
                 } else {
                     Color.clear
                 }
             }
-            .id(model.id + "-" + String(depth))
+            .id(focusInfo)
+            .onTapGesture {
+                sharedClient.focusState[type] = focusInfo
+            }
+            .focusable()
+            .focused(focusState, equals: focusInfo)
+
         // .focusable(interactions: [.activate, .edit])
         // .focused($focusedId, equals: status.id)
             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))

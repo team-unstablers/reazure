@@ -20,6 +20,9 @@ struct TimelineView: View {
     @EnvironmentObject
     var sharedClient: SharedClient
     
+    @FocusState
+    var focusState: TLFocusState?
+    
     /*
     @FocusState
     var focusedId: String?
@@ -29,7 +32,7 @@ struct TimelineView: View {
         ScrollViewReader { proxy in
             List {
                 ForEach(sharedClient.timeline[type]!) { model in
-                    PostGroup(model: model, type: type)
+                    PostGroup(model: model, type: type, focusState: $focusState)
                 }
             }
             .listStyle(.plain)
@@ -80,10 +83,10 @@ struct TimelineView: View {
                 guard let focusState = sharedClient.focusState[type] else {
                     return
                 }
-                proxy.scrollTo(focusState.id + "-" + String(focusState.depth))
+                proxy.scrollTo(focusState)
                 
                 DispatchQueue.main.async {
-                    // focusedId = sharedClient.focusState[type]
+                    self.focusState = focusState
                 }
                 
                 // withAnimation {
