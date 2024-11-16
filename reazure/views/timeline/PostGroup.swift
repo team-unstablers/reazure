@@ -84,11 +84,16 @@ struct PostGroup: View {
     }
     
     func resolveParent(of status: StatusAdaptor) {
+        guard let parentId = (status.reblog ?? status).replyToId else {
+            return
+        }
+
         if (model.resolving) {
             return
         }
-        
+
         model.resolving = true
+        
         
         Task {
             defer {
@@ -97,7 +102,7 @@ struct PostGroup: View {
                 }
             }
             do {
-                guard let parent = try await self.sharedClient.client?.status(of: status.replyToId!) else {
+                guard let parent = try await self.sharedClient.client?.status(of: parentId) else {
                     return
                 }
                 DispatchQueue.main.async {
