@@ -28,6 +28,16 @@ enum Tab {
 typealias Timeline = OrderedSet<StatusModel>
 typealias NotificationTimeline = OrderedSet<Mastodon.Notification>
 
+struct TLFocusState: Hashable {
+    var id: String
+    var depth: Int
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(depth)
+    }
+}
+
 class SharedClient: ObservableObject {
     @Published
     var account: Account? {
@@ -70,7 +80,7 @@ class SharedClient: ObservableObject {
     var notifications: NotificationTimeline = []
     
     @Published
-    var focusState: [TimelineType: String] = [:]
+    var focusState: [TimelineType: TLFocusState] = [:]
     
     @Published
     var postAreaFocused: Bool = false
@@ -120,8 +130,9 @@ class SharedClient: ObservableObject {
     }
     
     func focusedStatus(for type: TimelineType) -> StatusModel? {
-        guard let focusedId = focusState[type],
-              let status = timeline[type]?.get(id: focusedId) else {
+        fatalError("FIXME")
+        guard let focusState = focusState[type],
+              let status = timeline[type]?.get(id: focusState.id) else {
             return nil
         }
         
@@ -221,35 +232,58 @@ enum ShortcutKey {
 
 fileprivate extension SharedClient {
     func down() {
-        guard let focusedId = self.focusState[.home],
-              let index = self.timeline[.home]?.firstIndex(where: { $0.id == focusedId })
-        else {
-            self.focusState[.home] = self.timeline[.home]?.first?.id
+        guard let timeline = self.timeline[.home] else {
             return
         }
         
-        let timeline = self.timeline[.home]!
+        guard let focusState = self.focusState[.home],
+              let index = timeline.firstIndex(where: { $0.id == focusState.id })
+        else {
+            guard let index = timeline.first?.id else {
+                return
+            }
+            self.focusState[.home] = TLFocusState(id: index, depth: 0)
+            return
+        }
         
-        let nextIndex = max(0, min(index + 1, timeline.count - 1))
-        let nextId = timeline[nextIndex].id
         
-        self.focusState[.home] = nextId
+        let model = timeline[index]
+        
+        if (focusState.depth < model.expandedDepth) {
+            self.focusState[.home] = TLFocusState(id: model.id, depth: focusState.depth + 1)
+        } else {
+            let nextIndex = max(0, min(index + 1, timeline.count - 1))
+            let nextId = timeline[nextIndex].id
+            
+            self.focusState[.home] = TLFocusState(id: nextId, depth: 0)
+        }
     }
     
     func up() {
-        guard let focusedId = self.focusState[.home],
-              let index = self.timeline[.home]?.firstIndex(where: { $0.id == focusedId })
-        else {
-            self.focusState[.home] = self.timeline[.home]?.first?.id
+        guard let timeline = self.timeline[.home] else {
             return
         }
         
-        let timeline = self.timeline[.home]!
+        guard let focusState = self.focusState[.home],
+              let index = timeline.firstIndex(where: { $0.id == focusState.id })
+        else {
+            guard let index = timeline.first?.id else {
+                return
+            }
+            self.focusState[.home] = TLFocusState(id: index, depth: 0)
+            return
+        }
         
-        let prevIndex = max(0, min(index - 1, timeline.count - 1))
-        let prevId = timeline[prevIndex].id
+        let model = timeline[index]
         
-        self.focusState[.home] = prevId
+        if (focusState.depth > 0) {
+            self.focusState[.home] = TLFocusState(id: model.id, depth: focusState.depth - 1)
+        } else {
+            let prevIndex = max(0, min(index - 1, timeline.count - 1))
+            let prevModel = timeline[prevIndex]
+            
+            self.focusState[.home] = TLFocusState(id: prevModel.id, depth: prevModel.expandedDepth)
+        }
     }
     
     func r() {

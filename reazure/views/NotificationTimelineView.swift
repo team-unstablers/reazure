@@ -16,16 +16,18 @@ struct NotificationTimelineView: View {
             List {
                 ForEach(sharedClient.notifications) { notification in
                     Button {
-                        sharedClient.focusState[.notifications] = notification.id
+                        // sharedClient.focusState[.notifications] = notification.id
                     } label: {
                         NotificationItem(notification: notification)
                             .equatable()
                             .background {
+                                /*
                                 if sharedClient.focusState[.notifications] == notification.id {
                                     Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
                                 } else {
                                     Color.clear
                                 }
+                                 */
                             }
                     }
                     .zIndex(100)
@@ -38,12 +40,6 @@ struct NotificationTimelineView: View {
             .listStyle(.plain)
             .listRowSpacing(0)
             .padding(0)
-            .onChange(of: sharedClient.focusState[.notifications]) { _ in
-                print("test")
-                withAnimation {
-                    proxy.scrollTo(sharedClient.focusState[.notifications])
-                }
-            }
         }
         .onAppear {
             Task {

@@ -69,13 +69,16 @@ struct PostGroup: View {
         // .focusable()
         // .focused(sharedClient.focusState[type], equals: status.id)
             .background {
-                if sharedClient.focusState[type] == status.id {
+                // FIXME: 코드 개구림
+                if sharedClient.focusState[type]?.id == model.id,
+                   sharedClient.focusState[type]?.depth == depth
+                {
                     Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
                 } else {
                     Color.clear
                 }
             }
-            .id(status.id + "-" + String(depth))
+            .id(model.id + "-" + String(depth))
         // .focusable(interactions: [.activate, .edit])
         // .focused($focusedId, equals: status.id)
             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))

@@ -20,8 +20,10 @@ struct TimelineView: View {
     @EnvironmentObject
     var sharedClient: SharedClient
     
+    /*
     @FocusState
     var focusedId: String?
+     */
     
     var body: some View {
         ScrollViewReader { proxy in
@@ -75,10 +77,13 @@ struct TimelineView: View {
             }
             .onChange(of: sharedClient.focusState[type]) { value in
                 // proxy.scrollTo가 먼저 실행되어야 함: 왜냐하면 focusedId가 현재 표시 바깥에 있으면 포커스 안됨 / 숏컷 핸들러 안 먹게 됨
-                proxy.scrollTo(sharedClient.focusState[type])
+                guard let focusState = sharedClient.focusState[type] else {
+                    return
+                }
+                proxy.scrollTo(focusState.id + "-" + String(focusState.depth))
                 
                 DispatchQueue.main.async {
-                    focusedId = sharedClient.focusState[type]
+                    // focusedId = sharedClient.focusState[type]
                 }
                 
                 // withAnimation {
