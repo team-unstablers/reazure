@@ -15,7 +15,7 @@ enum StreamingState {
 }
 
 protocol StreamingClientDelegate {
-    func didReceive(event: StreamingEvent, client: StreamingClient)
+    func didReceive(event: Mastodon.StreamingEvent, client: StreamingClient)
     func didStateChange(state: StreamingState, client: StreamingClient)
 }
 
@@ -70,7 +70,7 @@ extension StreamingClient: WebSocketDelegate {
             self.state = .disconnected
         case .text(let string):
             do {
-                let event = try JSON.parse(string, to: StreamingEvent.self)
+                let event = try JSON.parse(string, to: Mastodon.StreamingEvent.self)
                 self.delegate?.didReceive(event: event, client: self)
             } catch {
                 print("StreamingClient Error: \(error)")

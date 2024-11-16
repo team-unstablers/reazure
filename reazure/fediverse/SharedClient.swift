@@ -25,8 +25,18 @@ enum Tab {
     case settings
 }
 
-typealias Timeline = OrderedSet<Status>
-typealias NotificationTimeline = OrderedSet<Notification>
+typealias Timeline = OrderedSet<StatusModel>
+typealias NotificationTimeline = OrderedSet<Mastodon.Notification>
+
+struct TLFocusState: Hashable {
+    var id: String
+    var depth: Int
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(depth)
+    }
+}
 
 class SharedClient: ObservableObject {
     @Published
@@ -70,7 +80,7 @@ class SharedClient: ObservableObject {
     var notifications: NotificationTimeline = []
     
     @Published
-    var focusState: [TimelineType: String] = [:]
+    var focusState: [TimelineType: TLFocusState] = [:]
     
     @Published
     var postAreaFocused: Bool = false
@@ -78,7 +88,7 @@ class SharedClient: ObservableObject {
     @Published
     var currentTab: Tab = .home
     
-    var replyTo = CurrentValueSubject<Status?, Never>(nil)
+    var replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
     
     func fetchStatuses(for type: TimelineType) async {
         assert(type != .notifications)
@@ -91,7 +101,9 @@ class SharedClient: ObservableObject {
             
             DispatchQueue.main.async {
                 for status in statuses.reversed() {
-                    self.timeline[type]?.insert(status, at: 0)
+                    let adaptor = MastodonStatusAdaptor(from: status)
+                    let model = StatusModel(adaptor: adaptor)
+                    self.timeline[type]?.insert(model, at: 0)
                 }
             }
         } catch {
@@ -117,32 +129,54 @@ class SharedClient: ObservableObject {
         }
     }
     
-    func focusedStatus(for type: TimelineType) -> Status? {
-        guard let focusedId = focusState[type],
-              let status = timeline[type]?.get(id: focusedId) else {
+    func focusedModel(for type: TimelineType) -> StatusModel? {
+        guard let focusState = focusState[type] else {
             return nil
         }
         
-        return status
+        return timeline[type]?.get(id: focusState.id)
     }
     
-    func withFocusedStatus(for type: TimelineType, _ block: (Status?) -> Status?) {
-        let status = focusedStatus(for: type)
+    func focusedStatus(for type: TimelineType) -> StatusAdaptor? {
+        guard let focusState = focusState[type],
+              let model = timeline[type]?.get(id: focusState.id) else {
+            return nil
+        }
         
-        guard let modified = block(status),
-              let index = timeline[type]?.firstIndex(where: { $0.id == modified.id })
-        else {
+        if (focusState.depth == 0) {
+            return model.status
+        } else {
+            return model.parents[focusState.depth - 1]
+        }
+    }
+    
+    func withFocusedStatus(for type: TimelineType, _ block: (StatusAdaptor?) -> StatusAdaptor?) {
+        guard let focusState = focusState[type],
+              let model = timeline[type]?.get(id: focusState.id) else {
+            return
+        }
+        
+        
+        let focusedStatus: any StatusAdaptor = (focusState.depth == 0) ?
+            model.status :
+            model.parents[focusState.depth - 1]
+       
+        guard let modified = block(focusedStatus) else {
             return
         }
         
         DispatchQueue.main.async {
-            self.timeline[type]?.update(modified, at: index)
+            if (focusState.depth == 0) {
+                model.status = modified
+            } else {
+                model.parents[focusState.depth - 1] = modified
+            }
         }
     }
 }
 
 extension SharedClient: StreamingClientDelegate {
-    func didReceive(event: StreamingEvent, client: StreamingClient) {
+    func didReceive(event: Mastodon.StreamingEvent, client: StreamingClient) {
         switch event.event {
         case "update":
             do {
@@ -151,11 +185,13 @@ extension SharedClient: StreamingClientDelegate {
                     return
                 }
                 
-                let status = try JSON.parse(payload, to: Status.self)
+                let status = try JSON.parse(payload, to: Mastodon.Status.self)
                 // home timeline
                 
                 DispatchQueue.main.async {
-                    self.timeline[.home]?.insert(status, at: 0)
+                    let adaptor = MastodonStatusAdaptor(from: status)
+                    let model = StatusModel(adaptor: adaptor)
+                    self.timeline[.home]?.insert(model, at: 0)
                 }
                 
                 print("Done!")
@@ -188,7 +224,7 @@ extension SharedClient: StreamingClientDelegate {
 }
 
 extension Timeline {
-    func get(id: String) -> Status? {
+    func get(id: String) -> StatusModel? {
         return self.first { $0.id == id }
     }
 }
@@ -214,35 +250,93 @@ enum ShortcutKey {
 
 fileprivate extension SharedClient {
     func down() {
-        guard let focusedId = self.focusState[.home],
-              let index = self.timeline[.home]?.firstIndex(where: { $0.id == focusedId })
-        else {
-            self.focusState[.home] = self.timeline[.home]?.first?.id
+        guard let timeline = self.timeline[.home] else {
             return
         }
         
-        let timeline = self.timeline[.home]!
+        guard let focusState = self.focusState[.home],
+              let index = timeline.firstIndex(where: { $0.id == focusState.id })
+        else {
+            guard let index = timeline.first?.id else {
+                return
+            }
+            self.focusState[.home] = TLFocusState(id: index, depth: 0)
+            return
+        }
         
-        let nextIndex = max(0, min(index + 1, timeline.count - 1))
-        let nextId = timeline[nextIndex].id
         
-        self.focusState[.home] = nextId
+        let model = timeline[index]
+        
+        if (focusState.depth < model.expandedDepth) {
+            self.focusState[.home] = TLFocusState(id: model.id, depth: focusState.depth + 1)
+        } else {
+            let nextIndex = max(0, min(index + 1, timeline.count - 1))
+            let nextId = timeline[nextIndex].id
+            
+            self.focusState[.home] = TLFocusState(id: nextId, depth: 0)
+        }
+    }
+    
+    func left() {
+        guard let focusState = self.focusState[.home],
+              let model = self.focusedModel(for: .home) else {
+            return
+        }
+        
+        model.expandedDepth = max(0, focusState.depth - 1)
+        
+        self.focusState[.home] = TLFocusState(id: model.id, depth: model.expandedDepth)
+    }
+        
+    
+    func right() {
+        guard let client = self.client,
+              let focusState = self.focusState[.home],
+              let model = self.focusedModel(for: .home) else {
+            return
+        }
+        
+        let focusedStatus: any StatusAdaptor = (focusState.depth == 0) ?
+            model.status :
+            model.parents[focusState.depth - 1]
+        
+        if focusedStatus.replyToId == nil {
+            return
+        }
+
+        model.expandedDepth = focusState.depth + 1
+        
+        
+        if (model.parents.count < focusState.depth + 1) {
+            model.resolveParent(of: focusedStatus, using: client)
+        }
     }
     
     func up() {
-        guard let focusedId = self.focusState[.home],
-              let index = self.timeline[.home]?.firstIndex(where: { $0.id == focusedId })
-        else {
-            self.focusState[.home] = self.timeline[.home]?.first?.id
+        guard let timeline = self.timeline[.home] else {
             return
         }
         
-        let timeline = self.timeline[.home]!
+        guard let focusState = self.focusState[.home],
+              let index = timeline.firstIndex(where: { $0.id == focusState.id })
+        else {
+            guard let index = timeline.first?.id else {
+                return
+            }
+            self.focusState[.home] = TLFocusState(id: index, depth: 0)
+            return
+        }
         
-        let prevIndex = max(0, min(index - 1, timeline.count - 1))
-        let prevId = timeline[prevIndex].id
+        let model = timeline[index]
         
-        self.focusState[.home] = prevId
+        if (focusState.depth > 0) {
+            self.focusState[.home] = TLFocusState(id: model.id, depth: focusState.depth - 1)
+        } else {
+            let prevIndex = max(0, min(index - 1, timeline.count - 1))
+            let prevModel = timeline[prevIndex]
+            
+            self.focusState[.home] = TLFocusState(id: prevModel.id, depth: prevModel.expandedDepth)
+        }
     }
     
     func r() {
@@ -255,24 +349,20 @@ fileprivate extension SharedClient {
                 return nil
             }
             
-            var modified = status
-            
             // FIXME: this is a workaround for the API not updating the status object
             // FIXME: client.favourite() will return new status object, should implement timeline.replace(status)
             if (!status.favourited) {
                 Task {
                     try? await self.client?.favourite(statusId: status.id)
                 }
-                modified.favourited = true
                 
-                return modified
+                return status.mask(favourited: true)
             } else {
                 Task {
                     try? await self.client?.unfavourite(statusId: status.id)
                 }
-                modified.favourited = false
                 
-                return modified
+                return status.mask(favourited: false)
             }
         }
     }
@@ -283,24 +373,20 @@ fileprivate extension SharedClient {
                 return nil
             }
             
-            var modified = status
-            
             // FIXME: this is a workaround for the API not updating the status object
             // FIXME: client.favourite() will return new status object, should implement timeline.replace(status)
             if (!status.reblogged) {
                 Task {
                     try? await self.client?.reblog(statusId: status.id)
                 }
-                modified.reblogged = true
                 
-                return modified
+                return status.mask(reblogged: true)
             } else {
                 Task {
                     try? await self.client?.unreblog(statusId: status.id)
                 }
-                modified.reblogged = false
                 
-                return modified
+                return status.mask(reblogged: false)
             }
         }
     }
@@ -332,13 +418,13 @@ extension SharedClient {
         DispatchQueue.main.async {
             switch key {
             case .h:
-                break
+                self.left()
             case .j:
                 self.down()
             case .k:
                 self.up()
             case .l:
-                break
+                self.right()
             case .r:
                 self.r()
             case .f:

@@ -11,7 +11,7 @@ struct CompactPostItem: View, Equatable {
     @Environment(\.openURL)
     var openURL
 
-    var status: Status
+    var status: StatusAdaptor
     
     /// 현재 사용자의 ID: mention 판정을 위해 사용
     var selfId: String = ""
@@ -21,9 +21,11 @@ struct CompactPostItem: View, Equatable {
     }
     
     var textColor: Color {
+        /*
         if status.mentions(id: selfId) {
             return .init(uiColor: UIColor(r8: 66, g8: 78, b8: 245, a: 1.0))
         }
+         */
         
         return .primary
     }
@@ -54,17 +56,6 @@ struct CompactPostItem: View, Equatable {
     }
 }
 
-fileprivate extension Status {
-    var footerContent: String {
-        let prettyDate = created_at.prettyDate()
-        
-        if let application = application {
-            return "\(prettyDate) / via \(application.name)"
-        }
-        
-        return prettyDate
-    }
-}
 
 fileprivate extension String {
     func parseDate() -> Date? {
@@ -88,13 +79,16 @@ fileprivate extension String {
 }
 
 #Preview {
-    let status = Status(
+    let status = MastodonStatusAdaptor(from: Mastodon.Status(
         id: "1",
         created_at: "2019-11-26T23:27:32.000Z",
+        
+        in_reply_to_id: nil,
+        
         url: "",
-        visibility: "public",
+        visibility: .publicType,
         content: "Hello, World!",
-        account: UserProfile(
+        account: Mastodon.UserProfile(
             id: "1",
             username: "cheesekun",
             acct: "cheesekun",
@@ -114,28 +108,28 @@ fileprivate extension String {
         emojis: [],
         mentions: [],
         media_attachments: [
-            MediaAttachment(
+            Mastodon.MediaAttachment(
                 id: "1234",
                 type: "image",
                 url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
             ),
-            MediaAttachment(
+            Mastodon.MediaAttachment(
                 id: "1235",
                 type: "image",
                 url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
             ),
-            MediaAttachment(
+            Mastodon.MediaAttachment(
                 id: "1236",
                 type: "image",
                 url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
             ),
-            MediaAttachment(
+            Mastodon.MediaAttachment(
                 id: "1237",
                 type: "image",
                 url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
@@ -143,16 +137,19 @@ fileprivate extension String {
                 remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
             ),
         ],
-        application: Application(name: "re;azure")
-    )
+        application: Mastodon.Application(name: "re;azure")
+    ))
     
-    let mentionStatus = Status(
+    let mentionStatus = MastodonStatusAdaptor(from: Mastodon.Status(
         id: "42",
         created_at: "2019-11-26T23:27:32.000Z",
+        
+        in_reply_to_id: nil,
+        
         url: "",
-        visibility: "public",
+        visibility: .publicType,
         content: "@cheesekun Hello, World!",
-        account: UserProfile(
+        account: Mastodon.UserProfile(
             id: "2",
             username: "ppiyac",
             acct: "ppiyac",
@@ -171,19 +168,22 @@ fileprivate extension String {
         reblog: nil,
         emojis: [],
         mentions: [
-            Mention(id: "1", username: "cheesekun", acct: "cheesekun")
+            Mastodon.Mention(id: "1", username: "cheesekun", acct: "cheesekun")
         ],
         media_attachments: [],
-        application: Application(name: "re;azure")
-    )
+        application: Mastodon.Application(name: "re;azure")
+    ))
     
-    let reblogStatus = Status(
+    let reblogStatus = MastodonStatusAdaptor(from: Mastodon.Status(
         id: "2",
         created_at: "2019-11-26T23:27:32.000Z",
+        
+        in_reply_to_id: nil,
+        
         url: "",
-        visibility: "public",
+        visibility: .publicType,
         content: "Hello, World!",
-        account: UserProfile(
+        account: Mastodon.UserProfile(
             id: "2",
             username: "ppiyac",
             acct: "ppiyac",
@@ -199,22 +199,21 @@ fileprivate extension String {
         favourited: false,
         reblogged: false,
         
-        reblog: Box(status),
+        reblog: Box(status._status),
         emojis: [],
         mentions: [],
         media_attachments: [],
-        application: Application(name: "re;azure")
-    )
+        application: Mastodon.Application(name: "re;azure")
+    ))
     
     VStack(spacing: 0) {
         CompactPostItem(status: status)
-        CompactPostItem(status: reblogStatus)
-        CompactPostItem(status: status)
-        CompactPostItem(status: mentionStatus, selfId: "1")
+        /*
         Button {} label: {
-            CompactPostItem(status: mentionStatus, selfId: "1")
+            PostItem(status: mentionStatus, selfId: "1", type: .favourite, relatedUser: status.account)
         }
         .buttonStyle(.plain)
+         */
     }
 }
 

@@ -8,9 +8,10 @@
 import SwiftUI
 
 struct NotificationItem: View, Equatable {
-    var notification: Notification
+    var notification: Mastodon.Notification
     
     var body: some View {
+        /*
         if let status = notification.status {
             if notification.type == "reblog" {
                 PostItem(status: status, type: .reblog, relatedUser: notification.account!)
@@ -20,6 +21,9 @@ struct NotificationItem: View, Equatable {
                 PostItem(status: status)
             }
         }
+         */
+        
+        EmptyView()
     }
     
     static func == (lhs: NotificationItem, rhs: NotificationItem) -> Bool {

@@ -21,34 +21,18 @@ struct TimelineView: View {
     var sharedClient: SharedClient
     
     @FocusState
+    var focusState: TLFocusState?
+    
+    /*
+    @FocusState
     var focusedId: String?
+     */
     
     var body: some View {
         ScrollViewReader { proxy in
             List {
-                ForEach(sharedClient.timeline[type]!) { status in
-                    Button {
-                        sharedClient.focusState[type] = status.id
-                    } label: {
-                        PostItem(status: status, selfId: sharedClient.account?.id ?? "")
-                            .equatable()
-                        // .focusable()
-                        // .focused(sharedClient.focusState[type], equals: status.id)
-                            .background {
-                                if sharedClient.focusState[type] == status.id {
-                                    Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
-                                } else {
-                                    Color.clear
-                                }
-                            }
-                    }
-                    .id(status.id)
-                    // .focusable(interactions: [.activate, .edit])
-                    // .focused($focusedId, equals: status.id)
-                    .buttonStyle(NoButtonStyle())
-                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    .listRowSeparator(.hidden)
-                    .setupShortcutHandler(with: sharedClient)
+                ForEach(sharedClient.timeline[type]!) { model in
+                    PostGroup(model: model, type: type, focusState: $focusState)
                 }
             }
             .listStyle(.plain)
@@ -96,10 +80,13 @@ struct TimelineView: View {
             }
             .onChange(of: sharedClient.focusState[type]) { value in
                 // proxy.scrollTo가 먼저 실행되어야 함: 왜냐하면 focusedId가 현재 표시 바깥에 있으면 포커스 안됨 / 숏컷 핸들러 안 먹게 됨
-                proxy.scrollTo(sharedClient.focusState[type])
+                guard let focusState = sharedClient.focusState[type] else {
+                    return
+                }
+                proxy.scrollTo(focusState)
                 
                 DispatchQueue.main.async {
-                    focusedId = sharedClient.focusState[type]
+                    self.focusState = focusState
                 }
                 
                 // withAnimation {

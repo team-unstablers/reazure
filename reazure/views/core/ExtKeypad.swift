@@ -81,7 +81,9 @@ struct ExtKeypad: View {
             }
              */
             HStack {
-                KeypadButton(label: .constant("h"), sublabel: .constant("←"))
+                KeypadButton(label: .constant("h"), sublabel: .constant("←")) {
+                    sharedClient.handleShortcut(key: .h)
+                }
                     .keyboardShortcut(.leftArrow, modifiers: [])
                 KeypadButton(label: .constant("j"), sublabel: .constant("↓")) {
                     sharedClient.handleShortcut(key: .j)
@@ -91,7 +93,9 @@ struct ExtKeypad: View {
                     sharedClient.handleShortcut(key: .k)
                 }
                     .keyboardShortcut(.upArrow, modifiers: [])
-                KeypadButton(label: .constant("l"), sublabel: .constant("→"))
+                KeypadButton(label: .constant("l"), sublabel: .constant("→")) {
+                    sharedClient.handleShortcut(key: .l)
+                }
                     .keyboardShortcut(.rightArrow, modifiers: [])
             }
             HStack {

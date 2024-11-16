@@ -28,6 +28,10 @@ struct MastodonEndpoint: RawRepresentable {
     
     static let streaming = MastodonEndpoint(rawValue: "/api/v1/streaming")
     
+    static func status(of statusId: String) -> MastodonEndpoint {
+        return MastodonEndpoint(rawValue: "/api/v1/statuses/\(statusId)")
+    }
+    
     static func favourite(of statusId: String) -> MastodonEndpoint {
         return MastodonEndpoint(rawValue: "/api/v1/statuses/\(statusId)/favourite")
     }
@@ -54,11 +58,11 @@ struct MastodonEndpoint: RawRepresentable {
 }
 
 class MastodonClient {
-    static func nodeInfo(of server: String) async throws -> NodeInfo? {
+    static func nodeInfo(of server: String) async throws -> Mastodon.NodeInfo? {
         let url = MastodonEndpoint.nodeInfo.url(for: server)
         let response = await AF.request(url)
             .validate()
-            .serializingDecodable(NodeInfo.self)
+            .serializingDecodable(Mastodon.NodeInfo.self)
             .response
         
         if let error = response.error {
@@ -68,7 +72,7 @@ class MastodonClient {
         return response.value
     }
     
-    static func createClient(at server: String) async throws -> OAuthApplication {
+    static func createClient(at server: String) async throws -> Mastodon.OAuthApplication {
         let url = MastodonEndpoint.registerApp.url(for: server)
         let parameters: [String: Any] = [
             "client_name": "reazure",
@@ -79,7 +83,7 @@ class MastodonClient {
         
         let response = await AF.request(url, method: .post, parameters: parameters, encoding: JSONEncoding.default)
             .validate()
-            .serializingDecodable(OAuthApplication.self)
+            .serializingDecodable(Mastodon.OAuthApplication.self)
             .response
         
         guard let value = response.value else {
@@ -89,7 +93,7 @@ class MastodonClient {
         return value
     }
     
-    static func obtainOAuthToken(from server: String, application: OAuthApplication, code: String) async throws -> OAuthToken {
+    static func obtainOAuthToken(from server: String, application: Mastodon.OAuthApplication, code: String) async throws -> Mastodon.OAuthToken {
         let url = MastodonEndpoint.oauthToken.url(for: server)
         let parameters: [String: Any] = [
             "grant_type": "authorization_code",
@@ -101,7 +105,7 @@ class MastodonClient {
         
         let response = await AF.request(url, method: .post, parameters: parameters, encoding: JSONEncoding.default)
             .validate()
-            .serializingDecodable(OAuthToken.self)
+            .serializingDecodable(Mastodon.OAuthToken.self)
             .response
         
         guard let value = response.value else {
@@ -117,14 +121,14 @@ class MastodonClient {
         self.account = account
     }
     
-    func verifyCredentials() async throws -> UserProfile {
+    func verifyCredentials() async throws -> Mastodon.UserProfile {
         let url = MastodonEndpoint.verifyCredentials.url(for: account.server.address)
     
         let response = await AF.request(url, headers: [
             "Authorization": "Bearer \(account.accessToken)"
         ])
             .validate()
-            .serializingDecodable(UserProfile.self)
+            .serializingDecodable(Mastodon.UserProfile.self)
             .response
         
         guard let value = response.value else {
@@ -134,17 +138,14 @@ class MastodonClient {
         return value
     }
     
-    func postStatus(_ status: String, visibility: Visibility) async throws -> Status {
-        let url = MastodonEndpoint.statuses.url(for: account.server.address)
-            
-        let response = await AF.request(url, method: .post, parameters: [
-            "status": status,
-            "visibility": visibility.rawValue
-        ], headers: [
+    func status(of statusId: String) async throws -> Mastodon.Status {
+        let url = MastodonEndpoint.status(of: statusId).url(for: account.server.address)
+        
+        let response = await AF.request(url, headers: [
             "Authorization": "Bearer \(account.accessToken)"
         ])
             .validate()
-            .serializingDecodable(Status.self)
+            .serializingDecodable(Mastodon.Status.self)
             .response
         
         guard let value = response.value else {
@@ -154,14 +155,40 @@ class MastodonClient {
         return value
     }
     
-    func notifications() async throws -> [Notification] {
+    func postStatus(_ status: String, visibility: Mastodon.Visibility, replyTo: String? = nil) async throws -> Mastodon.Status {
+        let url = MastodonEndpoint.statuses.url(for: account.server.address)
+        
+        var parameters = [
+            "status": status,
+            "visibility": visibility.rawValue
+        ]
+        
+        if let replyTo = replyTo {
+            parameters["in_reply_to_id"] = replyTo
+        }
+            
+        let response = await AF.request(url, method: .post, parameters: parameters, headers: [
+            "Authorization": "Bearer \(account.accessToken)"
+        ])
+            .validate()
+            .serializingDecodable(Mastodon.Status.self)
+            .response
+        
+        guard let value = response.value else {
+            throw response.error!
+        }
+        
+        return value
+    }
+    
+    func notifications() async throws -> [Mastodon.Notification] {
         let url = MastodonEndpoint.notifications.url(for: account.server.address)
         
         let response = await AF.request(url, headers: [
             "Authorization": "Bearer \(account.accessToken)"
         ])
             .validate()
-            .serializingDecodable([Notification].self)
+            .serializingDecodable([Mastodon.Notification].self)
             .response
         
         guard let value = response.value else {
@@ -171,7 +198,7 @@ class MastodonClient {
         return value
     }
     
-    func homeTimeline() async throws -> [Status] {
+    func homeTimeline() async throws -> [Mastodon.Status] {
         let url = MastodonEndpoint.homeTimeline.url(for: account.server.address)
         
             
@@ -179,7 +206,7 @@ class MastodonClient {
             "Authorization": "Bearer \(account.accessToken)"
         ])
             .validate()
-            .serializingDecodable([Status].self)
+            .serializingDecodable([Mastodon.Status].self)
             .response
         
         guard let value = response.value else {
@@ -189,14 +216,14 @@ class MastodonClient {
         return value
     }
     
-    func favourite(statusId: String) async throws -> Status {
+    func favourite(statusId: String) async throws -> Mastodon.Status {
         let url = MastodonEndpoint.favourite(of: statusId).url(for: account.server.address)
         
         let response = await AF.request(url, method: .post, headers: [
             "Authorization": "Bearer \(account.accessToken)"
         ])
             .validate()
-            .serializingDecodable(Status.self)
+            .serializingDecodable(Mastodon.Status.self)
             .response
         
         guard let value = response.value else {
@@ -206,14 +233,14 @@ class MastodonClient {
         return value
     }
     
-    func unfavourite(statusId: String) async throws -> Status {
+    func unfavourite(statusId: String) async throws -> Mastodon.Status {
         let url = MastodonEndpoint.unfavourite(of: statusId).url(for: account.server.address)
         
         let response = await AF.request(url, method: .post, headers: [
             "Authorization": "Bearer \(account.accessToken)"
         ])
             .validate()
-            .serializingDecodable(Status.self)
+            .serializingDecodable(Mastodon.Status.self)
             .response
         
         guard let value = response.value else {
@@ -223,14 +250,14 @@ class MastodonClient {
         return value
     }
     
-    func reblog(statusId: String) async throws -> Status {
+    func reblog(statusId: String) async throws -> Mastodon.Status {
         let url = MastodonEndpoint.reblog(of: statusId).url(for: account.server.address)
         
         let response = await AF.request(url, method: .post, headers: [
             "Authorization": "Bearer \(account.accessToken)"
         ])
             .validate()
-            .serializingDecodable(Status.self)
+            .serializingDecodable(Mastodon.Status.self)
             .response
         
         guard let value = response.value else {
@@ -240,14 +267,14 @@ class MastodonClient {
         return value
     }
     
-    func unreblog(statusId: String) async throws -> Status {
+    func unreblog(statusId: String) async throws -> Mastodon.Status {
         let url = MastodonEndpoint.unreblog(of: statusId).url(for: account.server.address)
         
         let response = await AF.request(url, method: .post, headers: [
             "Authorization": "Bearer \(account.accessToken)"
         ])
             .validate()
-            .serializingDecodable(Status.self)
+            .serializingDecodable(Mastodon.Status.self)
             .response
         
         guard let value = response.value else {

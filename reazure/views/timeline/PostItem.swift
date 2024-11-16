@@ -7,50 +7,114 @@
 
 import SwiftUI
 
-enum PostItemType {
-    case normal
-    case reblog
-    case favourite
+/*
+ enum PostItemType {
+ case normal
+ case reblog
+ case favourite
+ }
+ */
+
+struct PostItemFlags: RawRepresentable, OptionSet {
+    let rawValue: UInt8
+    
+    static let mentioned = PostItemFlags(rawValue: 0b1)
+    
+    // NOTE: '타인'으로부터 내 포스트가 fav/reblog된 경우
+    static let favouritedByOthers = PostItemFlags(rawValue: 0b10)
+    static let rebloggedByOthers = PostItemFlags(rawValue: 0b100)
+    
+    static let reblogged = PostItemFlags(rawValue: 0b1000)
+    
+    static let expanded = PostItemFlags(rawValue: 0b10000)
 }
 
 struct PostItem: View, Equatable {
     @Environment(\.openURL)
     var openURL
-
-    var status: Status
     
-    /// 현재 사용자의 ID: mention 판정을 위해 사용
-    var selfId: String = ""
+    var status: StatusAdaptor
     
-    var type: PostItemType = .normal
-    var relatedUser: UserProfile? = nil
+    var relatedAccount: AccountAdaptor? = nil
+    var flags: PostItemFlags = []
+    // var type: PostItemType = .normal
+    
+    var expandButtonHandler: (StatusAdaptor) -> Void = { _ in }
     
     var background: Color {
-        switch type {
-        case .reblog:
+        if flags.contains(.rebloggedByOthers) {
             return .init(uiColor: UIColor(r8: 135, g8: 245, b8: 66, a: 0.2))
-        case .favourite:
+        } else if flags.contains(.favouritedByOthers) {
             return .init(uiColor: UIColor(r8: 245, g8: 239, b8: 66, a: 0.2))
-        default:
-            return .clear
         }
+        
+        return .clear
     }
     
     var textColor: Color {
-        if status.mentions(id: selfId) {
+        if flags.contains(.mentioned) {
             return .init(uiColor: UIColor(r8: 66, g8: 78, b8: 245, a: 1.0))
         }
         
         return .primary
     }
     
+    var attachment: some View {
+        Group {
+            if !status.attachments.isEmpty {
+                HStack {
+                    ForEach(status.attachments, id: \.id) { attachment in
+                        // FIXME: preview_url에 가드를 넣는 것보단 흰색 placeholder라도 표시하는게 좋아
+                        if attachment.type == "image",
+                           let previewUrl = attachment.previewUrl
+                        {
+                            AsyncImage(url: URL(string: previewUrl)) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 64, height: 64)
+                                    .clipped()
+                                    .contentShape(Rectangle())
+                            } placeholder: {
+                                ProgressView()
+                                    .frame(width: 64, height: 64)
+                            }
+                            .onTapGesture {
+                                guard let url = URL(string: attachment.originUrl ?? attachment.url) else {
+                                    return
+                                }
+                                
+                                openURL(url)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if let relatedAccount = self.relatedAccount {
+                if self.flags.contains(.favouritedByOthers) {
+                    ActivityPubMarkupText(content: "Favourited by \(relatedAccount.displayName) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                } else if (self.flags.contains(.rebloggedByOthers) || self.flags.contains(.reblogged)) {
+                    ActivityPubMarkupText(content: "Boosted by \(relatedAccount.displayName) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                } else {
+                    EmptyView()
+                }
+            }
+        }
+    }
+    
     var body: some View {
         if let reblog = status.reblog {
-            PostItem(status: reblog.wrappedValue, type: .reblog, relatedUser: status.account)
+            PostItem(status: reblog, relatedAccount: status.account, flags: flags, expandButtonHandler: expandButtonHandler)
         } else {
             HStack(alignment: .top) {
                 VStack {
-                    if let relatedUser = self.relatedUser {
+                    if let relatedAccount = self.relatedAccount {
                         ZStack {
                             Rectangle()
                                 .foregroundStyle(.clear)
@@ -58,7 +122,7 @@ struct PostItem: View, Equatable {
                             ProfileImage(url: status.account.avatar, size: 48)
                                 .equatable()
                                 .offset(x: -4, y: -4)
-                            ProfileImage(url: relatedUser.avatar, size: 32)
+                            ProfileImage(url: relatedAccount.avatar, size: 32)
                                 .equatable()
                                 .offset(x: 12, y: 12)
                         }
@@ -69,7 +133,7 @@ struct PostItem: View, Equatable {
                 }.padding(.trailing, 4)
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline) {
-                        ActivityPubMarkupText(content: "\(status.account.display_name) (@\(status.account.acct))",
+                        ActivityPubMarkupText(content: "\(status.account.displayName) (@\(status.account.acct))",
                                               emojos: status.account.emojis)
                         .bold()
                         Spacer()
@@ -79,10 +143,10 @@ struct PostItem: View, Equatable {
                         if status.reblogged {
                             Text("🔁").lineSpacing(1)
                         }
-                        if status.visibility == "unlisted" {
+                        if status.visibility == .unlisted {
                             Text("🌙").lineSpacing(1)
                         }
-                        if status.visibility == "private" {
+                        if status.visibility == .privateType {
                             Text("🔒").lineSpacing(1)
                         }
                     }
@@ -90,54 +154,32 @@ struct PostItem: View, Equatable {
                     ActivityPubMarkupText(content: status.content, emojos: status.emojis)
                         .foregroundColor(textColor)
                     
-                    if !status.media_attachments.isEmpty {
-                        HStack {
-                            ForEach(status.media_attachments, id: \.id) { attachment in
-                                // FIXME: preview_url에 가드를 넣는 것보단 흰색 placeholder라도 표시하는게 좋아
-                                if attachment.type == "image",
-                                   let preview_url = attachment.preview_url
-                                {
-                                    AsyncImage(url: URL(string: preview_url)) { image in
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 64, height: 64)
-                                            .clipped()
-                                            .contentShape(Rectangle())
-                                    } placeholder: {
-                                        ProgressView()
-                                            .frame(width: 64, height: 64)
-                                    }
-                                    .onTapGesture {
-                                        guard let url = URL(string: attachment.remote_url ?? attachment.url!) else {
-                                            return
-                                        }
-                                        
-                                        openURL(url)
-                                    }
+                    
+                    self.attachment
+                    
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(verbatim: status.footerContent)
+                            .foregroundColor(.secondary)
+                        
+                        
+                        if status.replyToId != nil {
+                            Spacer()
+                            Button {
+                                expandButtonHandler(status)
+                            } label: {
+                                if flags.contains(.expanded) {
+                                    Image("tl_depth_minus")
+                                        .resizable()
+                                        .frame(width: 16, height: 16)
+                                } else {
+                                    Image("tl_depth_plus")
+                                        .resizable()
+                                        .frame(width: 16, height: 16)
                                 }
                             }
+                            .buttonStyle(.plain)
                         }
                     }
-                    
-                    if let relatedUser = self.relatedUser {
-                        switch type {
-                        case .favourite:
-                            ActivityPubMarkupText(content: "Favourited by \(relatedUser.display_name) (@\(relatedUser.acct))", emojos: relatedUser.emojis)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        case .reblog:
-                            ActivityPubMarkupText(content: "Boosted by \(relatedUser.display_name) (@\(relatedUser.acct))", emojos: relatedUser.emojis)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        default:
-                            EmptyView()
-                        }
-                    }
-                    
-                    Text(verbatim: status.footerContent)
-                        .foregroundColor(.secondary)
                 }
             }
             .padding(.horizontal, 12)
@@ -148,20 +190,22 @@ struct PostItem: View, Equatable {
             .background(background)
             .overlay(Divider(), alignment: .bottom)
         }
+
     }
     
     static func == (lhs: PostItem, rhs: PostItem) -> Bool {
         return (
             lhs.status.id == rhs.status.id &&
             lhs.status.favourited == rhs.status.favourited &&
-            lhs.status.reblogged == rhs.status.reblogged
+            lhs.status.reblogged == rhs.status.reblogged &&
+            lhs.flags == rhs.flags
         )
     }
 }
 
-fileprivate extension Status {
+fileprivate extension StatusAdaptor {
     var footerContent: String {
-        let prettyDate = created_at.prettyDate()
+        let prettyDate = createdAt.prettyDate()
         
         if let application = application {
             return "\(prettyDate) / via \(application.name)"
@@ -193,13 +237,16 @@ fileprivate extension String {
 }
 
 #Preview {
-    let status = Status(
+    let status = MastodonStatusAdaptor(from: Mastodon.Status(
         id: "1",
         created_at: "2019-11-26T23:27:32.000Z",
+        
+        in_reply_to_id: nil,
+        
         url: "",
-        visibility: "public",
+        visibility: .publicType,
         content: "Hello, World!",
-        account: UserProfile(
+        account: Mastodon.UserProfile(
             id: "1",
             username: "cheesekun",
             acct: "cheesekun",
@@ -219,28 +266,28 @@ fileprivate extension String {
         emojis: [],
         mentions: [],
         media_attachments: [
-            MediaAttachment(
+            Mastodon.MediaAttachment(
                 id: "1234",
                 type: "image",
                 url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
             ),
-            MediaAttachment(
+            Mastodon.MediaAttachment(
                 id: "1235",
                 type: "image",
                 url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
             ),
-            MediaAttachment(
+            Mastodon.MediaAttachment(
                 id: "1236",
                 type: "image",
                 url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
                 remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
             ),
-            MediaAttachment(
+            Mastodon.MediaAttachment(
                 id: "1237",
                 type: "image",
                 url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
@@ -248,22 +295,25 @@ fileprivate extension String {
                 remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
             ),
         ],
-        application: Application(name: "re;azure")
-    )
+        application: Mastodon.Application(name: "re;azure")
+    ))
     
-    let mentionStatus = Status(
+    let mentionStatus = MastodonStatusAdaptor(from: Mastodon.Status(
         id: "42",
         created_at: "2019-11-26T23:27:32.000Z",
+        
+        in_reply_to_id: nil,
+        
         url: "",
-        visibility: "public",
+        visibility: .publicType,
         content: "@cheesekun Hello, World!",
-        account: UserProfile(
+        account: Mastodon.UserProfile(
             id: "2",
             username: "ppiyac",
             acct: "ppiyac",
             
             url: "",
-
+            
             display_name: "삐약이",
             
             avatar: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
@@ -276,25 +326,28 @@ fileprivate extension String {
         reblog: nil,
         emojis: [],
         mentions: [
-            Mention(id: "1", username: "cheesekun", acct: "cheesekun")
+            Mastodon.Mention(id: "1", username: "cheesekun", acct: "cheesekun")
         ],
         media_attachments: [],
-        application: Application(name: "re;azure")
-    )
+        application: Mastodon.Application(name: "re;azure")
+    ))
     
-    let reblogStatus = Status(
+    let reblogStatus = MastodonStatusAdaptor(from: Mastodon.Status(
         id: "2",
         created_at: "2019-11-26T23:27:32.000Z",
+        
+        in_reply_to_id: nil,
+        
         url: "",
-        visibility: "public",
+        visibility: .publicType,
         content: "Hello, World!",
-        account: UserProfile(
+        account: Mastodon.UserProfile(
             id: "2",
             username: "ppiyac",
             acct: "ppiyac",
             
             url: "",
-
+            
             display_name: "삐약이",
             
             avatar: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
@@ -304,23 +357,23 @@ fileprivate extension String {
         favourited: false,
         reblogged: false,
         
-        reblog: Box(status),
+        reblog: Box(status._status),
         emojis: [],
         mentions: [],
         media_attachments: [],
-        application: Application(name: "re;azure")
-    )
+        application: Mastodon.Application(name: "re;azure")
+    ))
     
     VStack(spacing: 0) {
         PostItem(status: status)
         PostItem(status: reblogStatus)
-        PostItem(status: status, type: .favourite, relatedUser: status.account)
-        PostItem(status: mentionStatus, selfId: "1")
-        PostItem(status: mentionStatus, selfId: "1", type: .favourite, relatedUser: status.account)
-        Button {} label: {
-            PostItem(status: mentionStatus, selfId: "1", type: .favourite, relatedUser: status.account)
-        }
-        .buttonStyle(.plain)
+        PostItem(status: status, relatedAccount: status.account, flags: .favouritedByOthers)
+        /*
+         Button {} label: {
+         PostItem(status: mentionStatus, selfId: "1", type: .favourite, relatedUser: status.account)
+         }
+         .buttonStyle(.plain)
+         */
     }
 }
 

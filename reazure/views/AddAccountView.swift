@@ -47,7 +47,7 @@ fileprivate class AddAccountViewModel: ObservableObject {
         ((manualClientID && (!clientID.isEmpty && !clientSecret.isEmpty)) || !manualClientID)
     }
     
-    private var application: OAuthApplication? = nil
+    private var application: Mastodon.OAuthApplication? = nil
     
     func setup(accountManager: AccountManager) {
         self.accountManager = accountManager
@@ -140,9 +140,9 @@ fileprivate class AddAccountViewModel: ObservableObject {
         }
     }
     
-    func createApplication() async throws -> OAuthApplication {
+    func createApplication() async throws -> Mastodon.OAuthApplication {
         if manualClientID {
-            return OAuthApplication(
+            return Mastodon.OAuthApplication(
                 id: "unknown",
                 name: "unknown",
                 website: "unknown",
