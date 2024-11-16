@@ -38,3 +38,35 @@ extension StatusModel: Hashable, Equatable, Identifiable {
         return status.id
     }
 }
+
+extension StatusModel {
+    func resolveParent(of status: StatusAdaptor, using client: MastodonClient) {
+        guard let parentId = (status.reblog ?? status).replyToId else {
+            return
+        }
+        
+        if (self.resolving) {
+            return
+        }
+        
+        self.resolving = true
+        
+        
+        Task {
+            defer {
+                DispatchQueue.main.async {
+                    self.resolving = false
+                }
+            }
+            do {
+                let parent = try await client.status(of: parentId)
+                
+                DispatchQueue.main.async {
+                    self.parents.append(MastodonStatusAdaptor(from: parent))
+                }
+            } catch {
+                print("Failed to resolve parent: \(error)")
+            }
+        }
+    }
+}

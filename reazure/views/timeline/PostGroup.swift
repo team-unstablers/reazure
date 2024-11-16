@@ -60,7 +60,7 @@ struct PostGroup: View {
             }
             
             if (model.parents.count < depth + 1) {
-                resolveParent(of: status)
+                model.resolveParent(of: status, using: sharedClient.client!)
             }
         }
             .equatable()
@@ -89,44 +89,7 @@ struct PostGroup: View {
             .setupShortcutHandler(with: sharedClient)
     }
     
-    func resolveParent(of status: StatusAdaptor) {
-        guard let parentId = (status.reblog ?? status).replyToId else {
-            return
-        }
 
-        if (model.resolving) {
-            return
-        }
-
-        model.resolving = true
-        
-        
-        Task {
-            defer {
-                DispatchQueue.main.async {
-                    model.resolving = false
-                }
-            }
-            do {
-                guard let parent = try await self.sharedClient.client?.status(of: parentId) else {
-                    return
-                }
-                DispatchQueue.main.async {
-                    model.parents.append(MastodonStatusAdaptor(from: parent))
-                }
-            } catch {
-                print("Failed to resolve parent: \(error)")
-            }
-        }
-        
-        
-        /*
-        do {
-            let parent = nil // ...
-            model.parents.append(parent)
-        }
-         */
-    }
     
 }
 

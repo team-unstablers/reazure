@@ -129,6 +129,14 @@ class SharedClient: ObservableObject {
         }
     }
     
+    func focusedModel(for type: TimelineType) -> StatusModel? {
+        guard let focusState = focusState[type] else {
+            return nil
+        }
+        
+        return timeline[type]?.get(id: focusState.id)
+    }
+    
     func focusedStatus(for type: TimelineType) -> StatusAdaptor? {
         guard let focusState = focusState[type],
               let model = timeline[type]?.get(id: focusState.id) else {
@@ -269,6 +277,41 @@ fileprivate extension SharedClient {
         }
     }
     
+    func left() {
+        guard let focusState = self.focusState[.home],
+              let model = self.focusedModel(for: .home) else {
+            return
+        }
+        
+        model.expandedDepth = max(0, focusState.depth - 1)
+        
+        self.focusState[.home] = TLFocusState(id: model.id, depth: model.expandedDepth)
+    }
+        
+    
+    func right() {
+        guard let client = self.client,
+              let focusState = self.focusState[.home],
+              let model = self.focusedModel(for: .home) else {
+            return
+        }
+        
+        let focusedStatus: any StatusAdaptor = (focusState.depth == 0) ?
+            model.status :
+            model.parents[focusState.depth - 1]
+        
+        if focusedStatus.replyToId == nil {
+            return
+        }
+
+        model.expandedDepth = focusState.depth + 1
+        
+        
+        if (model.parents.count < focusState.depth + 1) {
+            model.resolveParent(of: focusedStatus, using: client)
+        }
+    }
+    
     func up() {
         guard let timeline = self.timeline[.home] else {
             return
@@ -375,13 +418,13 @@ extension SharedClient {
         DispatchQueue.main.async {
             switch key {
             case .h:
-                break
+                self.left()
             case .j:
                 self.down()
             case .k:
                 self.up()
             case .l:
-                break
+                self.right()
             case .r:
                 self.r()
             case .f:
