@@ -94,13 +94,13 @@ extension HTMLElement {
         }
     }
     
-    func asSwiftUIView(emojis: [CustomEmoji]) -> Text {
+    func asSwiftUIView(emojis: [EmojiAdaptor]) -> Text {
         if (name == "__TEXT__") {
             return Text(text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
         } else if (name == "__EMOJO__") {
             // FIXME: 비동기 처리가 필요함
             guard let emojoDef = emojis.first(where: { $0.shortcode == text }),
-                  let emojoData = try? Data(contentsOf: URL(string: emojoDef.static_url)!)
+                  let emojoData = try? Data(contentsOf: URL(string: emojoDef.url)!)
             else {
                 return Text(":\(text):")
             }
@@ -306,7 +306,7 @@ func parseHTML(_ html: String) -> HTMLElement {
 // CustomText에서 UIImage를 포함하는 NSAttributedString 생성 예시
 struct ActivityPubMarkupText: View {
     var content: String
-    var emojos: [CustomEmoji]
+    var emojos: [EmojiAdaptor]
     
     @State
     var resolvedEmojos: [String: UIImage] = [:]
@@ -356,7 +356,7 @@ struct ActivityPubMarkupText: View {
         }
     }
     
-    func buildTextView(element: HTMLElement, emojis: [CustomEmoji]) -> Text {
+    func buildTextView(element: HTMLElement, emojis: [EmojiAdaptor]) -> Text {
         if (element.name == "__TEXT__") {
             return Text(element.text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
         } else if (element.name == "__EMOJO__") {
@@ -366,7 +366,7 @@ struct ActivityPubMarkupText: View {
             
             guard let emojoImage = self.resolvedEmojos[element.text] else {
                 Task {
-                    await resolveEmojo(url: emojoDef.static_url, for: element.text)
+                    await resolveEmojo(url: emojoDef.url, for: element.text)
                 }
                 return Text(":\(element.text):")
             }
