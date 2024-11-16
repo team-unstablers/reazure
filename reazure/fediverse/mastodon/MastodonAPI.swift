@@ -155,13 +155,19 @@ class MastodonClient {
         return value
     }
     
-    func postStatus(_ status: String, visibility: Mastodon.Visibility) async throws -> Mastodon.Status {
+    func postStatus(_ status: String, visibility: Mastodon.Visibility, replyTo: String? = nil) async throws -> Mastodon.Status {
         let url = MastodonEndpoint.statuses.url(for: account.server.address)
-            
-        let response = await AF.request(url, method: .post, parameters: [
+        
+        var parameters = [
             "status": status,
             "visibility": visibility.rawValue
-        ], headers: [
+        ]
+        
+        if let replyTo = replyTo {
+            parameters["in_reply_to_id"] = replyTo
+        }
+            
+        let response = await AF.request(url, method: .post, parameters: parameters, headers: [
             "Authorization": "Bearer \(account.accessToken)"
         ])
             .validate()
