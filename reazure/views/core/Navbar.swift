@@ -19,7 +19,8 @@ struct Navbar: View {
                 Button {
                     tabChange(.home)
                 } label: {
-                    Image(systemName: "house")
+                    Text(Image(systemName: "house"))
+                        .font(.system(size: 20))
                 }
                 .shadow(color: .white, radius: tabSelection == .home ? 4 : 0)
                 .keyboardShortcut("1", modifiers: [])
@@ -29,7 +30,8 @@ struct Navbar: View {
                 Button {
                     tabChange(.notification)
                 } label: {
-                    Image(systemName: "house")
+                    Text(Image(systemName: "at"))
+                        .font(.system(size: 20))
                 }
                 .shadow(color: .white, radius: tabSelection == .notification ? 4 : 0)
                 .keyboardShortcut("2", modifiers: [])
@@ -39,7 +41,8 @@ struct Navbar: View {
                 Button {
                     tabChange(.profile)
                 } label: {
-                    Image(systemName: "globe")
+                    Text(Image(systemName: "globe"))
+                        .font(.system(size: 20))
                 }
                 .shadow(color: .white, radius: tabSelection == .profile ? 4 : 0)
                 .keyboardShortcut("3", modifiers: [])
@@ -49,7 +52,8 @@ struct Navbar: View {
                 Button {
                     tabChange(.settings)
                 } label: {
-                    Image(systemName: "globe")
+                    Text(Image(systemName: "gear"))
+                        .font(.system(size: 20))
                 }
                 .shadow(color: .white, radius: tabSelection == .settings ? 4 : 0)
                 .keyboardShortcut("4", modifiers: [])
