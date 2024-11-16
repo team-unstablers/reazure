@@ -8,7 +8,8 @@
 import SwiftUI
 
 class StatusModel: ObservableObject {
-    let status: StatusAdaptor
+    @Published
+    var status: StatusAdaptor
     
     @Published
     var parents: [StatusAdaptor] = []
