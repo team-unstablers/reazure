@@ -25,8 +25,8 @@ enum Tab {
     case settings
 }
 
-typealias Timeline = OrderedSet<Status>
-typealias NotificationTimeline = OrderedSet<Notification>
+typealias Timeline = OrderedSet<StatusModel>
+typealias NotificationTimeline = OrderedSet<Mastodon.Notification>
 
 class SharedClient: ObservableObject {
     @Published
@@ -78,7 +78,7 @@ class SharedClient: ObservableObject {
     @Published
     var currentTab: Tab = .home
     
-    var replyTo = CurrentValueSubject<Status?, Never>(nil)
+    var replyTo = CurrentValueSubject<StatusModel?, Never>(nil)
     
     func fetchStatuses(for type: TimelineType) async {
         assert(type != .notifications)
@@ -91,7 +91,9 @@ class SharedClient: ObservableObject {
             
             DispatchQueue.main.async {
                 for status in statuses.reversed() {
-                    self.timeline[type]?.insert(status, at: 0)
+                    let adaptor = MastodonStatusAdaptor(from: status)
+                    let model = StatusModel(adaptor: adaptor)
+                    self.timeline[type]?.insert(model, at: 0)
                 }
             }
         } catch {
@@ -117,7 +119,7 @@ class SharedClient: ObservableObject {
         }
     }
     
-    func focusedStatus(for type: TimelineType) -> Status? {
+    func focusedStatus(for type: TimelineType) -> StatusModel? {
         guard let focusedId = focusState[type],
               let status = timeline[type]?.get(id: focusedId) else {
             return nil
@@ -126,7 +128,9 @@ class SharedClient: ObservableObject {
         return status
     }
     
-    func withFocusedStatus(for type: TimelineType, _ block: (Status?) -> Status?) {
+    func withFocusedStatus(for type: TimelineType, _ block: (StatusAdaptor?) -> StatusAdaptor?) {
+        fatalError("Not implemented")
+        /*
         let status = focusedStatus(for: type)
         
         guard let modified = block(status),
@@ -138,11 +142,12 @@ class SharedClient: ObservableObject {
         DispatchQueue.main.async {
             self.timeline[type]?.update(modified, at: index)
         }
+         */
     }
 }
 
 extension SharedClient: StreamingClientDelegate {
-    func didReceive(event: StreamingEvent, client: StreamingClient) {
+    func didReceive(event: Mastodon.StreamingEvent, client: StreamingClient) {
         switch event.event {
         case "update":
             do {
@@ -151,11 +156,13 @@ extension SharedClient: StreamingClientDelegate {
                     return
                 }
                 
-                let status = try JSON.parse(payload, to: Status.self)
+                let status = try JSON.parse(payload, to: Mastodon.Status.self)
                 // home timeline
                 
                 DispatchQueue.main.async {
-                    self.timeline[.home]?.insert(status, at: 0)
+                    let adaptor = MastodonStatusAdaptor(from: status)
+                    let model = StatusModel(adaptor: adaptor)
+                    self.timeline[.home]?.insert(model, at: 0)
                 }
                 
                 print("Done!")
@@ -188,7 +195,7 @@ extension SharedClient: StreamingClientDelegate {
 }
 
 extension Timeline {
-    func get(id: String) -> Status? {
+    func get(id: String) -> StatusModel? {
         return self.first { $0.id == id }
     }
 }
@@ -263,14 +270,14 @@ fileprivate extension SharedClient {
                 Task {
                     try? await self.client?.favourite(statusId: status.id)
                 }
-                modified.favourited = true
+                // modified.favourited = true
                 
                 return modified
             } else {
                 Task {
                     try? await self.client?.unfavourite(statusId: status.id)
                 }
-                modified.favourited = false
+                // modified.favourited = false
                 
                 return modified
             }
@@ -291,14 +298,14 @@ fileprivate extension SharedClient {
                 Task {
                     try? await self.client?.reblog(statusId: status.id)
                 }
-                modified.reblogged = true
+                // modified.reblogged = true
                 
                 return modified
             } else {
                 Task {
                     try? await self.client?.unreblog(statusId: status.id)
                 }
-                modified.reblogged = false
+                // modified.reblogged = false
                 
                 return modified
             }

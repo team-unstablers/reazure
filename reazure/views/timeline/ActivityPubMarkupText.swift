@@ -36,7 +36,7 @@ extension HTMLElement {
         }.joined()
     }
     
-    func asNSAttributedString(emojis: [CustomEmoji]) -> NSAttributedString {
+    func asNSAttributedString(emojis: [EmojiAdaptor]) -> NSAttributedString {
         if (name == "__TEXT__") {
             let string = NSMutableAttributedString(string: text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
             
@@ -46,7 +46,7 @@ extension HTMLElement {
         } else if (name == "__EMOJO__") {
             // FIXME: 비동기 처리가 필요함
             guard let emojoDef = emojis.first(where: { $0.shortcode == text }),
-                  let emojoData = try? Data(contentsOf: URL(string: emojoDef.static_url)!)
+                  let emojoData = try? Data(contentsOf: URL(string: emojoDef.url)!)
             else {
                 return NSAttributedString(string: ":\(text):")
             }

@@ -9,7 +9,7 @@ import SwiftUI
 
 struct PostRequest: Codable {
     var content: String
-    var visibility: Visibility
+    var visibility: Mastodon.Visibility
     
     var replyTo: String?
 }
@@ -22,16 +22,17 @@ struct PostArea: View {
     
     
     @State
-    var visibility: Visibility = .publicType
+    var visibility: Mastodon.Visibility = .publicType
     
     @State
     var content: String = ""
     
     @State
-    var replyTo: Status? = nil {
+    var replyTo: StatusAdaptor? = nil {
         didSet {
             if let replyTo = replyTo {
-                visibilityMask = Visibility(rawValue: replyTo.visibility)
+                fatalError("FIXME")
+                // visibilityMask = replyTo.visibility
             } else {
                 visibilityMask = nil
             }
@@ -39,7 +40,7 @@ struct PostArea: View {
     }
 
     @State
-    var visibilityMask: Visibility? = nil
+    var visibilityMask: Mastodon.Visibility? = nil
 
     @State
     var visibilityMenuVisible: Bool = false
@@ -176,11 +177,15 @@ struct PostArea: View {
                 return
             }
             
-            replyTo = status
+            fatalError("FIXME")
+            
+            /*
+            replyTo = status.status
             
             let mentions = ([status.account.acct] + status.mentions.map { $0.acct }).map { "@" + $0 }
             
             content = "\(mentions.joined(separator: " ")) "
+             */
             
             isFocused = true
         }
@@ -215,7 +220,7 @@ fileprivate extension StreamingState {
     }
 }
 
-fileprivate extension Visibility {
+fileprivate extension Mastodon.Visibility {
     var asLocalizedText: String {
         switch self {
         case .publicType:
@@ -232,6 +237,7 @@ fileprivate extension Visibility {
     }
 }
 
+/*
 #Preview {
     let status = Status(
         id: "1",
@@ -305,3 +311,4 @@ fileprivate extension Visibility {
         .environmentObject(SharedClient())
     }
 }
+*/

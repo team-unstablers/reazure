@@ -203,7 +203,7 @@ class MastodonStatusAdaptor: StatusAdaptor {
     var favourited: Bool { _status.favourited }
     var reblogged: Bool { _status.reblogged }
     
-    var reblog: StatusAdaptor?
+    var reblog: (any StatusAdaptor)?
     
     var emojis: [EmojiAdaptor]
     var mentions: [MentionAdaptor]

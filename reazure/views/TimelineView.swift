@@ -30,7 +30,7 @@ struct TimelineView: View {
                     Button {
                         sharedClient.focusState[type] = status.id
                     } label: {
-                        PostItem(status: status, selfId: sharedClient.account?.id ?? "")
+                        PostItem(status: status.status)
                             .equatable()
                         // .focusable()
                         // .focused(sharedClient.focusState[type], equals: status.id)

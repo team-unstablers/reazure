@@ -8,11 +8,11 @@
 import SwiftUI
 
 /*
-enum PostItemType {
-    case normal
-    case reblog
-    case favourite
-}
+ enum PostItemType {
+ case normal
+ case reblog
+ case favourite
+ }
  */
 
 struct PostItemFlags: RawRepresentable, OptionSet {
@@ -30,7 +30,7 @@ struct PostItemFlags: RawRepresentable, OptionSet {
 struct PostItem: View, Equatable {
     @Environment(\.openURL)
     var openURL
-
+    
     var status: StatusAdaptor
     
     var relatedAccount: AccountAdaptor? = nil
@@ -53,6 +53,55 @@ struct PostItem: View, Equatable {
         }
         
         return .primary
+    }
+    
+    var attachment: some View {
+        Group {
+            if !status.attachments.isEmpty {
+                HStack {
+                    ForEach(status.attachments, id: \.id) { attachment in
+                        // FIXME: preview_url에 가드를 넣는 것보단 흰색 placeholder라도 표시하는게 좋아
+                        if attachment.type == "image",
+                           let previewUrl = attachment.previewUrl
+                        {
+                            AsyncImage(url: URL(string: previewUrl)) { image in
+                                image
+                                    .resizable()
+                                    .scaledToFill()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 64, height: 64)
+                                    .clipped()
+                                    .contentShape(Rectangle())
+                            } placeholder: {
+                                ProgressView()
+                                    .frame(width: 64, height: 64)
+                            }
+                            .onTapGesture {
+                                guard let url = URL(string: attachment.originUrl ?? attachment.url) else {
+                                    return
+                                }
+                                
+                                openURL(url)
+                            }
+                        }
+                    }
+                }
+            }
+            
+            if let relatedAccount = self.relatedAccount {
+                if self.flags.contains(.favouritedByOthers) {
+                    ActivityPubMarkupText(content: "Favourited by \(relatedAccount.displayName) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                } else if (self.flags.contains(.rebloggedByOthers) || self.flags.contains(.reblogged)) {
+                    ActivityPubMarkupText(content: "Boosted by \(relatedAccount.displayName) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
+                        .foregroundColor(.secondary)
+                        .lineLimit(1)
+                } else {
+                    EmptyView()
+                }
+            }
+        }
     }
     
     var body: some View {
@@ -90,10 +139,10 @@ struct PostItem: View, Equatable {
                         if status.reblogged {
                             Text("🔁").lineSpacing(1)
                         }
-                        if status.visibility == "unlisted" {
+                        if status.visibility == .unlisted {
                             Text("🌙").lineSpacing(1)
                         }
-                        if status.visibility == "private" {
+                        if status.visibility == .privateType {
                             Text("🔒").lineSpacing(1)
                         }
                     }
@@ -101,51 +150,8 @@ struct PostItem: View, Equatable {
                     ActivityPubMarkupText(content: status.content, emojos: status.emojis)
                         .foregroundColor(textColor)
                     
-                    if !status.media_attachments.isEmpty {
-                        HStack {
-                            ForEach(status.media_attachments, id: \.id) { attachment in
-                                // FIXME: preview_url에 가드를 넣는 것보단 흰색 placeholder라도 표시하는게 좋아
-                                if attachment.type == "image",
-                                   let preview_url = attachment.preview_url
-                                {
-                                    AsyncImage(url: URL(string: preview_url)) { image in
-                                        image
-                                            .resizable()
-                                            .scaledToFill()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 64, height: 64)
-                                            .clipped()
-                                            .contentShape(Rectangle())
-                                    } placeholder: {
-                                        ProgressView()
-                                            .frame(width: 64, height: 64)
-                                    }
-                                    .onTapGesture {
-                                        guard let url = URL(string: attachment.remote_url ?? attachment.url!) else {
-                                            return
-                                        }
-                                        
-                                        openURL(url)
-                                    }
-                                }
-                            }
-                        }
-                    }
                     
-                    if let relatedAccount = self.relatedAccount {
-                        switch type {
-                        case .favourite:
-                            ActivityPubMarkupText(content: "Favourited by \(relatedAccount.display_name) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        case .reblog:
-                            ActivityPubMarkupText(content: "Boosted by \(relatedAccount.display_name) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
-                                .foregroundColor(.secondary)
-                                .lineLimit(1)
-                        default:
-                            EmptyView()
-                        }
-                    }
+                    self.attachment
                     
                     Text(verbatim: status.footerContent)
                         .foregroundColor(.secondary)
@@ -280,7 +286,7 @@ fileprivate extension String {
             acct: "ppiyac",
             
             url: "",
-
+            
             display_name: "삐약이",
             
             avatar: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
@@ -314,7 +320,7 @@ fileprivate extension String {
             acct: "ppiyac",
             
             url: "",
-
+            
             display_name: "삐약이",
             
             avatar: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
@@ -336,10 +342,10 @@ fileprivate extension String {
         PostItem(status: reblogStatus)
         PostItem(status: status, relatedAccount: status.account, flags: .favouritedByOthers)
         /*
-        Button {} label: {
-            PostItem(status: mentionStatus, selfId: "1", type: .favourite, relatedUser: status.account)
-        }
-        .buttonStyle(.plain)
+         Button {} label: {
+         PostItem(status: mentionStatus, selfId: "1", type: .favourite, relatedUser: status.account)
+         }
+         .buttonStyle(.plain)
          */
     }
 }

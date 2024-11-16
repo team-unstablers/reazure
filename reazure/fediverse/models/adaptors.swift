@@ -76,3 +76,5 @@ protocol StatusAdaptor {
     var attachments: [AttachmentAdaptor] { get }
     var application: ApplicationAdaptor? { get }
 }
+
+
