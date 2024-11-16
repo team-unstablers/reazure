@@ -248,8 +248,11 @@ struct AddAccountView: View {
                     Text("ADD_ACCOUNT_FOOTER_EXTRA_SETTINGS")
                 }
             }
-            .navigationTitle("ADD_ACCOUNT_NAVIGATION_TITLE")
+            
+            AboutAppFooter()
+                .listRowInsets(EdgeInsets())
         }
+        .navigationTitle("ADD_ACCOUNT_NAVIGATION_TITLE")
         .onAppear {
             viewModel.setup(accountManager: accountManager)
         }

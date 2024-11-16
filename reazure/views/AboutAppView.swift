@@ -14,23 +14,16 @@ struct AboutAppView: View {
     
     @EnvironmentObject
     var preferencesManager: PreferencesManager
-
+    
     @EnvironmentObject
     var accountManager: AccountManager
     
     var body: some View {
         VStack {
-            VStack {
-                Text("PRODUCT_NAME")
-                    .font(.largeTitle)
-                Text("PRODUCT_DISPLAY_VERSION")
-                    .padding(.bottom, 8)
-                
-                Text("PRODUCT_SLOGAN")
-            }
-            .frame(minHeight: 192)
-            
             Form {
+                AboutAppHeader()
+                    .listRowInsets(EdgeInsets())
+                
                 Section("SETTINGS_CATEGORY_DEFAULT") {
                     Toggle(isOn: .constant(true)) {
                         Text("SETTINGS_KEY_PLAY_SOUND")
@@ -71,6 +64,9 @@ struct AboutAppView: View {
                     }
                 }
                 
+                AboutAppFooter()
+                    .listRowInsets(EdgeInsets())
+
                 
                 /*
                  Section {
@@ -93,4 +89,5 @@ struct AboutAppView: View {
 #Preview {
     AboutAppView(addAccountHandler: {})
         .environmentObject(AccountManager())
+        .environmentObject(PreferencesManager())
 }

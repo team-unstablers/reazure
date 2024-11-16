@@ -7,6 +7,9 @@
     "\n" : {
 
     },
+    " " : {
+
+    },
     ":%@:" : {
 
     },
@@ -31,6 +34,66 @@
     },
     "🔒" : {
 
+    },
+    "ABOUT_APP_FOOTER_NOTICE_CONTENT" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "re;azure is inspired by tmyt's Twitter client 〈Azurea〉.\n\nThis software is free software provided under the MIT license. You can view or contribute to the source code of re;azure on the [GitHub repository](https://github.com/team-unstablers/reazure).\n\n ©️ 2024 team unstablers Inc. and re;azure contributors. All rights reserved."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "re;azureは、tmyt氏作のTwitterクライアント 〈Azurea〉よりインスピレーションを受けて作成されました。素敵なアプリをありがとうございます。\n\nこのソフトウェアはMITライセンスの下で提供される自由ソフトウェアです。[GitHubリポジトリ](https://github.com/team-unstablers/reazure)でre;azureのソースコードを見たり、貢献することができます。\n\n©️ 2024 team unstablers Inc. and re;azure contributors. All rights reserved."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "re;azure는 tmyt님의 Twitter 클라이언트 〈Azurea〉로부터 영감을 받아 작성되었습니다.\n\n이 소프트웨어는 MIT 라이선스 하에 제공되는 자유 소프트웨어입니다. [GitHub 저장소](https://github.com/team-unstablers/reazure)에서 re;azure의 소스 코드를 보거나 기여할 수 있습니다.\n\n©️ 2024 team unstablers Inc. and re;azure contributors. All rights reserved."
+          }
+        }
+      }
+    },
+    "ABOUT_APP_FOOTER_NOTICE_CONTENT_FOOTER" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mastodon is registered trademark of Mastodon gGmbH.\ntmyt is an individual unrelated to team unstablers Inc. and the re;azure project."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mastodonは Mastodon gGmbH の登録商標です。\ntmyt氏はteam unstablers Inc.およびre;azureプロジェクトとは無関係の個人です。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Mastodon은 Mastodon gGmbH 의 등록 상표입니다.\ntmyt님은 team unstablers Inc. 및 re;azure 프로젝트와 무관한 개인입니다."
+          }
+        }
+      }
+    },
+    "ABOUT_APP_FOOTER_NOTICE_TITLE" : {
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NOTICE"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NOTICE"
+          }
+        }
+      }
     },
     "ACTION_ADD_ACCOUNT" : {
       "localizations" : {
@@ -427,14 +490,14 @@
       "localizations" : {
         "ja" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "version 241109"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "version 241109"
+            "value" : "version testrun-241116"
           }
         }
       },
@@ -458,7 +521,20 @@
       "shouldTranslate" : false
     },
     "PRODUCT_SLOGAN" : {
-
+      "localizations" : {
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "楽しかったあの頃にはもう戻れない。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "즐거웠던 그 시절은 다시 돌아오지 않아."
+          }
+        }
+      }
     },
     "SETTINGS_CATEGORY_DEFAULT" : {
       "localizations" : {
