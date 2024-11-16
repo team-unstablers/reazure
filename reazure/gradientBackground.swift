@@ -20,25 +20,7 @@ struct AzureaTheme {
     ]
 }
 
-extension UIColor {
-    convenience init(hex: Int, alpha: CGFloat = 1.0) {
-        self.init(
-            red: CGFloat((hex >> 16) & 0xFF) / 255.0,
-            green: CGFloat((hex >> 8) & 0xFF) / 255.0,
-            blue: CGFloat(hex & 0xFF) / 255.0,
-            alpha: alpha
-        )
-    }
-    
-    convenience init(r8: Int, g8: Int, b8: Int, a: CGFloat = 1.0) {
-        self.init(
-            red: CGFloat(r8) / 255.0,
-            green: CGFloat(g8) / 255.0,
-            blue: CGFloat(b8) / 255.0,
-            alpha: a
-        )
-    }
-}
+
 
 func generateGradientBackground(colors: [(UIColor, CGFloat)], height: CGFloat = 56) -> UIImage {
     let gradientLayer = CAGradientLayer()
@@ -56,4 +38,23 @@ func generateGradientBackground(colors: [(UIColor, CGFloat)], height: CGFloat = 
     }
 }
 
+typealias RAGradientPair = (Color, CGFloat)
+typealias RAGradientDefinition = Array<RAGradientPair>
 
+extension RAGradientDefinition {
+    func asGradient(_ height: CGFloat) -> UIImage {
+        let gradientLayer = CAGradientLayer()
+        gradientLayer.frame = CGRect(x: 0, y: 0, width: 1, height: height)
+        
+        gradientLayer.colors = self.map { $0.0.cgColor! }
+        gradientLayer.locations = self.map { $0.1 as NSNumber }
+        
+        gradientLayer.startPoint = CGPoint(x: 0.5, y: 0)
+        gradientLayer.endPoint = CGPoint(x: 0.5, y: 1)
+        
+        let renderer = UIGraphicsImageRenderer(size: gradientLayer.frame.size)
+        return renderer.image { context in
+            gradientLayer.render(in: context.cgContext)
+        }
+    }
+}
