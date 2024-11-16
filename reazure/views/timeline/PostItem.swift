@@ -25,6 +25,8 @@ struct PostItemFlags: RawRepresentable, OptionSet {
     static let rebloggedByOthers = PostItemFlags(rawValue: 0b100)
     
     static let reblogged = PostItemFlags(rawValue: 0b1000)
+    
+    static let expanded = PostItemFlags(rawValue: 0b10000)
 }
 
 struct PostItem: View, Equatable {
@@ -36,6 +38,8 @@ struct PostItem: View, Equatable {
     var relatedAccount: AccountAdaptor? = nil
     var flags: PostItemFlags = []
     // var type: PostItemType = .normal
+    
+    var expandButtonHandler: (StatusAdaptor) -> Void = { _ in }
     
     var background: Color {
         if flags.contains(.rebloggedByOthers) {
@@ -106,7 +110,7 @@ struct PostItem: View, Equatable {
     
     var body: some View {
         if let reblog = status.reblog {
-            PostItem(status: reblog, relatedAccount: status.account, flags: flags)
+            PostItem(status: reblog, relatedAccount: status.account, flags: flags, expandButtonHandler: expandButtonHandler)
         } else {
             HStack(alignment: .top) {
                 VStack {
@@ -153,8 +157,29 @@ struct PostItem: View, Equatable {
                     
                     self.attachment
                     
-                    Text(verbatim: status.footerContent)
-                        .foregroundColor(.secondary)
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(verbatim: status.footerContent)
+                            .foregroundColor(.secondary)
+                        
+                        
+                        if status.replyToId != nil {
+                            Spacer()
+                            Button {
+                                expandButtonHandler(status)
+                            } label: {
+                                if flags.contains(.expanded) {
+                                    Image("tl_depth_minus")
+                                        .resizable()
+                                        .frame(width: 16, height: 16)
+                                } else {
+                                    Image("tl_depth_plus")
+                                        .resizable()
+                                        .frame(width: 16, height: 16)
+                                }
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
                 }
             }
             .padding(.horizontal, 12)
@@ -165,13 +190,15 @@ struct PostItem: View, Equatable {
             .background(background)
             .overlay(Divider(), alignment: .bottom)
         }
+
     }
     
     static func == (lhs: PostItem, rhs: PostItem) -> Bool {
         return (
             lhs.status.id == rhs.status.id &&
             lhs.status.favourited == rhs.status.favourited &&
-            lhs.status.reblogged == rhs.status.reblogged
+            lhs.status.reblogged == rhs.status.reblogged &&
+            lhs.flags == rhs.flags
         )
     }
 }

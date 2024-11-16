@@ -5,8 +5,19 @@
 //  Created by Gyuhwan Park on 11/16/24.
 //
 
-class StatusModel {
+import SwiftUI
+
+class StatusModel: ObservableObject {
     let status: StatusAdaptor
+    
+    @Published
+    var parents: [StatusAdaptor] = []
+    
+    @Published
+    var expandedDepth: Int = 0
+    
+    @Published
+    var resolving: Bool = false
     
     init(adaptor status: StatusAdaptor) {
         self.status = status

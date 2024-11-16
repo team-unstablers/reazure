@@ -26,29 +26,8 @@ struct TimelineView: View {
     var body: some View {
         ScrollViewReader { proxy in
             List {
-                ForEach(sharedClient.timeline[type]!) { status in
-                    Button {
-                        sharedClient.focusState[type] = status.id
-                    } label: {
-                        PostItem(status: status.status)
-                            .equatable()
-                        // .focusable()
-                        // .focused(sharedClient.focusState[type], equals: status.id)
-                            .background {
-                                if sharedClient.focusState[type] == status.id {
-                                    Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
-                                } else {
-                                    Color.clear
-                                }
-                            }
-                    }
-                    .id(status.id)
-                    // .focusable(interactions: [.activate, .edit])
-                    // .focused($focusedId, equals: status.id)
-                    .buttonStyle(NoButtonStyle())
-                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    .listRowSeparator(.hidden)
-                    .setupShortcutHandler(with: sharedClient)
+                ForEach(sharedClient.timeline[type]!) { model in
+                    PostGroup(model: model, type: type)
                 }
             }
             .listStyle(.plain)
