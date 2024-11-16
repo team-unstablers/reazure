@@ -77,4 +77,50 @@ protocol StatusAdaptor {
     var application: ApplicationAdaptor? { get }
 }
 
+class MaskedStatusAdaptor: StatusAdaptor {
+    var status: StatusAdaptor
+    var favourited: Bool
+    var reblogged: Bool
+    
+    var id: String { status.id }
+    var createdAt: String { status.createdAt }
+    
+    var replyToId: String? { status.replyToId }
+    
+    var url: String? { status.url }
+    
+    var visibility: StatusVisibility { status.visibility }
+    
+    var content: String { status.content }
+    var parsedContent: HTMLElement { status.parsedContent }
+    
+    var account: AccountAdaptor { status.account }
+    
+    var reblog: (any StatusAdaptor)? { status.reblog }
+    
+    var emojis: [EmojiAdaptor] { status.emojis }
+    var mentions: [MentionAdaptor] { status.mentions }
+    
+    var attachments: [AttachmentAdaptor] { status.attachments }
+    var application: ApplicationAdaptor? { status.application }
+    
+    init(status: StatusAdaptor, favourited: Bool? = nil, reblogged: Bool? = nil) {
+        self.status = status
+        self.favourited = favourited ?? status.favourited
+        self.reblogged = reblogged ?? status.reblogged
+    }
+}
 
+extension StatusAdaptor {
+    func mask(favourited: Bool? = nil, reblogged: Bool? = nil) -> MaskedStatusAdaptor {
+        // check instance of MaskedStatusAdaptor
+        if let masked = self as? MaskedStatusAdaptor {
+            masked.favourited = favourited ?? masked.favourited
+            masked.reblogged = reblogged ?? masked.reblogged
+            
+            return masked
+        }
+        
+        return MaskedStatusAdaptor(status: self, favourited: favourited, reblogged: reblogged)
+    }
+}
