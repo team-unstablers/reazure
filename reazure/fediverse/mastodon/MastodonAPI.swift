@@ -28,6 +28,10 @@ struct MastodonEndpoint: RawRepresentable {
     
     static let streaming = MastodonEndpoint(rawValue: "/api/v1/streaming")
     
+    static func status(of statusId: String) -> MastodonEndpoint {
+        return MastodonEndpoint(rawValue: "/api/v1/statuses/\(statusId)")
+    }
+    
     static func favourite(of statusId: String) -> MastodonEndpoint {
         return MastodonEndpoint(rawValue: "/api/v1/statuses/\(statusId)/favourite")
     }
@@ -125,6 +129,23 @@ class MastodonClient {
         ])
             .validate()
             .serializingDecodable(Mastodon.UserProfile.self)
+            .response
+        
+        guard let value = response.value else {
+            throw response.error!
+        }
+        
+        return value
+    }
+    
+    func status(of statusId: String) async throws -> Mastodon.Status {
+        let url = MastodonEndpoint.status(of: statusId).url(for: account.server.address)
+        
+        let response = await AF.request(url, headers: [
+            "Authorization": "Bearer \(account.accessToken)"
+        ])
+            .validate()
+            .serializingDecodable(Mastodon.Status.self)
             .response
         
         guard let value = response.value else {
