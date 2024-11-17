@@ -600,6 +600,16 @@
         }
       }
     },
+    "SETTINGS_KEY_LIFT_DOWN_POST_AREA" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포스트 영역을 아래로 내리기"
+          }
+        }
+      }
+    },
     "SETTINGS_KEY_PLAY_SOUND" : {
       "localizations" : {
         "ja" : {

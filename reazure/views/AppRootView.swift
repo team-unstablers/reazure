@@ -31,6 +31,19 @@ struct AppRootView: View {
     @State
     var text: String = "Hello, World!"
     
+    var postArea: some View {
+        PostArea { request in
+            Task {
+                do {
+                    let _ = try await sharedClient.client?.postStatus(request.content, visibility: request.visibility, replyTo: request.replyTo)
+                } catch {
+                    print(error)
+                }
+            }
+        }
+        .zIndex(100)
+    }
+    
     init() {
         UITabBar.appearance().unselectedItemTintColor = .white
     }
@@ -38,16 +51,9 @@ struct AppRootView: View {
     var body: some View {
         NavigationStack(path: $navState) {
             VStack(spacing: 0) {
-                PostArea { request in
-                    Task {
-                        do {
-                            let _ = try await sharedClient.client?.postStatus(request.content, visibility: request.visibility, replyTo: request.replyTo)
-                        } catch {
-                            print(error)
-                        }
-                    }
+                if !preferencesManager.liftDownPostArea {
+                    postArea
                 }
-                .zIndex(100)
                 TabView(selection: $sharedClient.currentTab) {
                     Group {
                         TimelineView(type: .home)
@@ -65,6 +71,10 @@ struct AppRootView: View {
                 }
                 Navbar(tabSelection: $sharedClient.currentTab) { tab in
                     sharedClient.currentTab = tab
+                }
+                
+                if preferencesManager.liftDownPostArea {
+                    postArea
                 }
                 
                 if preferencesManager.showExtKeypad {

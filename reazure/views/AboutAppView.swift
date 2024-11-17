@@ -50,6 +50,9 @@ struct AboutAppView: View {
                     Toggle(isOn: .constant(true)) {
                         Text("SETTINGS_KEY_VIBRATE")
                     }
+                    PreferenceSwitch(isOn: $preferencesManager.liftDownPostArea) {
+                        Text("SETTINGS_KEY_LIFT_DOWN_POST_AREA")
+                    }
                 }
                 
                 Section {
