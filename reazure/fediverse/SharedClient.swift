@@ -327,6 +327,11 @@ fileprivate extension SharedClient {
             return
         }
         
+        if (index == 0 && focusState.depth == 0) {
+            self.postAreaFocused = true
+            return
+        }
+        
         let model = timeline[index]
         
         if (focusState.depth > 0) {
