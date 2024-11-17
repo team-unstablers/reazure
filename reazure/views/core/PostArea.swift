@@ -159,8 +159,11 @@ struct PostArea: View {
                         isFocused = true
                     }
                     .onKeyPress(.downArrow) {
-                        isFocused = false
-                        sharedClient.postAreaFocused = false
+                        DispatchQueue.main.async {
+                            isFocused = false
+                        }
+                        
+                        // sharedClient.postAreaFocused = false
                         sharedClient.handleShortcut(key: .j)
 
                         return .handled
