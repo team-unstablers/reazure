@@ -162,8 +162,6 @@ struct PostArea: View {
                         DispatchQueue.main.async {
                             isFocused = false
                         }
-                        
-                        sharedClient.handleShortcut(key: .j)
 
                         return .handled
                     }
