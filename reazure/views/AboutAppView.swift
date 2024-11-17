@@ -7,6 +7,25 @@
 
 import SwiftUI
 
+fileprivate struct PreferenceSwitch<Content>: View where Content: View {
+    @EnvironmentObject
+    var preferencesManager: PreferencesManager
+    
+    @Binding
+    var isOn: Bool
+    var content: () -> Content
+
+    var body: some View {
+        Toggle(isOn: $isOn) {
+            content()
+        }
+            .onChange(of: isOn) { newValue in
+                preferencesManager.save()
+            }
+    }
+    
+}
+
 
 
 struct AboutAppView: View {
@@ -34,7 +53,7 @@ struct AboutAppView: View {
                 }
                 
                 Section {
-                    Toggle(isOn: $preferencesManager.showExtKeypad) {
+                    PreferenceSwitch(isOn: $preferencesManager.showExtKeypad) {
                         Text("SETTINGS_KEY_SHOW_EXT_KEYPAD")
                     }
                 } footer: {
@@ -42,7 +61,7 @@ struct AboutAppView: View {
                 }
                 
                 Section {
-                    Toggle(isOn: $preferencesManager.alwaysShowSoftwareKeyboard) {
+                    PreferenceSwitch(isOn: $preferencesManager.alwaysShowSoftwareKeyboard) {
                         Text("SETTINGS_KEY_ALWAYS_SHOW_SOFT_KEYBOARD")
                     }
                 } footer: {
