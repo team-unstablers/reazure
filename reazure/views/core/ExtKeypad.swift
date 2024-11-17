@@ -71,6 +71,9 @@ fileprivate struct KeypadButton: View {
 
 struct ExtKeypad: View {
     @EnvironmentObject
+    var preferencesManager: PreferencesManager
+    
+    @EnvironmentObject
     var sharedClient: SharedClient
     
     var body: some View {
@@ -85,14 +88,28 @@ struct ExtKeypad: View {
                     sharedClient.handleShortcut(key: .h)
                 }
                     .keyboardShortcut(.leftArrow, modifiers: [])
-                KeypadButton(label: .constant("j"), sublabel: .constant("↓")) {
-                    sharedClient.handleShortcut(key: .j)
+                
+                /// TODO: cleanup
+                if !preferencesManager.swapJKOnExtKeypad {
+                    KeypadButton(label: .constant("j"), sublabel: .constant("↓")) {
+                        sharedClient.handleShortcut(key: .j)
+                    }
+                        .keyboardShortcut(.downArrow, modifiers: [])
+                    KeypadButton(label: .constant("k"), sublabel: .constant("↑")) {
+                        sharedClient.handleShortcut(key: .k)
+                    }
+                        .keyboardShortcut(.upArrow, modifiers: [])
+                } else {
+                    KeypadButton(label: .constant("k"), sublabel: .constant("↑")) {
+                        sharedClient.handleShortcut(key: .k)
+                    }
+                        .keyboardShortcut(.upArrow, modifiers: [])
+                    KeypadButton(label: .constant("j"), sublabel: .constant("↓")) {
+                        sharedClient.handleShortcut(key: .j)
+                    }
+                        .keyboardShortcut(.downArrow, modifiers: [])
                 }
-                    .keyboardShortcut(.downArrow, modifiers: [])
-                KeypadButton(label: .constant("k"), sublabel: .constant("↑")) {
-                    sharedClient.handleShortcut(key: .k)
-                }
-                    .keyboardShortcut(.upArrow, modifiers: [])
+                
                 KeypadButton(label: .constant("l"), sublabel: .constant("→")) {
                     sharedClient.handleShortcut(key: .l)
                 }
@@ -152,6 +169,7 @@ struct ExtKeypad: View {
         VStack {
             Text("Preview of ExtKeypad")
             ExtKeypad()
+                .environmentObject(PreferencesManager())
                 .environmentObject(SharedClient())
         }
         

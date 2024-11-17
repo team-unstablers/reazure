@@ -59,6 +59,11 @@ struct AboutAppView: View {
                     PreferenceSwitch(isOn: $preferencesManager.showExtKeypad) {
                         Text("SETTINGS_KEY_SHOW_EXT_KEYPAD")
                     }
+                    if preferencesManager.showExtKeypad {
+                        PreferenceSwitch(isOn: $preferencesManager.swapJKOnExtKeypad) {
+                            Text("SETTINGS_KEY_SWAP_JK_ON_EXT_KEYPAD")
+                        }
+                    }
                 } footer: {
                     Text("SETTINGS_FOOTER_SHOW_EXT_KEYPAD")
                 }
