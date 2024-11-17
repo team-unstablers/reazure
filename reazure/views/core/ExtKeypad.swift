@@ -21,7 +21,7 @@ fileprivate enum FeedbackStyle {
 fileprivate struct HapticFeedbackModifier: ViewModifier {
     @State private var tapped = false
     var style: FeedbackStyle = .medium
-
+    
     func body(content: Content) -> some View {
         content
             .simultaneousGesture(DragGesture(minimumDistance: 0)
@@ -44,7 +44,7 @@ fileprivate struct KeypadButton: View {
     @Binding var sublabel: String?
     
     var handler: () -> Void = {}
-
+    
     var body: some View {
         Button {
             handler()
@@ -76,73 +76,82 @@ struct ExtKeypad: View {
     @EnvironmentObject
     var sharedClient: SharedClient
     
+    var directionalPad: some View {
+        
+        let h = KeypadButton(label: .constant("h"), sublabel: .constant("←")) {
+            sharedClient.handleShortcut(key: .h)
+        }
+            .keyboardShortcut(.leftArrow, modifiers: [])
+        
+        let j = KeypadButton(label: .constant("j"), sublabel: .constant("↓")) {
+            sharedClient.handleShortcut(key: .j)
+        }
+            .platformMask([.iOS, .macOS]) { view in
+                view.keyboardShortcut(.downArrow, modifiers: [])
+            }
+        
+        let k = KeypadButton(label: .constant("k"), sublabel: .constant("↑")) {
+            sharedClient.handleShortcut(key: .k)
+        }
+            .platformMask([.iOS, .macOS]) { view in
+                view.keyboardShortcut(.upArrow, modifiers: [])
+            }
+        
+        let l = KeypadButton(label: .constant("l"), sublabel: .constant("→")) {
+            sharedClient.handleShortcut(key: .l)
+        }
+        .keyboardShortcut(.rightArrow, modifiers: [])
+
+        
+        return HStack {
+            h
+            if (preferencesManager.swapJKOnExtKeypad) {
+                j
+                k
+            } else {
+                k
+                j
+            }
+            l
+        }
+    }
+    
     var body: some View {
         VStack {
             /*
-            HStack {
-                KeypadButton(label: .constant("esc"), sublabel: .constant("release focus"))
-            }
+             HStack {
+             KeypadButton(label: .constant("esc"), sublabel: .constant("release focus"))
+             }
              */
-            HStack {
-                KeypadButton(label: .constant("h"), sublabel: .constant("←")) {
-                    sharedClient.handleShortcut(key: .h)
-                }
-                    .keyboardShortcut(.leftArrow, modifiers: [])
-                
-                /// TODO: cleanup
-                if !preferencesManager.swapJKOnExtKeypad {
-                    KeypadButton(label: .constant("j"), sublabel: .constant("↓")) {
-                        sharedClient.handleShortcut(key: .j)
-                    }
-                        .keyboardShortcut(.downArrow, modifiers: [])
-                    KeypadButton(label: .constant("k"), sublabel: .constant("↑")) {
-                        sharedClient.handleShortcut(key: .k)
-                    }
-                        .keyboardShortcut(.upArrow, modifiers: [])
-                } else {
-                    KeypadButton(label: .constant("k"), sublabel: .constant("↑")) {
-                        sharedClient.handleShortcut(key: .k)
-                    }
-                        .keyboardShortcut(.upArrow, modifiers: [])
-                    KeypadButton(label: .constant("j"), sublabel: .constant("↓")) {
-                        sharedClient.handleShortcut(key: .j)
-                    }
-                        .keyboardShortcut(.downArrow, modifiers: [])
-                }
-                
-                KeypadButton(label: .constant("l"), sublabel: .constant("→")) {
-                    sharedClient.handleShortcut(key: .l)
-                }
-                    .keyboardShortcut(.rightArrow, modifiers: [])
-            }
+            self.directionalPad
             HStack {
                 KeypadButton(label: .constant("r"), sublabel: .constant("reply")) {
                     sharedClient.handleShortcut(key: .r)
                 }
-                    .keyboardShortcut("r", modifiers: [])
+                .keyboardShortcut("r", modifiers: [])
                 KeypadButton(label: .constant("f"), sublabel: .constant("favourite")) {
                     sharedClient.handleShortcut(key: .f)
                 }
-                    .keyboardShortcut("f", modifiers: [])
+                .keyboardShortcut("f", modifiers: [])
                 KeypadButton(label: .constant("t"), sublabel: .constant("boost")) {
                     sharedClient.handleShortcut(key: .t)
                 }
-                    .keyboardShortcut("t", modifiers: [])
+                .keyboardShortcut("t", modifiers: [])
                 KeypadButton(label: .constant("v"), sublabel: .constant("context"))
                     .keyboardShortcut("v", modifiers: [])
                 KeypadButton(label:
                                 !sharedClient.postAreaFocused ?
-                                    .constant("u") : .constant("esc"),
+                    .constant("u") : .constant("esc"),
                              sublabel:
                                 !sharedClient.postAreaFocused ?
-                                    .constant("new post") : .constant("unfocus")
+                    .constant("new post") : .constant("unfocus")
                 ) {
                     sharedClient.handleShortcut(key: .u)
                 }
-                    .keyboardShortcut("u", modifiers: [])
-                    .onLongPressGesture(minimumDuration: 0.1, maximumDistance: 0) {
-                        print("TODO: discard")
-                    }
+                .keyboardShortcut("u", modifiers: [])
+                .onLongPressGesture(minimumDuration: 0.1, maximumDistance: 0) {
+                    print("TODO: discard")
+                }
             }
         }
         .padding(.horizontal, 16)
