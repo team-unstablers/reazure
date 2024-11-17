@@ -9,6 +9,9 @@ import SwiftUI
 
 struct Navbar: View {
     
+    @EnvironmentObject
+    var sharedClient: SharedClient
+    
     @Binding
     var tabSelection: Tab
     var tabChange: (Tab) -> Void
@@ -23,7 +26,7 @@ struct Navbar: View {
                         .font(.system(size: 20))
                 }
                 .shadow(color: .white, radius: tabSelection == .home ? 4 : 0)
-                .keyboardShortcut("1", modifiers: [])
+                .conditionalShortcut("1", modifiers: [], when: !sharedClient.postAreaFocused)
                 
                 Spacer()
                 
@@ -34,7 +37,7 @@ struct Navbar: View {
                         .font(.system(size: 20))
                 }
                 .shadow(color: .white, radius: tabSelection == .notification ? 4 : 0)
-                .keyboardShortcut("2", modifiers: [])
+                .conditionalShortcut("2", modifiers: [], when: !sharedClient.postAreaFocused)
 
                 Spacer()
                 
@@ -45,7 +48,7 @@ struct Navbar: View {
                         .font(.system(size: 20))
                 }
                 .shadow(color: .white, radius: tabSelection == .profile ? 4 : 0)
-                .keyboardShortcut("3", modifiers: [])
+                .conditionalShortcut("3", modifiers: [], when: !sharedClient.postAreaFocused)
 
                 Spacer()
                 
@@ -56,7 +59,7 @@ struct Navbar: View {
                         .font(.system(size: 20))
                 }
                 .shadow(color: .white, radius: tabSelection == .settings ? 4 : 0)
-                .keyboardShortcut("4", modifiers: [])
+                .conditionalShortcut("4", modifiers: [], when: !sharedClient.postAreaFocused)
 
             }
             .foregroundColor(.white)

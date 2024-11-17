@@ -163,7 +163,6 @@ struct PostArea: View {
                             isFocused = false
                         }
                         
-                        // sharedClient.postAreaFocused = false
                         sharedClient.handleShortcut(key: .j)
 
                         return .handled
@@ -185,21 +184,24 @@ struct PostArea: View {
             
             content = "\(mentions.joined(separator: " ")) "
             
-            isFocused = true
+            DispatchQueue.main.async {
+                isFocused = true
+            }
         }
         .onChange(of: content) { content in
             if (content.isEmpty) {
                 replyTo = nil
             }
         }
-        .onChange(of: sharedClient.postAreaFocused) { focused in
-            /*
-            if (!focused && content == "") {
-                replyTo = nil
+        .onChange(of: isFocused) { focused in
+            if (sharedClient.postAreaFocused != focused) {
+                sharedClient.postAreaFocused = focused
             }
-             */
-            
-            self.isFocused = focused
+        }
+        .onChange(of: sharedClient.postAreaFocused) { focused in
+            if (self.isFocused != focused) {
+                self.isFocused = focused
+            }
         }
         
     }
