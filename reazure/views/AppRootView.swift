@@ -69,12 +69,13 @@ struct AppRootView: View {
                     }
                     .toolbar(.hidden, for: .tabBar)
                 }
-                Navbar(tabSelection: $sharedClient.currentTab) { tab in
-                    sharedClient.currentTab = tab
-                }
                 
                 if preferencesManager.liftDownPostArea {
                     postArea
+                }
+
+                Navbar(tabSelection: $sharedClient.currentTab) { tab in
+                    sharedClient.currentTab = tab
                 }
                 
                 if preferencesManager.showExtKeypad {
