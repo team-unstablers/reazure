@@ -81,14 +81,17 @@ struct AboutAppView: View {
                 ForEach(accountManager.accounts) { account in
                     Section(header: Text("\(account.username)@\(account.server.address)")) {
                         Button("ACTION_LOGOUT") {
+                            accountManager.remove(account)
                         }
                         .foregroundColor(.red)
                     }
                 }
                 
-                Section {
-                    Button("ACTION_ADD_ACCOUNT") {
-                        addAccountHandler()
+                if accountManager.isEmpty {
+                    Section {
+                        Button("ACTION_ADD_ACCOUNT") {
+                            addAccountHandler()
+                        }
                     }
                 }
                 

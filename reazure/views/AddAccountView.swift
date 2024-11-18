@@ -87,7 +87,7 @@ fileprivate class AddAccountViewModel: ObservableObject {
         }
     }
     
-    func finalizeAddAccount() {
+    func finalizeAddAccount(_ completionHandler: @escaping (() -> Void)) {
         guard let application = self.application else {
             return
         }
@@ -118,6 +118,8 @@ fileprivate class AddAccountViewModel: ObservableObject {
                 DispatchQueue.main.async {
                     self.accountManager.add(account)
                     self.isBusy = false
+                    
+                    completionHandler()
                 }
             } catch {
                 DispatchQueue.main.async {
@@ -165,6 +167,8 @@ struct AddAccountView: View {
     @StateObject
     private var viewModel = AddAccountViewModel()
     
+    var completionHandler: (() -> Void)?
+    
     var body: some View {
         Form {
             Section {
@@ -210,7 +214,9 @@ struct AddAccountView: View {
                     
                     HStack {
                         Button("ACTION_FINISH_OAUTH") {
-                            viewModel.finalizeAddAccount()
+                            viewModel.finalizeAddAccount {
+                                completionHandler?()
+                            }
                         }
                         .disabled(!viewModel.validated || viewModel.isBusy)
                         

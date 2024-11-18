@@ -81,6 +81,12 @@
     },
     "ABOUT_APP_FOOTER_NOTICE_TITLE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "NOTICE"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -229,6 +235,12 @@
     },
     "ADD_ACCOUNT_EXTRA_MANUAL_CLIENT_ID" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "클라이언트 ID를 수동으로 지정"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -245,6 +257,12 @@
     },
     "ADD_ACCOUNT_FOOTER_EXTRA_SETTINGS" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "필요한 경우 클라이언트 ID를 수동으로 지정할 수 있습니다. via芸를 하고 싶을 때 유용합니다.  참고 사항: - profile, read, write에 대한 OAuth scope가 필요합니다."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -261,6 +279,12 @@
     },
     "ADD_ACCOUNT_FOOTER_NOTICE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "re;azure는 현재 Mastodon v4 계열 서버만 지원합니다. Mastodon 계정을 가지고 있지 않은 경우, https://\njoinmastodon.org 를 참조하십시오."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "needs_review",
@@ -277,6 +301,12 @@
     },
     "ADD_ACCOUNT_FOOTER_OAUTH_CODE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "인증 화면에 표시된 인증 코드를 입력해주세요."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -293,6 +323,12 @@
     },
     "ADD_ACCOUNT_HEADER_EXTRA_SETTINGS" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "고급 설정"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -309,6 +345,12 @@
     },
     "ADD_ACCOUNT_HEADER_OAUTH_CODE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth 인증 코드 입력"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -325,6 +367,12 @@
     },
     "ADD_ACCOUNT_HEADER_SERVER_INFO" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fediverse 서버 정보"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -341,6 +389,12 @@
     },
     "ADD_ACCOUNT_NAVIGATION_TITLE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 계정 추가"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -357,6 +411,12 @@
     },
     "ADD_ACCOUNT_OAUTH_CODE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "OAuth 인증 코드"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -373,6 +433,12 @@
     },
     "ADD_ACCOUNT_SERVER_ADDRESS" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fediverse 서버 주소"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -389,6 +455,12 @@
     },
     "DIALOG_YES" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "예"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -405,6 +477,12 @@
     },
     "ERROR: %@" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오류: %@"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -433,6 +511,12 @@
             "value" : "Direct"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ダイレクト"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -447,6 +531,12 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Private"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "非公開"
           }
         },
         "ko" : {
@@ -465,6 +555,12 @@
             "value" : "Public"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "公開"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -481,6 +577,12 @@
             "value" : "Unlisted"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unlisted"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -490,6 +592,7 @@
       }
     },
     "PRODUCT_DISPLAY_VERSION" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ja" : {
           "stringUnit" : {
@@ -525,6 +628,12 @@
     },
     "PRODUCT_SLOGAN" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "즐거웠던 그 시절은 다시 돌아오지 않아."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -541,6 +650,12 @@
     },
     "SETTINGS_CATEGORY_DEFAULT" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기본 설정"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -557,6 +672,12 @@
     },
     "SETTINGS_FOOTER_ALWAYS_SHOW_SOFT_KEYBOARD" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "물리 QWERTY 자판이 탑재된 스마트폰과 유사한 경험을 할 수 있도록 앱 내에서 항상 가상 키보드를 표시합니다."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -573,6 +694,12 @@
     },
     "SETTINGS_FOOTER_SHOW_EXT_KEYPAD" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "휴대폰에서도 Azurea 단축키를 사용할 수 있도록 확장 키패드를 표시합니다."
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -589,6 +716,12 @@
     },
     "SETTINGS_KEY_ALWAYS_SHOW_SOFT_KEYBOARD" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "항상 가상 키보드 표시"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -605,6 +738,18 @@
     },
     "SETTINGS_KEY_LIFT_DOWN_POST_AREA" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포스트 영역을 아래로 내리기"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포스트 영역을 아래로 내리기"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -615,6 +760,12 @@
     },
     "SETTINGS_KEY_PLAY_SOUND" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알림 수신 시 소리 재생"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -631,6 +782,12 @@
     },
     "SETTINGS_KEY_SHOW_EXT_KEYPAD" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "확장 키패드 표시"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -647,6 +804,18 @@
     },
     "SETTINGS_KEY_SWAP_JK_ON_EXT_KEYPAD" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "j, k (↓, ↑) 버튼 순서를 바꾸기"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "j, k (↓, ↑) ボタンをswapする"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -657,6 +826,12 @@
     },
     "SETTINGS_KEY_VIBRATE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알림 수신 시 진동"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -725,8 +900,8 @@
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "切断"
+            "state" : "translated",
+            "value" : "切断済み"
           }
         },
         "ko" : {
@@ -737,8 +912,17 @@
         }
       }
     },
+    "version %@" : {
+
+    },
     "WATCH_ACCOUNT_MANAGER_NO_ACCOUNT_MESSAGE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "새 Fediverse 계정을 추가합니까?"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
@@ -755,6 +939,12 @@
     },
     "WATCH_ACCOUNT_MANAGER_NO_ACCOUNT_TITLE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Fediverse 계정 없음"
+          }
+        },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",

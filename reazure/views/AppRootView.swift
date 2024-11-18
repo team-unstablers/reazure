@@ -97,7 +97,9 @@ struct AppRootView: View {
             }
             .navigationDestination(for: AppRootNavState.self) { navState in
                 if (navState == .signin) {
-                    AddAccountView()
+                    AddAccountView {
+                        self.navState.removeAll()
+                    }
                         .environmentObject(accountManager)
                 }
             }

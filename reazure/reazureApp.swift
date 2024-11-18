@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+let PRODUCT_VERSION = "testrun-241118"
+
 @main
 struct reazureApp: App {
     
