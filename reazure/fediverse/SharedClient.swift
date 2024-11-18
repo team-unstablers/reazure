@@ -26,7 +26,7 @@ enum Tab {
 }
 
 typealias Timeline = OrderedSet<StatusModel>
-typealias NotificationTimeline = OrderedSet<Mastodon.Notification>
+typealias NotificationTimeline = OrderedSet<NotificationModel>
 
 struct TLFocusState: Hashable {
     var id: String
@@ -88,6 +88,17 @@ class SharedClient: ObservableObject {
     @Published
     var currentTab: Tab = .home
     
+    var currentTimeline: TimelineType? {
+        switch currentTab {
+        case .home:
+            return .home
+        case .notification:
+            return .notifications
+        default:
+            return nil
+        }
+    }
+    
     var replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
     
     func fetchStatuses(for type: TimelineType) async {
@@ -120,7 +131,10 @@ class SharedClient: ObservableObject {
             
             DispatchQueue.main.async {
                 for notification in notifications.reversed() {
-                    self.notifications.insert(notification, at: 0)
+                    let adaptor = MastodonNotificationAdaptor(from: notification)
+                    let model = NotificationModel(adaptor: adaptor)
+                    
+                    self.notifications.insert(model, at: 0)
                 }
             }
         } catch {
@@ -134,12 +148,16 @@ class SharedClient: ObservableObject {
             return nil
         }
         
+        if type == .notifications {
+            return notifications.get(id: focusState.id)?.statusModel
+        }
+        
         return timeline[type]?.get(id: focusState.id)
     }
     
     func focusedStatus(for type: TimelineType) -> StatusAdaptor? {
         guard let focusState = focusState[type],
-              let model = timeline[type]?.get(id: focusState.id) else {
+              let model = self.focusedModel(for: type) else {
             return nil
         }
         
@@ -152,7 +170,7 @@ class SharedClient: ObservableObject {
     
     func withFocusedStatus(for type: TimelineType, _ block: (StatusAdaptor?) -> StatusAdaptor?) {
         guard let focusState = focusState[type],
-              let model = timeline[type]?.get(id: focusState.id) else {
+              let model = self.focusedModel(for: type) else {
             return
         }
         
@@ -198,6 +216,30 @@ extension SharedClient: StreamingClientDelegate {
             } catch {
                 print("SharedClient:didReceive: \(error)")
             }
+            break
+        case "notification":
+            do {
+                guard let payload = event.payload else {
+                    print("XXX: Invalid payload")
+                    return
+                }
+                
+                let notification = try JSON.parse(payload, to: Mastodon.Notification.self)
+                
+                DispatchQueue.main.async {
+                    let adaptor = MastodonNotificationAdaptor(from: notification)
+                    let model = NotificationModel(adaptor: adaptor)
+                    
+                    self.notifications.insert(model, at: 0)
+                    
+                    if (PreferencesManager.shared.vibrateOnNotification) {
+                        HapticManager.shared.vibrate()
+                    }
+                }
+            } catch {
+                print("SharedClient:didReceive: \(error)")
+            }
+            break
         default:
             break
         }
@@ -227,6 +269,189 @@ extension Timeline {
     func get(id: String) -> StatusModel? {
         return self.first { $0.id == id }
     }
+    
+    func nextFocus(_ focusState: TLFocusState?) -> TLFocusState? {
+        guard let focusState = focusState,
+              let index = self.firstIndex(where: { $0.id == focusState.id }) else {
+            guard let index = self.first?.id else {
+                return nil
+            }
+            
+            return TLFocusState(id: index, depth: 0)
+        }
+        
+        let model = self[index]
+        
+        if (focusState.depth < model.expandedDepth) {
+            return TLFocusState(id: model.id, depth: focusState.depth + 1)
+        } else {
+            let nextIndex = Swift.max(0, Swift.min(index + 1, self.count - 1))
+            let nextId = self[nextIndex].id
+            
+            return TLFocusState(id: nextId, depth: 0)
+        }
+    }
+    
+    func previousFocus(_ focusState: TLFocusState?) -> TLFocusState? {
+        guard let focusState = focusState,
+              let index = self.firstIndex(where: { $0.id == focusState.id }) else {
+            guard let index = self.first?.id else {
+                return nil
+            }
+            
+            return TLFocusState(id: index, depth: 0)
+        }
+        
+        if (index == 0 && focusState.depth == 0) {
+            // self.postAreaFocused = true
+            return nil
+        }
+        
+        let model = self[index]
+        
+        if (focusState.depth > 0) {
+            return TLFocusState(id: model.id, depth: focusState.depth - 1)
+        } else {
+            let prevIndex = Swift.max(0, Swift.min(index - 1, self.count - 1))
+            let prevModel = self[prevIndex]
+            
+            return TLFocusState(id: prevModel.id, depth: prevModel.expandedDepth)
+        }
+    }
+    
+    func expand(_ focusState: TLFocusState, client: MastodonClient) {
+        guard let index = self.firstIndex(where: { $0.id == focusState.id }) else {
+            return
+        }
+        
+        let model = self[index]
+        
+        let focusedStatus: any StatusAdaptor = (focusState.depth == 0) ?
+            model.status :
+            model.parents[focusState.depth - 1]
+        
+        if focusedStatus.replyToId == nil {
+            return
+        }
+
+        model.expandedDepth = focusState.depth + 1
+        
+        
+        if (model.parents.count < focusState.depth + 1) {
+            model.resolveParent(of: focusedStatus, using: client)
+        }
+    }
+    
+    func collapse(_ focusState: TLFocusState) -> TLFocusState? {
+        guard let index = self.firstIndex(where: { $0.id == focusState.id }) else {
+            return nil
+        }
+        
+        let model = self[index]
+        
+        model.expandedDepth = Swift.max(0, focusState.depth - 1)
+        
+        return TLFocusState(id: model.id, depth: model.expandedDepth)
+    }
+}
+
+extension NotificationTimeline {
+    func get(id: String) -> NotificationModel? {
+        return self.first { $0.id == id }
+    }
+        
+    func nextFocus(_ focusState: TLFocusState?) -> TLFocusState? {
+        guard let focusState = focusState,
+              let index = self.firstIndex(where: { $0.id == focusState.id }) else {
+            guard let index = self.first?.id else {
+                return nil
+            }
+            
+            return TLFocusState(id: index, depth: 0)
+        }
+        
+        let model = self[index]
+        
+        
+        
+        if (focusState.depth < model.statusModel?.expandedDepth ?? 0) {
+            return TLFocusState(id: model.id, depth: focusState.depth + 1)
+        } else {
+            let nextIndex = Swift.max(0, Swift.min(index + 1, self.count - 1))
+            let nextId = self[nextIndex].id
+            
+            return TLFocusState(id: nextId, depth: 0)
+        }
+    }
+    
+    func previousFocus(_ focusState: TLFocusState?) -> TLFocusState? {
+        guard let focusState = focusState,
+              let index = self.firstIndex(where: { $0.id == focusState.id }) else {
+            guard let index = self.first?.id else {
+                return nil
+            }
+            
+            return TLFocusState(id: index, depth: 0)
+        }
+        
+        if (index == 0 && focusState.depth == 0) {
+            // self.postAreaFocused = true
+            return nil
+        }
+        
+        let model = self[index]
+        
+        if (focusState.depth > 0) {
+            return TLFocusState(id: model.id, depth: focusState.depth - 1)
+        } else {
+            let prevIndex = Swift.max(0, Swift.min(index - 1, self.count - 1))
+            let prevModel = self[prevIndex]
+            
+            return TLFocusState(id: prevModel.id, depth: prevModel.statusModel?.expandedDepth ?? 0)
+        }
+    }
+    
+    func expand(_ focusState: TLFocusState, client: MastodonClient) {
+        guard let index = self.firstIndex(where: { $0.id == focusState.id }) else {
+            return
+        }
+        
+        let model = self[index]
+        guard let statusModel = model.statusModel else {
+            return
+        }
+        
+        let focusedStatus: any StatusAdaptor = (focusState.depth == 0) ?
+            statusModel.status :
+            statusModel.parents[focusState.depth - 1]
+        
+        if focusedStatus.replyToId == nil {
+            return
+        }
+
+        statusModel.expandedDepth = focusState.depth + 1
+        
+        
+        if (statusModel.parents.count < focusState.depth + 1) {
+            statusModel.resolveParent(of: focusedStatus, using: client)
+        }
+    }
+    
+    func collapse(_ focusState: TLFocusState) -> TLFocusState? {
+        guard let index = self.firstIndex(where: { $0.id == focusState.id }) else {
+            return nil
+        }
+        
+        let model = self[index]
+        
+        guard let statusModel = model.statusModel else {
+            return nil
+        }
+        
+        statusModel.expandedDepth = Swift.max(0, focusState.depth - 1)
+        
+        return TLFocusState(id: model.id, depth: statusModel.expandedDepth)
+    }
 }
 
 enum ShortcutKey {
@@ -250,106 +475,88 @@ enum ShortcutKey {
 
 fileprivate extension SharedClient {
     func down() {
-        guard let timeline = self.timeline[.home] else {
+        guard let type = self.currentTimeline else {
             return
         }
         
-        guard let focusState = self.focusState[.home],
-              let index = timeline.firstIndex(where: { $0.id == focusState.id })
-        else {
-            guard let index = timeline.first?.id else {
+        let focusState = self.focusState[type]
+        
+        if type == .notifications {
+             guard let newState = self.notifications.nextFocus(focusState) else {
                 return
             }
-            self.focusState[.home] = TLFocusState(id: index, depth: 0)
-            return
-        }
-        
-        
-        let model = timeline[index]
-        
-        if (focusState.depth < model.expandedDepth) {
-            self.focusState[.home] = TLFocusState(id: model.id, depth: focusState.depth + 1)
+            self.focusState[type] = newState
+           
         } else {
-            let nextIndex = max(0, min(index + 1, timeline.count - 1))
-            let nextId = timeline[nextIndex].id
-            
-            self.focusState[.home] = TLFocusState(id: nextId, depth: 0)
+            guard let newState = self.timeline[type]?.nextFocus(focusState) else {
+                return
+            }
+            self.focusState[type] = newState
         }
     }
     
     func left() {
-        guard let focusState = self.focusState[.home],
-              let model = self.focusedModel(for: .home) else {
+        guard let type = self.currentTimeline,
+              let focusState = self.focusState[type] else {
             return
         }
         
-        model.expandedDepth = max(0, focusState.depth - 1)
-        
-        self.focusState[.home] = TLFocusState(id: model.id, depth: model.expandedDepth)
+        if type == .notifications {
+            self.focusState[type] = self.notifications.collapse(focusState)
+        } else {
+            self.focusState[type] = self.timeline[type]?.collapse(focusState)
+        }
     }
         
     
     func right() {
         guard let client = self.client,
-              let focusState = self.focusState[.home],
-              let model = self.focusedModel(for: .home) else {
+              let type = self.currentTimeline,
+              let focusState = self.focusState[type] else {
             return
         }
         
-        let focusedStatus: any StatusAdaptor = (focusState.depth == 0) ?
-            model.status :
-            model.parents[focusState.depth - 1]
-        
-        if focusedStatus.replyToId == nil {
-            return
-        }
-
-        model.expandedDepth = focusState.depth + 1
-        
-        
-        if (model.parents.count < focusState.depth + 1) {
-            model.resolveParent(of: focusedStatus, using: client)
+        if type == .notifications {
+            self.notifications.expand(focusState, client: client)
+        } else {
+            self.timeline[type]?.expand(focusState, client: client)
         }
     }
     
     func up() {
-        guard let timeline = self.timeline[.home] else {
+        guard let type = self.currentTimeline else {
             return
         }
         
-        guard let focusState = self.focusState[.home],
-              let index = timeline.firstIndex(where: { $0.id == focusState.id })
-        else {
-            guard let index = timeline.first?.id else {
+        let focusState = self.focusState[type]
+        
+        if type == .notifications {
+             guard let newState = self.notifications.previousFocus(focusState) else {
                 return
             }
-            self.focusState[.home] = TLFocusState(id: index, depth: 0)
-            return
-        }
-        
-        if (index == 0 && focusState.depth == 0) {
-            self.postAreaFocused = true
-            return
-        }
-        
-        let model = timeline[index]
-        
-        if (focusState.depth > 0) {
-            self.focusState[.home] = TLFocusState(id: model.id, depth: focusState.depth - 1)
+            self.focusState[type] = newState
         } else {
-            let prevIndex = max(0, min(index - 1, timeline.count - 1))
-            let prevModel = timeline[prevIndex]
-            
-            self.focusState[.home] = TLFocusState(id: prevModel.id, depth: prevModel.expandedDepth)
+            guard let newState = self.timeline[type]?.previousFocus(focusState) else {
+                return
+            }
+            self.focusState[type] = newState
         }
     }
     
     func r() {
-        self.replyTo.send(self.focusedStatus(for: .home))
+        guard let type = self.currentTimeline else {
+            return
+        }
+
+        self.replyTo.send(self.focusedStatus(for: type))
     }
     
     func f() {
-        self.withFocusedStatus(for: .home) { status in
+        guard let type = self.currentTimeline else {
+            return
+        }
+
+        self.withFocusedStatus(for: type) { status in
             guard let status = status else {
                 return nil
             }
@@ -373,7 +580,11 @@ fileprivate extension SharedClient {
     }
     
     func t() {
-        self.withFocusedStatus(for: .home) { status in
+        guard let type = self.currentTimeline else {
+            return
+        }
+
+        self.withFocusedStatus(for: type) { status in
             guard let status = status else {
                 return nil
             }

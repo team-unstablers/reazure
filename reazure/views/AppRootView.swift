@@ -60,7 +60,11 @@ struct AppRootView: View {
                             .tag(Tab.home)
                         NotificationTimelineView()
                             .tag(Tab.notification)
-                        TimelineView(type: .federated)
+                        VStack {
+                            Spacer()
+                            Text("IN CONSTRUCTION")
+                            Spacer()
+                        }
                             .tag(Tab.profile)
                         AboutAppView {
                             navState.append(.signin)

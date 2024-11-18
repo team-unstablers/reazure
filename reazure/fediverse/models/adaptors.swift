@@ -12,6 +12,15 @@ enum StatusVisibility {
     case direct
 }
 
+enum NotificationType {
+    case mention
+    case status
+    case reblog
+    case follow
+    case followRequest
+    case favourite
+}
+
 protocol ApplicationAdaptor {
     var name: String { get }
 }
@@ -75,6 +84,15 @@ protocol StatusAdaptor {
     
     var attachments: [AttachmentAdaptor] { get }
     var application: ApplicationAdaptor? { get }
+}
+
+protocol NotificationAdaptor {
+    var id: String { get }
+    var type: NotificationType { get }
+    var createdAt: String { get }
+    
+    var account: AccountAdaptor? { get }
+    var status: StatusAdaptor? { get }
 }
 
 class MaskedStatusAdaptor: StatusAdaptor {

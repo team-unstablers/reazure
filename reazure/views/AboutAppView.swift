@@ -44,10 +44,11 @@ struct AboutAppView: View {
                     .listRowInsets(EdgeInsets())
                 
                 Section("SETTINGS_CATEGORY_DEFAULT") {
-                    Toggle(isOn: .constant(true)) {
+                    Toggle(isOn: .constant(false)) {
                         Text("SETTINGS_KEY_PLAY_SOUND")
                     }
-                    Toggle(isOn: .constant(true)) {
+                        .disabled(true)
+                    PreferenceSwitch(isOn: $preferencesManager.vibrateOnNotification) {
                         Text("SETTINGS_KEY_VIBRATE")
                     }
                     PreferenceSwitch(isOn: $preferencesManager.liftDownPostArea) {

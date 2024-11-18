@@ -177,10 +177,7 @@ struct PostArea: View {
             }
             
             replyTo = status
-            
-            let mentions = ([status.account.acct] + status.mentions.map { $0.acct }).map { "@" + $0 }
-            
-            content = "\(mentions.joined(separator: " ")) "
+            content = status.buildMentionString(me: sharedClient.account!)
             
             DispatchQueue.main.async {
                 isFocused = true
@@ -202,6 +199,18 @@ struct PostArea: View {
             }
         }
         
+    }
+}
+
+fileprivate extension StatusAdaptor {
+    func buildMentionString(me: Account) -> String {
+        if (self.account.id == me.id) {
+            return "@\(self.account.username)"
+        } else {
+            let mentions = ([self.account.acct] + self.mentions.filter { $0.id != me.id }.map { $0.acct }).map { "@" + $0 }.deduplicated()
+            
+            return mentions.joined(separator: " ") + " "
+        }
     }
 }
 
@@ -232,6 +241,20 @@ fileprivate extension Mastodon.Visibility {
         default:
             return NSLocalizedString("POST_VISIBILITY_PUBLIC", comment: "")
         }
+    }
+}
+
+fileprivate extension Array {
+    func deduplicated() -> [Element] where Element: Hashable {
+        var new = [Element]()
+        
+        for element in self {
+            if !new.contains(element) {
+                new.append(element)
+            }
+        }
+        
+        return new
     }
 }
 

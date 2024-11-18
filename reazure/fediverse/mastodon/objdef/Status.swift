@@ -30,6 +30,43 @@ extension Mastodon {
         static let direct = Visibility(rawValue: "direct")
     }
     
+    struct NotificationType: RawRepresentable, Codable, Equatable, Hashable {
+        var rawValue: String
+        
+        init(rawValue: String) {
+            self.rawValue = rawValue
+        }
+        
+        init(from decoder: Decoder) throws {
+            let container = try decoder.singleValueContainer()
+            rawValue = try container.decode(String.self)
+        }
+        
+        func encode(to encoder: Encoder) throws {
+            var container = encoder.singleValueContainer()
+            try container.encode(rawValue)
+        }
+        
+        static let mention = NotificationType(rawValue: "mention")
+        static let status = NotificationType(rawValue: "status")
+        static let reblog = NotificationType(rawValue: "reblog")
+        static let favourite = NotificationType(rawValue: "favourite")
+        static let follow = NotificationType(rawValue: "follow")
+        static let followRequest = NotificationType(rawValue: "follow_request")
+        
+        
+        var isSupported: Bool {
+            switch self {
+            case .mention, .status, .reblog, .favourite:
+                return true
+            default:
+                return false
+            }
+        }
+    }
+    
+    
+    
     struct CustomEmoji: Codable {
         let shortcode: String
         let url: String
@@ -82,7 +119,7 @@ extension Mastodon {
     
     struct Notification: Codable {
         let id: String
-        let type: String
+        let type: NotificationType
         let created_at: String
         
         let account: UserProfile?
@@ -145,6 +182,45 @@ extension StatusVisibility {
             return .privateType
         case .direct:
             return .direct
+        }
+    }
+}
+
+extension NotificationType {
+    init(_ type: Mastodon.NotificationType) {
+        switch type {
+        case .mention:
+            self = .mention
+        case .status:
+            self = .status
+        case .reblog:
+            self = .reblog
+        case .favourite:
+            self = .favourite
+        case .follow:
+            self = .follow
+        case .followRequest:
+            self = .followRequest
+        default:
+            self = .mention
+        }
+    }
+    
+    // FIXME: 임시 대응
+    func __DONOTUSE__asMastodonNotificationType() -> Mastodon.NotificationType {
+        switch self {
+        case .mention:
+            return .mention
+        case .status:
+            return .status
+        case .reblog:
+            return .reblog
+        case .favourite:
+            return .favourite
+        case .follow:
+            return .follow
+        case .followRequest:
+            return .followRequest
         }
     }
 }
@@ -241,6 +317,30 @@ class MastodonStatusAdaptor: StatusAdaptor {
         
         if let application = self._status.application {
             self.application = MastodonApplicationAdaptor(from: application)
+        }
+    }
+}
+
+class MastodonNotificationAdaptor: NotificationAdaptor {
+    let _notification: Mastodon.Notification
+    
+    var id: String { _notification.id }
+    var createdAt: String { _notification.created_at }
+    
+    var type: NotificationType { NotificationType(_notification.type) }
+    
+    var account: AccountAdaptor?
+    var status: StatusAdaptor?
+    
+    init(from notification: Mastodon.Notification) {
+        self._notification = notification
+        
+        if let account = self._notification.account {
+            self.account = MastodonAccountAdaptor(from: account)
+        }
+        
+        if let status = self._notification.status {
+            self.status = MastodonStatusAdaptor(from: status)
         }
     }
 }

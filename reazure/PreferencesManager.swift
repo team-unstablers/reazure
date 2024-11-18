@@ -7,7 +7,11 @@
 import Foundation
 
 class PreferencesManager: ObservableObject {
+    static let shared = PreferencesManager()
     
+    @Published
+    var vibrateOnNotification: Bool = true
+
     @Published
     var showExtKeypad: Bool = false
     
@@ -28,6 +32,7 @@ class PreferencesManager: ObservableObject {
     func refresh() {
         let defaults = UserDefaults.standard
         
+        self.vibrateOnNotification = defaults.bool(forKey: "vibrateOnNotification")
         self.showExtKeypad = defaults.bool(forKey: "showExtKeypad")
         self.swapJKOnExtKeypad = defaults.bool(forKey: "swapJKOnExtKeypad")
         self.alwaysShowSoftwareKeyboard = defaults.bool(forKey: "alwaysShowSoftwareKeyboard")
@@ -37,6 +42,7 @@ class PreferencesManager: ObservableObject {
     func save() {
         let defaults = UserDefaults.standard
         
+        defaults.set(self.vibrateOnNotification, forKey: "vibrateOnNotification")
         defaults.set(self.showExtKeypad, forKey: "showExtKeypad")
         defaults.set(self.swapJKOnExtKeypad, forKey: "swapJKOnExtKeypad")
         defaults.set(self.alwaysShowSoftwareKeyboard, forKey: "alwaysShowSoftwareKeyboard")

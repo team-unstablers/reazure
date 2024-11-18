@@ -11,7 +11,7 @@ import SwiftUI
 struct reazureApp: App {
     
     @StateObject
-    private var preferencesManager = PreferencesManager()
+    private var preferencesManager = PreferencesManager.shared
     
     @StateObject
     private var accountManager = AccountManager()
