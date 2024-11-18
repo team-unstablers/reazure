@@ -106,11 +106,11 @@ struct ExtKeypad: View {
         return HStack {
             h
             if (preferencesManager.swapJKOnExtKeypad) {
-                j
                 k
+                j
             } else {
-                k
                 j
+                k
             }
             l
         }
