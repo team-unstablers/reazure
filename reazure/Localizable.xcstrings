@@ -648,6 +648,22 @@
         }
       }
     },
+    "SEND_FEEDBACK" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Feedback?"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "피드백 보내기"
+          }
+        }
+      }
+    },
     "SETTINGS_CATEGORY_DEFAULT" : {
       "localizations" : {
         "en" : {

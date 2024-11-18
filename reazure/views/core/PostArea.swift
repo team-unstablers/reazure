@@ -7,6 +7,8 @@
 
 import SwiftUI
 
+fileprivate let FEEDBACK_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSfIKbkLUpy9oPXUlBgNQrCLc09C1vb6Eim69zOvVXtHYkS1NQ/viewform?usp=sf_link"
+
 struct PostRequest: Codable {
     var content: String
     var visibility: Mastodon.Visibility
@@ -17,6 +19,9 @@ struct PostRequest: Codable {
 typealias PostSubmitHandler = (PostRequest) -> Void
 
 struct PostArea: View {
+    @Environment(\.openURL)
+    var openURL
+    
     @EnvironmentObject
     var sharedClient: SharedClient
     
@@ -129,6 +134,10 @@ struct PostArea: View {
                         visibilityMenuVisible.toggle()
                     }
                 Spacer()
+                Text("SEND_FEEDBACK")
+                    .onTapGesture {
+                        openURL(URL(string: FEEDBACK_FORM_URL)!)
+                    }
                 Text(sharedClient.streamingState.asLocalizedText)
             }
             .foregroundStyle(.black)
