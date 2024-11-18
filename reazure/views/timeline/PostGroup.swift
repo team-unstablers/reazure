@@ -79,11 +79,10 @@ struct PostGroup: View {
             .onTapGesture {
                 sharedClient.focusState[type] = focusInfo
             }
+            /*
             .focusable()
             .focused(focusState, equals: focusInfo)
-
-        // .focusable(interactions: [.activate, .edit])
-        // .focused($focusedId, equals: status.id)
+             */
             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             .listRowSeparator(.hidden)
             .setupShortcutHandler(with: sharedClient)
