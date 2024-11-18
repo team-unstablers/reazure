@@ -75,7 +75,7 @@ class MastodonClient {
     static func createClient(at server: String) async throws -> Mastodon.OAuthApplication {
         let url = MastodonEndpoint.registerApp.url(for: server)
         let parameters: [String: Any] = [
-            "client_name": "reazure",
+            "client_name": "re;azure",
             "redirect_uris": "urn:ietf:wg:oauth:2.0:oob",
             "scopes": "read write follow",
             "website": "https://reazure.unstabler.pl"

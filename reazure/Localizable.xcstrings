@@ -263,14 +263,14 @@
       "localizations" : {
         "ja" : {
           "stringUnit" : {
-            "state" : "translated",
+            "state" : "needs_review",
             "value" : "現在、re;azureは Mastodon v4系のサーバーのみサポートしています。Mastodonアカウントを持っていない場合、 https://joinmastodon.org を参照してください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "reazure는 현재 Mastodon v4 계열 서버만 지원합니다. Mastodon 계정을 가지고 있지 않은 경우, https://\njoinmastodon.org 를 참조하십시오."
+            "value" : "re;azure는 현재 Mastodon v4 계열 서버만 지원합니다. Mastodon 계정을 가지고 있지 않은 경우, https://\njoinmastodon.org 를 참조하십시오."
           }
         }
       }
