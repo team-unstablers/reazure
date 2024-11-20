@@ -497,6 +497,86 @@
         }
       }
     },
+    "FEDI_API_ERROR_NOT_IMPLEMENTED" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "이 버전의 re;azure에서는 아직 구현되지 않았습니다."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 버전의 re;azure에서는 아직 구현되지 않았습니다."
+          }
+        }
+      }
+    },
+    "FEDI_API_ERROR_OPERATION_NOT_SUPPORTED" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "소속되어 계신 서버에서는 이 기능을 지원하지 않습니다."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "소속되어 계신 서버에서는 이 기능을 지원하지 않습니다."
+          }
+        }
+      }
+    },
+    "FEDI_API_ERROR_SERVER_ERROR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "서버에서 오류를 반환하였습니다."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버에서 오류를 반환하였습니다."
+          }
+        }
+      }
+    },
+    "FEDI_API_ERROR_UNKNOWN_ERROR" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "알 수 없는 오류가 발생하였습니다."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알 수 없는 오류가 발생하였습니다."
+          }
+        }
+      }
+    },
+    "FEDI_API_ERROR_UNSUPPORTED_SERVER_SOFTWARE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "이 버전의 re;azure는 소속되어 계신 서버를 지원하지 않습니다."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 버전의 re;azure는 소속되어 계신 서버를 지원하지 않습니다."
+          }
+        }
+      }
+    },
     "IN CONSTRUCTION" : {
 
     },
