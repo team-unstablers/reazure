@@ -110,7 +110,7 @@ struct PostItem: View, Equatable {
     
     var body: some View {
         if let reblog = status.reblog {
-            PostItem(status: reblog, relatedAccount: status.account, flags: flags, expandButtonHandler: expandButtonHandler)
+            PostItem(status: reblog, relatedAccount: status.account, flags: flags.union(.reblogged), expandButtonHandler: expandButtonHandler)
         } else {
             HStack(alignment: .top, spacing: 0) {
                 HStack(spacing: 0) {
