@@ -61,7 +61,9 @@ class SharedClient: ObservableObject {
                         return
                     }
                     
-                    self.configuration = configuration
+                    DispatchQueue.main.async {
+                        self.configuration = configuration
+                    }
                     streamingClient?.start(configuration)
                 }
             } else {
@@ -70,10 +72,11 @@ class SharedClient: ObservableObject {
         }
     }
     
-    
-    var configuration: FediverseServerConfiguration?
     var client: MastodonClient?
     var streamingClient: StreamingClient?
+
+    @Published
+    var configuration: FediverseServerConfiguration?
     
     @Published
     var streamingState: StreamingState = .disconnected

@@ -53,10 +53,13 @@ struct PostArea: View {
     var isFocused: Bool
     
     var handler: PostSubmitHandler
+    
+    var maxPostLength: Int {
+        sharedClient.configuration?.maxPostLength ?? 500
+    }
 
     var remaining: Int {
-        // FIXME: 인스턴스마다 이 제한은 다름
-        500 - content.count
+        maxPostLength - content.count
     }
     
     
