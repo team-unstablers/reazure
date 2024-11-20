@@ -32,6 +32,9 @@ struct AboutAppView: View {
     var addAccountHandler: () -> Void
     
     @EnvironmentObject
+    var sharedClient: SharedClient
+
+    @EnvironmentObject
     var preferencesManager: PreferencesManager
     
     @EnvironmentObject
@@ -91,6 +94,7 @@ struct AboutAppView: View {
                     Section(header: Text("\(account.username)@\(account.server.address)")) {
                         Button("ACTION_LOGOUT") {
                             accountManager.remove(account)
+                            sharedClient.account = nil
                         }
                         .foregroundColor(.red)
                     }
@@ -128,6 +132,7 @@ struct AboutAppView: View {
 
 #Preview {
     AboutAppView(addAccountHandler: {})
+        .environmentObject(SharedClient())
         .environmentObject(AccountManager())
         .environmentObject(PreferencesManager())
 }

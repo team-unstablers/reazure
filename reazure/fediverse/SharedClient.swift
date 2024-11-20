@@ -42,13 +42,21 @@ class SharedClient: ObservableObject {
     @Published
     var account: Account? {
         didSet {
+            timeline = [
+                .home: Timeline(),
+                .local: Timeline(),
+                .federated: Timeline()
+            ]
+            
+            streamingClient?.delegate = nil
+            streamingClient?.stop()
+            
+            client = nil
+            streamingClient = nil
+            
+            streamingState = .disconnected
+            
             if let account = account {
-                timeline = [
-                    .home: Timeline(),
-                    .local: Timeline(),
-                    .federated: Timeline()
-                ]
-                
                 client = MastodonClient(using: account)
                 streamingClient = StreamingClient(using: account)
                 streamingState = .disconnected
