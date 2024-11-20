@@ -81,7 +81,7 @@ struct ProfileImage: View, Equatable {
     }
     
     static func == (lhs: ProfileImage, rhs: ProfileImage) -> Bool {
-        return lhs.url == rhs.url
+        return lhs.url == rhs.url && lhs.resolved == rhs.resolved
     }
 }
 
