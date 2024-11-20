@@ -127,11 +127,12 @@ struct NotificationGroup: View {
         
         
         if preferencesManager.compactMode && focused {
-            return AnyView(item)
-                .onAppear {
+            return AnyView(
+                item.onAppear {
                     // HACK: compact 모드인 경우 컨텐츠가 잘린 채로 스크롤 되는 경우가 있음
                     scrollViewProxy?.scrollTo(focusInfo)
                 }
+           )
         }
         
         return AnyView(item)
