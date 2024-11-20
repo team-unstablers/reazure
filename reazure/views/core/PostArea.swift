@@ -217,7 +217,7 @@ struct PostArea: View {
 fileprivate extension StatusAdaptor {
     func buildMentionString(me: Account) -> String {
         if (self.account.id == me.id) {
-            return "@\(self.account.username)"
+            return "@\(self.account.username) "
         } else {
             let mentions = ([self.account.acct] + self.mentions.filter { $0.id != me.id }.map { $0.acct }).map { "@" + $0 }.deduplicated()
             
