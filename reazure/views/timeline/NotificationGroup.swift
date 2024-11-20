@@ -82,7 +82,7 @@ struct NotificationGroup: View {
         
         if shouldDisplayCompactRow {
             return AnyView(
-                CompactPostItem(status: status, flags: flags)
+                CompactPostItem(status: status, relatedAccount: relatedAccount, flags: flags)
                     .equatable()
                     .onTapGesture {
                         sharedClient.focusState[.notifications] = focusInfo
