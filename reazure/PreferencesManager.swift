@@ -11,6 +11,9 @@ class PreferencesManager: ObservableObject {
     
     @Published
     var vibrateOnNotification: Bool = true
+    
+    @Published
+    var compactMode: Bool = false
 
     @Published
     var showExtKeypad: Bool = false
@@ -33,6 +36,7 @@ class PreferencesManager: ObservableObject {
         let defaults = UserDefaults.standard
         
         self.vibrateOnNotification = defaults.bool(forKey: "vibrateOnNotification")
+        self.compactMode = defaults.bool(forKey: "compactMode")
         self.showExtKeypad = defaults.bool(forKey: "showExtKeypad")
         self.swapJKOnExtKeypad = defaults.bool(forKey: "swapJKOnExtKeypad")
         self.alwaysShowSoftwareKeyboard = defaults.bool(forKey: "alwaysShowSoftwareKeyboard")
@@ -43,6 +47,7 @@ class PreferencesManager: ObservableObject {
         let defaults = UserDefaults.standard
         
         defaults.set(self.vibrateOnNotification, forKey: "vibrateOnNotification")
+        defaults.set(self.compactMode, forKey: "compactMode")
         defaults.set(self.showExtKeypad, forKey: "showExtKeypad")
         defaults.set(self.swapJKOnExtKeypad, forKey: "swapJKOnExtKeypad")
         defaults.set(self.alwaysShowSoftwareKeyboard, forKey: "alwaysShowSoftwareKeyboard")

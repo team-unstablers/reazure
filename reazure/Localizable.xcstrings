@@ -708,6 +708,22 @@
         }
       }
     },
+    "SETTINGS_FOOTER_COMPACT_MODE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포커스 중이 아닌 포스트를 한줄로 표시합니다."
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포커스 중이 아닌 포스트를 한줄로 표시합니다."
+          }
+        }
+      }
+    },
     "SETTINGS_FOOTER_SHOW_EXT_KEYPAD" : {
       "localizations" : {
         "en" : {
@@ -748,6 +764,22 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "항상 가상 키보드 표시"
+          }
+        }
+      }
+    },
+    "SETTINGS_KEY_COMPACT_MODE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "needs_review",
+            "value" : "컴팩트 모드"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "컴팩트 모드"
           }
         }
       }
