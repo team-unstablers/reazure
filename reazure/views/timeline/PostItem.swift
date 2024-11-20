@@ -130,7 +130,9 @@ struct PostItem: View, Equatable {
                         ProfileImage(url: status.account.avatar)
                             .equatable()
                     }
-                }.padding(.trailing, 4)
+                }
+                    .padding(.trailing, 4)
+                    .fixedSize()
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline) {
                         ActivityPubMarkupText(content: "\(status.account.displayName) (@\(status.account.acct))",
