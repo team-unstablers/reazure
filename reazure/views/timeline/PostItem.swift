@@ -112,8 +112,8 @@ struct PostItem: View, Equatable {
         if let reblog = status.reblog {
             PostItem(status: reblog, relatedAccount: status.account, flags: flags, expandButtonHandler: expandButtonHandler)
         } else {
-            HStack(alignment: .top) {
-                VStack {
+            HStack(alignment: .top, spacing: 0) {
+                HStack(spacing: 0) {
                     if let relatedAccount = self.relatedAccount {
                         ZStack {
                             Rectangle()
@@ -131,8 +131,9 @@ struct PostItem: View, Equatable {
                             .equatable()
                     }
                 }
-                    .padding(.trailing, 4)
+                    .padding(.trailing, 12)
                     .fixedSize()
+                
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline) {
                         ActivityPubMarkupText(content: "\(status.account.displayName) (@\(status.account.acct))",
