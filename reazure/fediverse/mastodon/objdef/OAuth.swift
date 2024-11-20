@@ -9,8 +9,8 @@ extension Mastodon {
     struct OAuthApplication: Codable {
         let id: String
         let name: String
-        let website: String
-        let scopes: [String]
+        let website: String?
+        let scopes: [String]?
         let client_id: String
         let client_secret: String
     }

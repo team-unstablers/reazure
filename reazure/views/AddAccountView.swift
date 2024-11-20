@@ -65,11 +65,13 @@ fileprivate class AddAccountViewModel: ObservableObject {
                 
                 var authorizeURL = MastodonEndpoint.oauthAuthorize.url(for: serverAddress)
                 
+                let scopes = application.scopes ?? ["profile", "read", "write"]
+                
                 authorizeURL.append(queryItems: [
                     URLQueryItem(name: "client_id", value: application.client_id),
                     URLQueryItem(name: "response_type", value: "code"),
                     URLQueryItem(name: "redirect_uri", value: "urn:ietf:wg:oauth:2.0:oob"),
-                    URLQueryItem(name: "scope", value: application.scopes.joined(separator: " "))
+                    URLQueryItem(name: "scope", value: scopes.joined(separator: " "))
                 ])
                 
                 await openURL(authorizeURL)
