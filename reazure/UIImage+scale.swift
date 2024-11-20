@@ -16,11 +16,8 @@ extension UIImage {
         
         let scale = newSize / self.size.height
 
-        let aspectRatio = self.size.width / self.size.height
-        
         filter.setValue(ciImage, forKey: kCIInputImageKey)
         filter.setValue(scale, forKey: kCIInputScaleKey)
-        filter.setValue(aspectRatio, forKey: kCIInputAspectRatioKey)
         
         let outputImage = filter.outputImage!
         
