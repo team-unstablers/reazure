@@ -96,7 +96,53 @@ protocol NotificationAdaptor {
 }
 
 class MaskedStatusAdaptor: StatusAdaptor {
+    
+    // FIXME: HACK: 난 너무 게을러
+    class ReblogMaskedStatusAdaptor: StatusAdaptor {
+        var _parent: MaskedStatusAdaptor
+        
+        var status: StatusAdaptor {
+            return _parent.status.reblog!
+        }
+        
+        var favourited: Bool {
+            _parent.favourited
+        }
+        var reblogged: Bool {
+            _parent.reblogged
+        }
+
+        var id: String { status.id }
+        var createdAt: String { status.createdAt }
+        
+        var replyToId: String? { status.replyToId }
+        
+        var url: String? { status.url }
+        
+        var visibility: StatusVisibility { status.visibility }
+        
+        var content: String { status.content }
+        var parsedContent: HTMLElement { status.parsedContent }
+        
+        var account: AccountAdaptor { status.account }
+        
+        var reblog: (any StatusAdaptor)? { status.reblog }
+        
+        var emojis: [EmojiAdaptor] { status.emojis }
+        var mentions: [MentionAdaptor] { status.mentions }
+        
+        var attachments: [AttachmentAdaptor] { status.attachments }
+        var application: ApplicationAdaptor? { status.application }
+        
+        init(_ parent: MaskedStatusAdaptor) {
+            self._parent = parent
+        }
+    }
+    
     var status: StatusAdaptor
+    
+    var reblog: (any StatusAdaptor)?
+    
     var favourited: Bool
     var reblogged: Bool
     
@@ -114,7 +160,6 @@ class MaskedStatusAdaptor: StatusAdaptor {
     
     var account: AccountAdaptor { status.account }
     
-    var reblog: (any StatusAdaptor)? { status.reblog }
     
     var emojis: [EmojiAdaptor] { status.emojis }
     var mentions: [MentionAdaptor] { status.mentions }
@@ -124,8 +169,11 @@ class MaskedStatusAdaptor: StatusAdaptor {
     
     init(status: StatusAdaptor, favourited: Bool? = nil, reblogged: Bool? = nil) {
         self.status = status
+        
         self.favourited = favourited ?? status.favourited
         self.reblogged = reblogged ?? status.reblogged
+        
+        self.reblog = ReblogMaskedStatusAdaptor(self)
     }
 }
 
