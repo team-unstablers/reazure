@@ -15,6 +15,8 @@ struct MastodonEndpoint: RawRepresentable {
     
     static let oauthAuthorize = MastodonEndpoint(rawValue: "/oauth/authorize")
     static let oauthToken = MastodonEndpoint(rawValue: "/oauth/token")
+    
+    static let instance = MastodonEndpoint(rawValue: "/api/v2/instance")
 
     static let registerApp = MastodonEndpoint(rawValue: "/api/v1/apps")
     
@@ -70,6 +72,20 @@ class MastodonClient {
         }
         
         return response.value
+    }
+    
+    static func instanceInfo(of server: String) async throws -> Mastodon.Instance {
+        let url = MastodonEndpoint.instance.url(for: server)
+        let response = await AF.request(url)
+            .validate()
+            .serializingDecodable(Mastodon.Instance.self)
+            .response
+        
+        guard let value = response.value else {
+            throw response.error!
+        }
+        
+        return value
     }
     
     static func createClient(at server: String) async throws -> Mastodon.OAuthApplication {
@@ -293,6 +309,10 @@ fileprivate extension String {
             server.removeFirst("https://".count)
         } else if server.hasPrefix("http://") {
             server.removeFirst("http://".count)
+        } else if server.hasPrefix("wss://") {
+            server.removeFirst("wss://".count)
+        } else if server.hasPrefix("ws://") {
+            server.removeFirst("ws://".count)
         }
         
         if server.hasSuffix("/") {

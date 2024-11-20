@@ -50,10 +50,24 @@ enum FediverseServer: Codable {
             try container.encode(address, forKey: .address)
         }
     }
+    
+    func configuration() async throws -> FediverseServerConfiguration {
+        switch self {
+        case .mastodon(let address):
+            let instance = try await MastodonClient.instanceInfo(of: address)
+            return instance.configuration.asCompatibleConfiguration()
+        case .misskey(_):
+            throw FediverseAPIError.notImplemented
+        }
+    }
+}
+
+struct FediverseServerConfiguration {
+    let streamingEndpoint: String
+    let maxPostLength: Int
 }
 
 extension FediverseServer: Hashable, Equatable {
-    
     func hash(into hasher: inout Hasher) {
         switch self {
         case .mastodon(let address):
