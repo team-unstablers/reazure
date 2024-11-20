@@ -13,38 +13,60 @@ struct CompactPostItem: View, Equatable {
 
     var status: StatusAdaptor
     
-    /// 현재 사용자의 ID: mention 판정을 위해 사용
-    var selfId: String = ""
+    var relatedAccount: AccountAdaptor? = nil
+    var flags: PostItemFlags = []
     
     var background: Color {
-        return Color(UIColor.systemBackground)
+        if flags.contains(.rebloggedByOthers) {
+            return .init(uiColor: UIColor(r8: 135, g8: 245, b8: 66, a: 0.2))
+        } else if flags.contains(.favouritedByOthers) {
+            return .init(uiColor: UIColor(r8: 245, g8: 239, b8: 66, a: 0.2))
+        }
+        
+        return .init(uiColor: .systemBackground)
     }
     
     var textColor: Color {
-        /*
-        if status.mentions(id: selfId) {
+        if flags.contains(.mentioned) {
             return .init(uiColor: UIColor(r8: 66, g8: 78, b8: 245, a: 1.0))
         }
-         */
         
         return .primary
     }
     
     var body: some View {
-        HStack(alignment: .center) {
-            VStack {
-                ProfileImage(url: status.account.avatar, size: 48, compact: true)
-                    .equatable()
-            }.padding(.trailing, 2)
-            ActivityPubMarkupText(content: status.content, emojos: status.emojis)
-                .foregroundColor(textColor)
-                .lineLimit(1)
+        if let reblog = status.reblog {
+            CompactPostItem(status: reblog, relatedAccount: status.account, flags: flags)
+        } else {
+            HStack(alignment: .center) {
+                VStack {
+                    if let relatedAccount = relatedAccount {
+                        ZStack {
+                            // crop left 24 pixels
+                            
+                            ProfileImage(url: status.account.avatar, size: 48, compact: true)
+                                .equatable()
+                                .clipShape(Rectangle().size(width: 24, height: 24))
+                                
+                            ProfileImage(url: relatedAccount.avatar, size: 48, compact: true)
+                                .equatable()
+                                .clipShape(Rectangle().size(width: 24, height: 24).offset(x: 24))
+                        }
+                    } else {
+                        ProfileImage(url: status.account.avatar, size: 48, compact: true)
+                            .equatable()
+                    }
+                }.padding(.trailing, 2)
+                ActivityPubMarkupText(content: status.content, emojos: status.emojis)
+                    .foregroundColor(textColor)
+                    .lineLimit(1)
+            }
+            // .containerRelativeFrame([.horizontal], alignment: .topLeading)
+            .frame(maxWidth: .infinity, alignment: .topLeading)
+            .contentShape(Rectangle())
+            .background(background)
+            .overlay(Divider(), alignment: .bottom)
         }
-        // .containerRelativeFrame([.horizontal], alignment: .topLeading)
-        .frame(maxWidth: .infinity, alignment: .topLeading)
-        .contentShape(Rectangle())
-        .background(background)
-        // .overlay(Divider(), alignment: .bottom)
     }
     
     static func == (lhs: CompactPostItem, rhs: CompactPostItem) -> Bool {

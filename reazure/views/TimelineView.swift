@@ -32,12 +32,13 @@ struct TimelineView: View {
         ScrollViewReader { proxy in
             List {
                 ForEach(sharedClient.timeline[type]!) { model in
-                    PostGroup(model: model, type: type, focusState: $focusState)
+                    PostGroup(model: model, type: type, focusState: $focusState, scrollViewProxy: proxy)
                 }
             }
             .listStyle(.plain)
             .listRowSpacing(0)
             .padding(0)
+            .environment(\.defaultMinListRowHeight, 0)
             .overlay {
                 /*
                 if let status = sharedClient.focusedStatus(for: .home) {

@@ -17,6 +17,9 @@ import SwiftUI
 
 struct NotificationGroup: View {
     @EnvironmentObject
+    var preferencesManager: PreferencesManager
+
+    @EnvironmentObject
     var sharedClient: SharedClient
     
     @ObservedObject
@@ -27,6 +30,8 @@ struct NotificationGroup: View {
     
     var focusState: FocusState<TLFocusState?>.Binding
     
+    var scrollViewProxy: ScrollViewProxy?
+
     var flags: PostItemFlags {
         var flags = PostItemFlags()
         
@@ -70,8 +75,25 @@ struct NotificationGroup: View {
         }
         
         let focusInfo = TLFocusState(id: model.id, depth: depth)
+        let focusState = sharedClient.focusState[.notifications]
+        let focused = focusState?.id == model.id && focusState?.depth == depth
         
-        return PostItem(status: status, relatedAccount: relatedAccount, flags: flags) { _ in
+        let shouldDisplayCompactRow = (preferencesManager.compactMode && !focused)
+        
+        if shouldDisplayCompactRow {
+            return AnyView(
+                CompactPostItem(status: status, relatedAccount: relatedAccount, flags: flags)
+                    .equatable()
+                    .onTapGesture {
+                        sharedClient.focusState[.notifications] = focusInfo
+                    }
+                    .id(focusInfo)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .listRowSeparator(.hidden)
+            )
+        }
+
+        let item = PostItem(status: status, relatedAccount: relatedAccount, flags: flags) { _ in
             if (expanded) {
                 statusModel.expandedDepth = depth
             } else {
@@ -85,10 +107,7 @@ struct NotificationGroup: View {
             .equatable()
             .padding(.leading, CGFloat(depth) * 8)
             .background {
-                if let focusState = sharedClient.focusState[.notifications],
-                   focusState.id == model.id,
-                   focusState.depth == depth
-                {
+                if focused {
                     Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
                 } else {
                     Color.clear
@@ -105,6 +124,17 @@ struct NotificationGroup: View {
             .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
             .listRowSeparator(.hidden)
             .setupShortcutHandler(with: sharedClient)
+        
+        
+        if preferencesManager.compactMode && focused {
+            return AnyView(item)
+                .onAppear {
+                    // HACK: compact 모드인 경우 컨텐츠가 잘린 채로 스크롤 되는 경우가 있음
+                    scrollViewProxy?.scrollTo(focusInfo)
+                }
+        }
+        
+        return AnyView(item)
     }
     
 

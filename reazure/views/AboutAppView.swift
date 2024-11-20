@@ -51,9 +51,18 @@ struct AboutAppView: View {
                     PreferenceSwitch(isOn: $preferencesManager.vibrateOnNotification) {
                         Text("SETTINGS_KEY_VIBRATE")
                     }
+                    
                     PreferenceSwitch(isOn: $preferencesManager.liftDownPostArea) {
                         Text("SETTINGS_KEY_LIFT_DOWN_POST_AREA")
                     }
+                }
+                
+                Section {
+                    PreferenceSwitch(isOn: $preferencesManager.compactMode) {
+                        Text("SETTINGS_KEY_COMPACT_MODE")
+                    }
+                } footer: {
+                    Text("SETTINGS_FOOTER_COMPACT_MODE")
                 }
                 
                 Section {
@@ -70,7 +79,7 @@ struct AboutAppView: View {
                 }
                 
                 Section {
-                    PreferenceSwitch(isOn: $preferencesManager.alwaysShowSoftwareKeyboard) {
+                    PreferenceSwitch(isOn: .constant(false)) {
                         Text("SETTINGS_KEY_ALWAYS_SHOW_SOFT_KEYBOARD")
                     }
                 } footer: {

@@ -17,6 +17,9 @@ import SwiftUI
 
 struct PostGroup: View {
     @EnvironmentObject
+    var preferencesManager: PreferencesManager
+    
+    @EnvironmentObject
     var sharedClient: SharedClient
     
     @ObservedObject
@@ -25,6 +28,8 @@ struct PostGroup: View {
     var type: TimelineType
     
     var focusState: FocusState<TLFocusState?>.Binding
+    
+    var scrollViewProxy: ScrollViewProxy?
     
     var body: some View {
         Section {
@@ -51,41 +56,65 @@ struct PostGroup: View {
         }
         
         let focusInfo = TLFocusState(id: model.id, depth: depth)
+        let focusState = sharedClient.focusState[type]
+        let focused = focusState?.id == model.id && focusState?.depth == depth
         
-        return PostItem(status: status, flags: flags) { _ in
-            if (expanded) {
-                model.expandedDepth = depth
-            } else {
-                model.expandedDepth = depth + 1
-            }
-            
-            if (model.parents.count < depth + 1) {
-                model.resolveParent(of: status, using: sharedClient.client!)
-            }
+        let shouldDisplayCompactRow = (preferencesManager.compactMode && !focused)
+        
+        if shouldDisplayCompactRow {
+            return AnyView(
+                CompactPostItem(status: status, flags: flags)
+                    .equatable()
+                    .onTapGesture {
+                        sharedClient.focusState[type] = focusInfo
+                    }
+                    .id(focusInfo)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                    .listRowSeparator(.hidden)
+            )
         }
-            .equatable()
-            .padding(.leading, CGFloat(depth) * 8)
-            .background {
-                if let focusState = sharedClient.focusState[type],
-                   focusState.id == model.id,
-                   focusState.depth == depth
-                {
-                    Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
+        
+        let item = PostItem(status: status, flags: flags) { _ in
+                if (expanded) {
+                    model.expandedDepth = depth
                 } else {
-                    Color.clear
+                    model.expandedDepth = depth + 1
+                }
+                
+                if (model.parents.count < depth + 1) {
+                    model.resolveParent(of: status, using: sharedClient.client!)
                 }
             }
-            .id(focusInfo)
-            .onTapGesture {
-                sharedClient.focusState[type] = focusInfo
-            }
-            /*
-            .focusable()
-            .focused(focusState, equals: focusInfo)
-             */
-            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-            .listRowSeparator(.hidden)
-            .setupShortcutHandler(with: sharedClient)
+                .equatable()
+                .padding(.leading, CGFloat(depth) * 8)
+                .background {
+                    if focused {
+                        Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
+                    } else {
+                        Color.clear
+                    }
+                }
+                .id(focusInfo)
+                .onTapGesture {
+                    sharedClient.focusState[type] = focusInfo
+                }
+                /*
+                .focusable()
+                .focused(focusState, equals: focusInfo)
+                 */
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                .listRowSeparator(.hidden)
+                .setupShortcutHandler(with: sharedClient)
+        
+        if preferencesManager.compactMode && focused {
+            return AnyView(item)
+                .onAppear {
+                    // HACK: compact 모드인 경우 컨텐츠가 잘린 채로 스크롤 되는 경우가 있음
+                    scrollViewProxy?.scrollTo(focusInfo)
+                }
+        }
+        
+        return AnyView(item)
     }
     
 
