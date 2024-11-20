@@ -40,8 +40,22 @@ struct CompactPostItem: View, Equatable {
         } else {
             HStack(alignment: .center) {
                 VStack {
-                    ProfileImage(url: status.account.avatar, size: 48, compact: true)
-                        .equatable()
+                    if let relatedAccount = relatedAccount {
+                        ZStack {
+                            // crop left 24 pixels
+                            
+                            ProfileImage(url: status.account.avatar, size: 48, compact: true)
+                                .equatable()
+                                .clipShape(Rectangle().size(width: 24, height: 24))
+                                
+                            ProfileImage(url: relatedAccount.avatar, size: 48, compact: true)
+                                .equatable()
+                                .clipShape(Rectangle().size(width: 24, height: 24).offset(x: 24))
+                        }
+                    } else {
+                        ProfileImage(url: status.account.avatar, size: 48, compact: true)
+                            .equatable()
+                    }
                 }.padding(.trailing, 2)
                 ActivityPubMarkupText(content: status.content, emojos: status.emojis)
                     .foregroundColor(textColor)
