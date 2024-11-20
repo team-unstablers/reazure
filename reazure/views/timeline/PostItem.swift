@@ -155,6 +155,9 @@ struct PostItem: View, Equatable {
                         if status.visibility == .privateType {
                             Text("🔒").lineSpacing(1)
                         }
+                        if status.visibility == .direct {
+                            Text("✉️").lineSpacing(1)
+                        }
                     }
                     .lineLimit(1)
                     ActivityPubMarkupText(element: status.parsedContent, emojos: status.emojis)
