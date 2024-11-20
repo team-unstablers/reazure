@@ -84,6 +84,7 @@ struct NotificationGroup: View {
             return AnyView(
                 CompactPostItem(status: status, relatedAccount: relatedAccount, flags: flags)
                     .equatable()
+                    .padding(.leading, CGFloat(depth) * 8)
                     .onTapGesture {
                         sharedClient.focusState[.notifications] = focusInfo
                     }

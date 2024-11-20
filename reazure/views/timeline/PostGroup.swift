@@ -65,6 +65,7 @@ struct PostGroup: View {
             return AnyView(
                 CompactPostItem(status: status, flags: flags)
                     .equatable()
+                    .padding(.leading, CGFloat(depth) * 8)
                     .onTapGesture {
                         sharedClient.focusState[type] = focusInfo
                     }
