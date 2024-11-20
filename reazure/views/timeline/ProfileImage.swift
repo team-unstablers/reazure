@@ -26,6 +26,11 @@ struct ProfileImage: View, Equatable {
         self.url = url
         self.size = size
         self.compact = compact
+        
+        if let image = self.cachedImageLoader.getImage(url: url) {
+            self.image = image
+            self.resolved = true
+        }
     }
     
     @State
@@ -67,7 +72,7 @@ struct ProfileImage: View, Equatable {
         if (resolved) {
             return
         }
-        
+
         print("fetching image")
         Task { [self] in
             let image = await self.cachedImageLoader.loadImage(url: url)
@@ -81,7 +86,7 @@ struct ProfileImage: View, Equatable {
     }
     
     static func == (lhs: ProfileImage, rhs: ProfileImage) -> Bool {
-        return lhs.url == rhs.url && lhs.resolved == rhs.resolved
+        return lhs.image == rhs.image && lhs.url == rhs.url && lhs.resolved == rhs.resolved
     }
 }
 
