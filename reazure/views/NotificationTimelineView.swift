@@ -29,7 +29,20 @@ struct NotificationTimelineView: View {
             .listRowSpacing(0)
             .padding(0)
             .environment(\.defaultMinListRowHeight, 0)
-            .onChange(of: sharedClient.focusState[.notifications]) { value in
+            .onChange(of: sharedClient.notifications) {
+                guard let focusState = sharedClient.focusState[.notifications] else {
+                    return
+                }
+                
+                if (sharedClient.notifications.first?.id != focusState.id) {
+                    proxy.scrollTo(focusState)
+                }
+            }
+            .onChange(of: sharedClient.focusState[.notifications]) { oldValue, value in
+                if oldValue == value {
+                    return
+                }
+                
                 // proxy.scrollTo가 먼저 실행되어야 함: 왜냐하면 focusedId가 현재 표시 바깥에 있으면 포커스 안됨 / 숏컷 핸들러 안 먹게 됨
                 guard let focusState = sharedClient.focusState[.notifications] else {
                     return

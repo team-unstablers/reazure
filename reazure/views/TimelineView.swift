@@ -79,7 +79,20 @@ struct TimelineView: View {
                 }
                  */
             }
-            .onChange(of: sharedClient.focusState[type]) { value in
+            .onChange(of: sharedClient.timeline[type]) {
+                guard let focusState = sharedClient.focusState[type] else {
+                    return
+                }
+                
+                if (sharedClient.timeline[type]?.first?.id != focusState.id) {
+                    proxy.scrollTo(focusState)
+                }
+            }
+            .onChange(of: sharedClient.focusState[type]) { (oldValue, value) in
+                if (oldValue == value) {
+                    return
+                }
+                
                 // proxy.scrollTo가 먼저 실행되어야 함: 왜냐하면 focusedId가 현재 표시 바깥에 있으면 포커스 안됨 / 숏컷 핸들러 안 먹게 됨
                 guard let focusState = sharedClient.focusState[type] else {
                     return
