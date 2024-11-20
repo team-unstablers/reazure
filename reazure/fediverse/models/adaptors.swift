@@ -133,10 +133,10 @@ extension StatusAdaptor {
     func mask(favourited: Bool? = nil, reblogged: Bool? = nil) -> MaskedStatusAdaptor {
         // check instance of MaskedStatusAdaptor
         if let masked = self as? MaskedStatusAdaptor {
-            masked.favourited = favourited ?? masked.favourited
-            masked.reblogged = reblogged ?? masked.reblogged
+            let favourited = favourited ?? masked.favourited
+            let reblogged = reblogged ?? masked.reblogged
             
-            return masked
+            return MaskedStatusAdaptor(status: masked.status, favourited: favourited, reblogged: reblogged)
         }
         
         return MaskedStatusAdaptor(status: self, favourited: favourited, reblogged: reblogged)
