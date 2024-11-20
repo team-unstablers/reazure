@@ -35,8 +35,8 @@ class StreamingClient {
         self.account = account
     }
     
-    func start() {
-        var url = MastodonEndpoint.streaming.url(for: self.account.server.address)
+    func start(_ configuration: FediverseServerConfiguration) {
+        var url = MastodonEndpoint.streaming.url(for: configuration.streamingEndpoint)
         url = url.appending(queryItems: [
             URLQueryItem(name: "access_token", value: self.account.accessToken),
             URLQueryItem(name: "stream", value: "user")

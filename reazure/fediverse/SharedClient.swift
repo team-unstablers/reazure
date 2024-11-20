@@ -54,8 +54,16 @@ class SharedClient: ObservableObject {
                 streamingState = .disconnected
                 
                 streamingClient?.delegate = self
-                
-                streamingClient?.start()
+
+                Task {
+                    // FIXME: handle errors
+                    guard let configuration = try? await account.server.configuration() else {
+                        return
+                    }
+                    
+                    self.configuration = configuration
+                    streamingClient?.start(configuration)
+                }
             } else {
                 client = nil
             }
@@ -63,6 +71,7 @@ class SharedClient: ObservableObject {
     }
     
     
+    var configuration: FediverseServerConfiguration?
     var client: MastodonClient?
     var streamingClient: StreamingClient?
     
@@ -247,7 +256,9 @@ extension SharedClient: StreamingClientDelegate {
     
     func didStateChange(state: StreamingState, client: StreamingClient) {
         print("streaming state changed: \(state)")
-        self.streamingState = state
+        DispatchQueue.main.async {
+            self.streamingState = state
+        }
         
         
         if state == .disconnected {
@@ -258,8 +269,11 @@ extension SharedClient: StreamingClientDelegate {
                     await self.fetchStatuses(for: .home)
                 }
                 
-                client.start()
+                guard let configuration = self.configuration else {
+                    return
+                }
                 
+                client.start(configuration)
             }
         }
     }
