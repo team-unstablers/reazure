@@ -57,7 +57,8 @@ struct CompactPostItem: View, Equatable {
                             .equatable()
                     }
                 }.padding(.trailing, 2)
-                ActivityPubMarkupText(content: status.content, emojos: status.emojis)
+                ActivityPubMarkupText(element: status.parsedContent, emojos: status.emojis)
+                    .equatable()
                     .foregroundColor(textColor)
                     .lineLimit(1)
             }
@@ -73,7 +74,8 @@ struct CompactPostItem: View, Equatable {
         return (
             lhs.status.id == rhs.status.id &&
             lhs.status.favourited == rhs.status.favourited &&
-            lhs.status.reblogged == rhs.status.reblogged
+            lhs.status.reblogged == rhs.status.reblogged &&
+            lhs.flags == rhs.flags
         )
     }
 }

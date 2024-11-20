@@ -94,11 +94,13 @@ struct PostItem: View, Equatable {
             
             if let relatedAccount = self.relatedAccount {
                 if self.flags.contains(.favouritedByOthers) {
-                    ActivityPubMarkupText(content: "Favourited by \(relatedAccount.displayName) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
+                    ActivityPubMarkupTextSimple(content: "Favourited by \(relatedAccount.displayName) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
+                        .equatable()
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 } else if (self.flags.contains(.rebloggedByOthers) || self.flags.contains(.reblogged)) {
-                    ActivityPubMarkupText(content: "Boosted by \(relatedAccount.displayName) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
+                    ActivityPubMarkupTextSimple(content: "Boosted by \(relatedAccount.displayName) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
+                        .equatable()
                         .foregroundColor(.secondary)
                         .lineLimit(1)
                 } else {
@@ -136,8 +138,9 @@ struct PostItem: View, Equatable {
                 
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(alignment: .firstTextBaseline) {
-                        ActivityPubMarkupText(content: "\(status.account.displayName) (@\(status.account.acct))",
+                        ActivityPubMarkupTextSimple(content: "\(status.account.displayName) (@\(status.account.acct))",
                                               emojos: status.account.emojis)
+                            .equatable()
                         .bold()
                         Spacer()
                         if status.favourited {
@@ -154,7 +157,8 @@ struct PostItem: View, Equatable {
                         }
                     }
                     .lineLimit(1)
-                    ActivityPubMarkupText(content: status.content, emojos: status.emojis)
+                    ActivityPubMarkupText(element: status.parsedContent, emojos: status.emojis)
+                        .equatable()
                         .foregroundColor(textColor)
                     
                     

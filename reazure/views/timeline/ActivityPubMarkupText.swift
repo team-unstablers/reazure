@@ -8,7 +8,7 @@
 import SwiftUI
 import UIKit
 
-class HTMLElement {
+class HTMLElement: Equatable, Hashable {
     var name: String
     var attributes: [String: String] = [:]
     
@@ -17,6 +17,20 @@ class HTMLElement {
     
     init(name: String) {
         self.name = name
+    }
+    
+    static func == (lhs: HTMLElement, rhs: HTMLElement) -> Bool {
+        return lhs.name == rhs.name &&
+               lhs.attributes == rhs.attributes &&
+               lhs.children == rhs.children &&
+               lhs.text == rhs.text
+    }
+    
+    func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
+        hasher.combine(attributes)
+        hasher.combine(children)
+        hasher.combine(text)
     }
 }
 
@@ -302,20 +316,25 @@ func parseHTML(_ html: String) -> HTMLElement {
     return root
 }
 
-
 // CustomText에서 UIImage를 포함하는 NSAttributedString 생성 예시
-struct ActivityPubMarkupText: View {
-    var content: String
-    var emojos: [EmojiAdaptor]
-    
+struct ActivityPubMarkupText: View, Equatable {
     @State
     var resolvedEmojos: [String: UIImage] = [:]
     
-    var element: HTMLElement {
+    var element: HTMLElement
+    var emojos: [EmojiAdaptor]
+
+    init(content: String, emojos: [EmojiAdaptor]) {
         let element = parseHTML(content)
-        insertLineBreak(element: element)
+        Self.insertLineBreak(element: element)
         
-        return element
+        self.element = element
+        self.emojos = emojos
+    }
+    
+    init(element: HTMLElement, emojos: [EmojiAdaptor]) {
+        self.element = element
+        self.emojos = emojos
     }
     
     var body: some View {
@@ -335,7 +354,7 @@ struct ActivityPubMarkupText: View {
     
     /// 웹 브라우저의 display: block; 속성을 흉내내기 위해 p, div 태그 뒤에 두 개의 br 태그를 추가합니다.
     /// FIXME: 이 함수는 여러 depth의 요소를 가진 HTML을 처리하지 못합니다.
-    func insertLineBreak(element: HTMLElement) {
+    static func insertLineBreak(element: HTMLElement) {
         if (element.name == "body") {
             for (index, child) in element.children.enumerated() {
                 if (index == element.children.count - 1) {
@@ -407,7 +426,31 @@ struct ActivityPubMarkupText: View {
             return result
         }
     }
+    
+    static func == (lhs: ActivityPubMarkupText, rhs: ActivityPubMarkupText) -> Bool {
+        // FIXME: compare emojos
+        return (lhs.element == rhs.element)
+    }
+}
 
+
+struct ActivityPubMarkupTextSimple: View, Equatable {
+    var content: String
+    var emojos: [EmojiAdaptor]
+    
+    init(content: String, emojos: [EmojiAdaptor]) {
+        self.content = content
+        self.emojos = emojos
+    }
+    
+    var body: some View {
+        ActivityPubMarkupText(content: content, emojos: emojos)
+            .equatable()
+    }
+    
+    static func == (lhs: ActivityPubMarkupTextSimple, rhs: ActivityPubMarkupTextSimple) -> Bool {
+        return lhs.content == rhs.content
+    }
 }
 
 #Preview {

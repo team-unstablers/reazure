@@ -45,6 +45,7 @@ struct ProfileImage: View, Equatable {
                 if self.resolved {
                     Image(uiImage: image)
                         .resizable()
+                        .equatable()
                         .frame(width: size, height: size)
                         .clipShape(.rect(cornerRadius: 4))
                 } else {
@@ -55,6 +56,7 @@ struct ProfileImage: View, Equatable {
                 if self.resolved {
                     Image(uiImage: image)
                         .resizable()
+                        .equatable()
                         .scaledToFill()
                         .frame(width: size, height: 24)
                         .clipped()
