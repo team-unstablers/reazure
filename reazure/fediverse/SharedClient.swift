@@ -106,7 +106,17 @@ class SharedClient: ObservableObject {
     var postAreaFocused: Bool = false
     
     @Published
-    var currentTab: Tab = .home
+    var currentTab: Tab = .home {
+        didSet {
+            if (currentTab == .notification) {
+                unreadNotificationCount = 0
+            }
+        }
+    }
+    
+    // FIXME
+    @Published
+    var unreadNotificationCount: Int = 0
     
     var currentTimeline: TimelineType? {
         switch currentTab {
@@ -251,6 +261,10 @@ extension SharedClient: StreamingClientDelegate {
                     let model = NotificationModel(adaptor: adaptor)
                     
                     self.notifications.insert(model, at: 0)
+                    
+                    if (self.currentTab != .notification) {
+                        self.unreadNotificationCount += 1
+                    }
                     
                     let preferencesManager = PreferencesManager.shared
                     let notifySound = preferencesManager.notificationSound
