@@ -13,6 +13,16 @@
     ":%@:" : {
 
     },
+    "%@ - %@" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "%1$@ - %2$@"
+          }
+        }
+      }
+    },
     "%@@%@" : {
       "localizations" : {
         "ko" : {
@@ -22,6 +32,9 @@
           }
         }
       }
+    },
+    "©️ %@" : {
+
     },
     "✉️" : {
 
@@ -586,6 +599,17 @@
     "Left: %lld" : {
 
     },
+    "NOTIFICATION_SOUND_BOOP" : {
+      "comment" : "boop (Mastodon 기본)",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "boop"
+          }
+        }
+      }
+    },
     "NOTIFICATION_SOUND_DEFAULT" : {
       "comment" : "기본 (Tri-Tone)",
       "localizations" : {
@@ -830,11 +854,22 @@
       }
     },
     "SETTINGS_FOOTER_DEFAULT" : {
+      "extractionState" : "stale",
       "localizations" : {
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
             "value" : "각 알림 소리에 대한 라이선스는 GitHub 저장소에서 확인이 가능합니다."
+          }
+        }
+      }
+    },
+    "SETTINGS_FOOTER_DEFAULT_SOUND_LICENSED_WITH: %@" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이 소리 파일은 %@ 라이선스를 적용받습니다."
           }
         }
       }

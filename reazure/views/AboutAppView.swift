@@ -45,7 +45,18 @@ struct AboutAppView: View {
                 AboutAppHeader()
                     .listRowInsets(EdgeInsets())
                 
-                Section(header: Text("SETTINGS_CATEGORY_DEFAULT"), footer: Text("SETTINGS_FOOTER_DEFAULT")) {
+                Section(header: Text("SETTINGS_CATEGORY_DEFAULT"), footer: {
+                    let notificationSound = preferencesManager.notificationSound
+                    if notificationSound != .default {
+                        return (
+                            Text("\(notificationSound.localizedDescription) - \(notificationSound.description)") + Text("\n") +
+                            Text("SETTINGS_FOOTER_DEFAULT_SOUND_LICENSED_WITH: \(notificationSound.license)") + Text("\n") +
+                            Text("©️ \(notificationSound.copyright)")
+                        )
+                    } else {
+                        return Text("")
+                    }
+                }()) {
                     PreferenceSwitch(isOn: $preferencesManager.playSoundOnNotification) {
                         Text("SETTINGS_KEY_PLAY_SOUND")
                     }
