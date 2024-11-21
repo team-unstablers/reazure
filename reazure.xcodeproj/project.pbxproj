@@ -12,6 +12,9 @@
 		F6DAEA842CDF3BFB0022FA6A /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = F6DAEA832CDF3BFB0022FA6A /* Localizable.xcstrings */; };
 		F6DAEA912CDF4CDF0022FA6A /* Starscream in Frameworks */ = {isa = PBXBuildFile; productRef = F6DAEA902CDF4CDF0022FA6A /* Starscream */; };
 		F6DAEA942CDF4CF20022FA6A /* Collections in Frameworks */ = {isa = PBXBuildFile; productRef = F6DAEA932CDF4CF20022FA6A /* Collections */; };
+		F6E5E53E2CEFEE6E000A6013 /* genbuildinfo.pl in Resources */ = {isa = PBXBuildFile; fileRef = F6E5E53D2CEFEE45000A6013 /* genbuildinfo.pl */; };
+		F6E5E5402CEFEE82000A6013 /* BuildInfoBase.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E5E53F2CEFEE7F000A6013 /* BuildInfoBase.swift */; };
+		F6E5E5452CEFF45E000A6013 /* BuildInfo.swift in Sources */ = {isa = PBXBuildFile; fileRef = F6E5E5442CEFF45E000A6013 /* BuildInfo.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -33,6 +36,9 @@
 
 /* Begin PBXFileReference section */
 		F6DAEA832CDF3BFB0022FA6A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = reazure/Localizable.xcstrings; sourceTree = "<group>"; };
+		F6E5E53D2CEFEE45000A6013 /* genbuildinfo.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = genbuildinfo.pl; sourceTree = "<group>"; };
+		F6E5E53F2CEFEE7F000A6013 /* BuildInfoBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfoBase.swift; sourceTree = "<group>"; };
+		F6E5E5442CEFF45E000A6013 /* BuildInfo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfo.swift; sourceTree = "<group>"; };
 		F6F892E62CD6388100182F17 /* reazure.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = reazure.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6F892F72CD6388300182F17 /* reazureTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = reazureTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		F6F893012CD6388300182F17 /* reazureUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = reazureUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -88,6 +94,9 @@
 		F6F892DD2CD6388100182F17 = {
 			isa = PBXGroup;
 			children = (
+				F6E5E5442CEFF45E000A6013 /* BuildInfo.swift */,
+				F6E5E53F2CEFEE7F000A6013 /* BuildInfoBase.swift */,
+				F6E5E53D2CEFEE45000A6013 /* genbuildinfo.pl */,
 				F6DAEA832CDF3BFB0022FA6A /* Localizable.xcstrings */,
 				F6F892E82CD6388100182F17 /* reazure */,
 				F6F892FA2CD6388300182F17 /* reazureTests */,
@@ -113,6 +122,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = F6F8930B2CD6388300182F17 /* Build configuration list for PBXNativeTarget "reazure" */;
 			buildPhases = (
+				F6E5E5432CEFF285000A6013 /* ShellScript */,
 				F6F892E22CD6388100182F17 /* Sources */,
 				F6F892E32CD6388100182F17 /* Frameworks */,
 				F6F892E42CD6388100182F17 /* Resources */,
@@ -239,6 +249,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				F6DAEA842CDF3BFB0022FA6A /* Localizable.xcstrings in Resources */,
+				F6E5E53E2CEFEE6E000A6013 /* genbuildinfo.pl in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -258,11 +269,35 @@
 		};
 /* End PBXResourcesBuildPhase section */
 
+/* Begin PBXShellScriptBuildPhase section */
+		F6E5E5432CEFF285000A6013 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			outputFileListPaths = (
+			);
+			outputPaths = (
+				"$(SRCROOT)/BuildInfo.swift",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "# Type a script or drag a script file from your workspace to insert its path.\n\ncd $SRCROOT\nperl $SRCROOT/genbuildinfo.pl\n";
+		};
+/* End PBXShellScriptBuildPhase section */
+
 /* Begin PBXSourcesBuildPhase section */
 		F6F892E22CD6388100182F17 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				F6E5E5452CEFF45E000A6013 /* BuildInfo.swift in Sources */,
+				F6E5E5402CEFEE82000A6013 /* BuildInfoBase.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -424,6 +459,7 @@
 				DEVELOPMENT_TEAM = XHA76UVA95;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "re;azure";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";
@@ -467,6 +503,7 @@
 				DEVELOPMENT_TEAM = XHA76UVA95;
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = NO;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_CFBundleDisplayName = "re;azure";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.social-networking";

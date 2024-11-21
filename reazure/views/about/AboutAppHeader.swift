@@ -37,7 +37,7 @@ struct AboutAppHeader: View {
                 .padding(.bottom, 8)
             
             VStack {
-                (Text("PRODUCT_NAME") + Text(" ") + Text("version \(PRODUCT_VERSION)"))
+                (Text("PRODUCT_NAME") + Text(" ") + Text("version \(BuildInfo.current.displayVersion)"))
                     .padding(.bottom, 8)
                 
                 Text("PRODUCT_SLOGAN")
