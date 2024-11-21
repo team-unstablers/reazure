@@ -252,7 +252,16 @@ extension SharedClient: StreamingClientDelegate {
                     
                     self.notifications.insert(model, at: 0)
                     
-                    if (PreferencesManager.shared.vibrateOnNotification) {
+                    let preferencesManager = PreferencesManager.shared
+                    let notifySound = preferencesManager.notificationSound
+                    let shouldPlaySound = preferencesManager.playSoundOnNotification
+                    let shouldVibrate = (
+                        preferencesManager.vibrateOnNotification
+                    )
+                    
+                    if (shouldPlaySound) {
+                        notifySound.play()
+                    } else if (shouldVibrate) {
                         HapticManager.shared.vibrate()
                     }
                 }

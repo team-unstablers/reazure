@@ -23,7 +23,6 @@ fileprivate struct PreferenceSwitch<Content>: View where Content: View {
                 preferencesManager.save()
             }
     }
-    
 }
 
 
@@ -46,14 +45,29 @@ struct AboutAppView: View {
                 AboutAppHeader()
                     .listRowInsets(EdgeInsets())
                 
-                Section("SETTINGS_CATEGORY_DEFAULT") {
-                    Toggle(isOn: .constant(false)) {
+                Section(header: Text("SETTINGS_CATEGORY_DEFAULT"), footer: Text("SETTINGS_FOOTER_DEFAULT")) {
+                    PreferenceSwitch(isOn: $preferencesManager.playSoundOnNotification) {
                         Text("SETTINGS_KEY_PLAY_SOUND")
                     }
-                        .disabled(true)
+                    
+                    if preferencesManager.playSoundOnNotification {
+                        Picker("SETTINGS_KEY_SOUND_NAME", selection: $preferencesManager.notificationSound) {
+                            ForEach(NotificationSound.allCases) { sound in
+                                Text(sound.localizedDescription)
+                                    .tag(sound)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                        .onChange(of: preferencesManager.notificationSound) { newValue in
+                            newValue.play()
+                            preferencesManager.save()
+                        }
+                    }
+                    
                     PreferenceSwitch(isOn: $preferencesManager.vibrateOnNotification) {
                         Text("SETTINGS_KEY_VIBRATE")
                     }
+                        .disabled(preferencesManager.playSoundOnNotification)
                     
                     PreferenceSwitch(isOn: $preferencesManager.liftDownPostArea) {
                         Text("SETTINGS_KEY_LIFT_DOWN_POST_AREA")
