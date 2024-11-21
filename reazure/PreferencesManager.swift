@@ -10,6 +10,12 @@ class PreferencesManager: ObservableObject {
     static let shared = PreferencesManager()
     
     @Published
+    var playSoundOnNotification: Bool = true
+    
+    @Published
+    var notificationSound: NotificationSound = .default
+
+    @Published
     var vibrateOnNotification: Bool = true
     
     @Published
@@ -35,6 +41,8 @@ class PreferencesManager: ObservableObject {
     func refresh() {
         let defaults = UserDefaults.standard
         
+        self.playSoundOnNotification = defaults.bool(forKey: "playSoundOnNotification")
+        self.notificationSound = NotificationSound(rawValue: defaults.string(forKey: "notificationSound") ?? "default") ?? .default
         self.vibrateOnNotification = defaults.bool(forKey: "vibrateOnNotification")
         self.compactMode = defaults.bool(forKey: "compactMode")
         self.showExtKeypad = defaults.bool(forKey: "showExtKeypad")
@@ -46,6 +54,8 @@ class PreferencesManager: ObservableObject {
     func save() {
         let defaults = UserDefaults.standard
         
+        defaults.set(self.playSoundOnNotification, forKey: "playSoundOnNotification")
+        defaults.set(self.notificationSound.rawValue, forKey: "notificationSound")
         defaults.set(self.vibrateOnNotification, forKey: "vibrateOnNotification")
         defaults.set(self.compactMode, forKey: "compactMode")
         defaults.set(self.showExtKeypad, forKey: "showExtKeypad")

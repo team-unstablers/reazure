@@ -586,6 +586,28 @@
     "Left: %lld" : {
 
     },
+    "NOTIFICATION_SOUND_DEFAULT" : {
+      "comment" : "기본 (Tri-Tone)",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "기본값 (가능한 경우)"
+          }
+        }
+      }
+    },
+    "NOTIFICATION_SOUND_NOTIFY32" : {
+      "comment" : "notify32",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "notify32"
+          }
+        }
+      }
+    },
     "POST_VISIBILITY_DIRECT" : {
       "localizations" : {
         "en" : {
@@ -807,6 +829,16 @@
         }
       }
     },
+    "SETTINGS_FOOTER_DEFAULT" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "각 알림 소리에 대한 라이선스는 GitHub 저장소에서 확인이 가능합니다."
+          }
+        }
+      }
+    },
     "SETTINGS_FOOTER_SHOW_EXT_KEYPAD" : {
       "localizations" : {
         "en" : {
@@ -929,6 +961,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "확장 키패드 표시"
+          }
+        }
+      }
+    },
+    "SETTINGS_KEY_SOUND_NAME" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "알림 소리"
           }
         }
       }
