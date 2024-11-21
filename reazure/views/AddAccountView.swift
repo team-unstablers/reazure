@@ -58,14 +58,18 @@ fileprivate class AddAccountViewModel: ObservableObject {
         
         Task {
             do {
-                try await sanityCheck()
+                guard let nodeInfo = try await MastodonClient.nodeInfo(of: serverAddress) else {
+                    throw FediverseAPIError.unsupportedServerSoftware
+                }
+
+                try await sanityCheck(using: nodeInfo)
                 
                 let application = try await createApplication()
                 self.application = application
                 
                 var authorizeURL = MastodonEndpoint.oauthAuthorize.url(for: serverAddress)
                 
-                let scopes = application.scopes ?? ["profile", "read", "write"]
+                let scopes = application.scopes ?? MastodonClient.defaultScope(for: nodeInfo.software.version)
                 
                 authorizeURL.append(queryItems: [
                     URLQueryItem(name: "client_id", value: application.client_id),
@@ -134,13 +138,9 @@ fileprivate class AddAccountViewModel: ObservableObject {
         }
     }
     
-    func sanityCheck() async throws {
-        guard let nodeInfo = try await MastodonClient.nodeInfo(of: serverAddress) else {
-            throw URLError(.badServerResponse)
-        }
-        
+    func sanityCheck(using nodeInfo: Mastodon.NodeInfo) async throws {
         if nodeInfo.software.name != "mastodon" {
-            throw URLError(.badServerResponse)
+            throw FediverseAPIError.unsupportedServerSoftware
         }
     }
     

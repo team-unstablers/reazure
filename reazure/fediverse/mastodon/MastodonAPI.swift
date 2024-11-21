@@ -60,6 +60,21 @@ struct MastodonEndpoint: RawRepresentable {
 }
 
 class MastodonClient {
+    static func defaultScope(for version: String) -> [String] {
+        let version = version.split(separator: ".")
+        guard let major = Int(version[0]),
+              let minor = Int(version[1])
+        else {
+            return ["read", "write", "profile"]
+        }
+        
+        if (major == 4 && minor <= 2) || major < 4 {
+            return ["read", "write"]
+        }
+        
+        return ["read", "write", "profile"]
+    }
+    
     static func nodeInfo(of server: String) async throws -> Mastodon.NodeInfo? {
         let url = MastodonEndpoint.nodeInfo.url(for: server)
         let response = await AF.request(url)
