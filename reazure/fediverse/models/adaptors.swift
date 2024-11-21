@@ -173,7 +173,9 @@ class MaskedStatusAdaptor: StatusAdaptor {
         self.favourited = favourited ?? status.favourited
         self.reblogged = reblogged ?? status.reblogged
         
-        self.reblog = ReblogMaskedStatusAdaptor(self)
+        if let reblog = status.reblog {
+            self.reblog = ReblogMaskedStatusAdaptor(self)
+        }
     }
 }
 
