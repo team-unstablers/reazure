@@ -28,6 +28,7 @@ struct reazureApp: App {
                 .environmentObject(preferencesManager)
                 .environmentObject(accountManager)
                 .environmentObject(sharedClient)
+                .environment(\.appTheme, preferencesManager.theme)
         }
     }
 }

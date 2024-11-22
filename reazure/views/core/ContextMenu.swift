@@ -7,6 +7,9 @@
 import SwiftUI
 
 struct ContextMenu<T>: View where T: View {
+    @Environment(\.palette)
+    var palette: AppPalette
+
     var content: () -> T
     
     var body: some View {
@@ -14,7 +17,7 @@ struct ContextMenu<T>: View where T: View {
             content()
         }
         .padding(16)
-        .background(AzureaTheme.win32Background.shadow(radius: 2, x: 2, y: 2))
+        .background(palette.shell32Background.shadow(radius: 2, x: 2, y: 2))
         .border(.gray, width: 1)
     }
 }

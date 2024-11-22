@@ -79,12 +79,26 @@ struct AboutAppView: View {
                         Text("SETTINGS_KEY_VIBRATE")
                     }
                         .disabled(preferencesManager.playSoundOnNotification)
-                    
+                }
+                
+                Section {
+                    Picker("SETTINGS_KEY_THEME", selection: $preferencesManager.theme) {
+                        ForEach(AppTheme.allCases) { theme in
+                            Text(theme.name)
+                                .tag(theme)
+                        }
+                    }
+                    .pickerStyle(MenuPickerStyle())
+                } footer: {
+                    Text("SETTINGS_FOOTER_THEME_AUTHORED_BY: \(preferencesManager.theme.author)")
+                }
+                
+                Section {
                     PreferenceSwitch(isOn: $preferencesManager.liftDownPostArea) {
                         Text("SETTINGS_KEY_LIFT_DOWN_POST_AREA")
                     }
                 }
-                
+
                 Section {
                     PreferenceSwitch(isOn: $preferencesManager.compactMode) {
                         Text("SETTINGS_KEY_COMPACT_MODE")

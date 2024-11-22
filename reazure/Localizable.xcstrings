@@ -513,6 +513,9 @@
         }
       }
     },
+    "FEDI_API_ERROR_DECODING_ERROR" : {
+
+    },
     "FEDI_API_ERROR_NOT_IMPLEMENTED" : {
       "localizations" : {
         "en" : {
@@ -896,6 +899,9 @@
         }
       }
     },
+    "SETTINGS_FOOTER_THEME_AUTHORED_BY: %@" : {
+
+    },
     "SETTINGS_KEY_ALWAYS_SHOW_SOFT_KEYBOARD" : {
       "localizations" : {
         "en" : {
@@ -1031,6 +1037,9 @@
           }
         }
       }
+    },
+    "SETTINGS_KEY_THEME" : {
+
     },
     "SETTINGS_KEY_VIBRATE" : {
       "localizations" : {

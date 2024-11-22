@@ -22,6 +22,9 @@ struct PostArea: View {
     @Environment(\.openURL)
     var openURL
     
+    @Environment(\.palette)
+    var palette: AppPalette
+    
     @EnvironmentObject
     var sharedClient: SharedClient
     
@@ -179,7 +182,7 @@ struct PostArea: View {
                     }
             }
         }
-        .background(AzureaTheme.win32Background)
+        .background(palette.shell32Background)
         .onAppear {
             isFocused = false
         }

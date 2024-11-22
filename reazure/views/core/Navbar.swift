@@ -8,13 +8,17 @@
 import SwiftUI
 
 struct Navbar: View {
+    @Environment(\.palette)
+    var palette: AppPalette
     
     @EnvironmentObject
     var sharedClient: SharedClient
     
     @Binding
     var tabSelection: Tab
+
     var tabChange: (Tab) -> Void
+    
     
     var body: some View {
         HStack {
@@ -24,8 +28,9 @@ struct Navbar: View {
                 } label: {
                     Text(Image(systemName: "house"))
                         .font(.system(size: 20))
+                        .foregroundStyle(palette.navbarForeground)
                 }
-                .shadow(color: .white, radius: tabSelection == .home ? 4 : 0)
+                .shadow(color: palette.navbarForeground, radius: tabSelection == .home ? 4 : 0)
                 .conditionalShortcut("1", modifiers: [], when: !sharedClient.postAreaFocused)
                 
                 Spacer()
@@ -35,6 +40,7 @@ struct Navbar: View {
                 } label: {
                     Text(Image(systemName: "at"))
                         .font(.system(size: 20))
+                        .foregroundStyle(palette.navbarForeground)
                         .overlay {
                             if sharedClient.unreadNotificationCount > 0 {
                                 Text(verbatim: String(sharedClient.unreadNotificationCount))
@@ -47,7 +53,7 @@ struct Navbar: View {
                             }
                         }
                 }
-                .shadow(color: .white, radius: tabSelection == .notification ? 4 : 0)
+                .shadow(color: palette.navbarForeground, radius: tabSelection == .notification ? 4 : 0)
                 .conditionalShortcut("2", modifiers: [], when: !sharedClient.postAreaFocused)
 
                 Spacer()
@@ -57,8 +63,9 @@ struct Navbar: View {
                 } label: {
                     Text(Image(systemName: "globe"))
                         .font(.system(size: 20))
+                        .foregroundStyle(palette.navbarForeground)
                 }
-                .shadow(color: .white, radius: tabSelection == .profile ? 4 : 0)
+                .shadow(color: palette.navbarForeground, radius: tabSelection == .profile ? 4 : 0)
                 .conditionalShortcut("3", modifiers: [], when: !sharedClient.postAreaFocused)
 
                 Spacer()
@@ -68,8 +75,9 @@ struct Navbar: View {
                 } label: {
                     Text(Image(systemName: "gear"))
                         .font(.system(size: 20))
+                        .foregroundStyle(palette.navbarForeground)
                 }
-                .shadow(color: .white, radius: tabSelection == .settings ? 4 : 0)
+                .shadow(color: palette.navbarForeground, radius: tabSelection == .settings ? 4 : 0)
                 .conditionalShortcut("4", modifiers: [], when: !sharedClient.postAreaFocused)
 
             }
@@ -78,8 +86,7 @@ struct Navbar: View {
         .padding(.horizontal, 32)
         .frame(height: 48)
         .background(
-            Image(uiImage: generateGradientBackground(colors: AzureaTheme.bgGradient))
-                .resizable()
+            LinearGradient(gradient: palette.navbarBackground, startPoint: .top, endPoint: .bottom)
         )
     }
 }
