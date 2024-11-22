@@ -13,6 +13,8 @@ enum FediverseAPIError: LocalizedError {
     case operationNotSupported
     case unsupportedServerSoftware
     
+    case decodingError(originError: DecodingError)
+    
     case serverError(originError: Error? = nil)
     case unknownError(originError: Error? = nil)
     
@@ -24,6 +26,8 @@ enum FediverseAPIError: LocalizedError {
             return NSLocalizedString("FEDI_API_ERROR_OPERATION_NOT_SUPPORTED", comment: "")
         case .unsupportedServerSoftware:
             return NSLocalizedString("FEDI_API_ERROR_UNSUPPORTED_SERVER_SOFTWARE", comment: "")
+        case .decodingError(let originError):
+            return NSLocalizedString("FEDI_API_ERROR_DECODING_ERROR", comment: "") + " (" + originError.localizedDescription + ")"
         case .serverError(let originError):
             return NSLocalizedString("FEDI_API_ERROR_SERVER_ERROR", comment: "") + " (" + (originError?.localizedDescription ?? "") + ")"
         case .unknownError(let originError):
