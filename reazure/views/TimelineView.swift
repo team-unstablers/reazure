@@ -79,15 +79,6 @@ struct TimelineView: View {
                 }
                  */
             }
-            .onChange(of: sharedClient.timeline[type]) {
-                guard let focusState = sharedClient.focusState[type] else {
-                    return
-                }
-                
-                if (sharedClient.timeline[type]?.first?.id != focusState.id) {
-                    proxy.scrollTo(focusState)
-                }
-            }
             .onChange(of: sharedClient.focusState[type]) { (oldValue, value) in
                 if (oldValue == value) {
                     return
