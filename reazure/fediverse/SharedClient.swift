@@ -241,8 +241,6 @@ extension SharedClient: StreamingClientDelegate {
                     let model = StatusModel(adaptor: adaptor)
                     self.timeline[.home]?.insert(model, at: 0)
                 }
-                
-                print("Done!")
             } catch {
                 print("SharedClient:didReceive: \(error)")
             }

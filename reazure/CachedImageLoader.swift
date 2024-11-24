@@ -23,7 +23,6 @@ class CachedImageLoader {
     
     func loadImage(url: String) async -> UIImage {
         if let image = imageCache.image(withIdentifier: url) {
-            print("cache hit")
             return image
         }
         
