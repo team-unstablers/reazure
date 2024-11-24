@@ -35,6 +35,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		F6CD862D2CF348A0003B7173 /* README.md */ = {isa = PBXFileReference; explicitFileType = text; path = README.md; sourceTree = "<group>"; };
+		F6CD86392CF351E1003B7173 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		F6DAEA832CDF3BFB0022FA6A /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; name = Localizable.xcstrings; path = reazure/Localizable.xcstrings; sourceTree = "<group>"; };
 		F6E5E53D2CEFEE45000A6013 /* genbuildinfo.pl */ = {isa = PBXFileReference; lastKnownFileType = text.script.perl; path = genbuildinfo.pl; sourceTree = "<group>"; };
 		F6E5E53F2CEFEE7F000A6013 /* BuildInfoBase.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BuildInfoBase.swift; sourceTree = "<group>"; };
@@ -94,6 +96,8 @@
 		F6F892DD2CD6388100182F17 = {
 			isa = PBXGroup;
 			children = (
+				F6CD862D2CF348A0003B7173 /* README.md */,
+				F6CD86392CF351E1003B7173 /* LICENSE */,
 				F6E5E5442CEFF45E000A6013 /* BuildInfo.swift */,
 				F6E5E53F2CEFEE7F000A6013 /* BuildInfoBase.swift */,
 				F6E5E53D2CEFEE45000A6013 /* genbuildinfo.pl */,
