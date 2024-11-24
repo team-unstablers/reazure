@@ -26,6 +26,11 @@ extension AppTheme {
             ]),
             navbarForeground: .white,
             
+            extKeypadBackground: .init(r8: 209, g8: 212, b8: 217),
+            extKeypadButtonBackground: .white,
+            extKeypadButtonForeground: .black,
+            extKeypadButtonSecondaryForeground: .gray,
+            
             timelineBackground: .white,
             
             postItemNormalBackground: .white,
@@ -51,6 +56,11 @@ extension AppTheme {
             ]),
             navbarForeground: .white,
             
+            extKeypadBackground: .init(r8: 43, g8: 43, b8: 43),
+            extKeypadButtonBackground: .init(r8: 106, g8: 106, b8: 106),
+            extKeypadButtonForeground: .white,
+            extKeypadButtonSecondaryForeground: .white.opacity(0.75),
+
             timelineBackground: .black,
             
             postItemNormalBackground: .black,

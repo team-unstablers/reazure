@@ -40,6 +40,9 @@ fileprivate struct HapticFeedbackModifier: ViewModifier {
 
 
 fileprivate struct KeypadButton: View {
+    @Environment(\.palette)
+    var palette: AppPalette
+
     @Binding var label: String
     @Binding var sublabel: String?
     
@@ -51,18 +54,18 @@ fileprivate struct KeypadButton: View {
         } label: {
             VStack {
                 Text(label)
-                    .foregroundStyle(.black)
+                    .foregroundStyle(palette.extKeypadButtonForeground)
                     .padding(.bottom, 0)
                 
                 Text(sublabel ?? " ")
                     .font(.caption2)
-                    .foregroundStyle(.gray)
+                    .foregroundStyle(palette.extKeypadButtonSecondaryForeground)
             }
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .frame(maxWidth: .infinity, alignment: .center)
         }
-        .background(.white)
+        .background(palette.extKeypadButtonBackground)
         .clipShape(.rect(cornerRadius: 4))
         .shadow(radius: 1, x: 0, y: 1)
         .hapticFeedback()
@@ -70,6 +73,9 @@ fileprivate struct KeypadButton: View {
 }
 
 struct ExtKeypad: View {
+    @Environment(\.palette)
+    var palette: AppPalette
+    
     @EnvironmentObject
     var preferencesManager: PreferencesManager
     
@@ -156,7 +162,7 @@ struct ExtKeypad: View {
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 8)
-        .background(Color(uiColor: .init(r8: 209, g8: 212, b8: 217)))
+        .background(palette.extKeypadBackground)
     }
 }
 

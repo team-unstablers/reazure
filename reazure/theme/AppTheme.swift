@@ -15,6 +15,11 @@ struct AppPalette {
     var navbarBackground: Gradient
     var navbarForeground: Color
     
+    var extKeypadBackground: Color
+    var extKeypadButtonBackground: Color
+    var extKeypadButtonForeground: Color
+    var extKeypadButtonSecondaryForeground: Color
+
     var timelineBackground: Color
     
     var postItemNormalBackground: Color
