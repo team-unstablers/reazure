@@ -514,7 +514,14 @@
       }
     },
     "FEDI_API_ERROR_DECODING_ERROR" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "서버로부터 받은 데이터를 해석할 수 없었습니다."
+          }
+        }
+      }
     },
     "FEDI_API_ERROR_NOT_IMPLEMENTED" : {
       "localizations" : {
@@ -911,7 +918,14 @@
       }
     },
     "SETTINGS_FOOTER_THEME_AUTHORED_BY: %@" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테마 작성자: %@"
+          }
+        }
+      }
     },
     "SETTINGS_KEY_ALWAYS_SHOW_SOFT_KEYBOARD" : {
       "localizations" : {
@@ -1050,7 +1064,14 @@
       }
     },
     "SETTINGS_KEY_THEME" : {
-
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "테마"
+          }
+        }
+      }
     },
     "SETTINGS_KEY_VIBRATE" : {
       "localizations" : {
