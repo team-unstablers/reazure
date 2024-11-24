@@ -49,7 +49,7 @@ extension AppTheme {
                 .init(color: .init(r8: 10,  g8: 53,  b8: 121), location: 0.5),
                 .init(color: .init(r8: 10,  g8: 53,  b8: 129), location: 1),
             ]),
-            navbarForeground: .black,
+            navbarForeground: .white,
             
             timelineBackground: .black,
             
