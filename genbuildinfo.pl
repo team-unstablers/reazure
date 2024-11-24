@@ -5,7 +5,7 @@ use warnings;
 
 use IO::File;
 
-my $debug = ($ENV{DEBUG} // 1) == 1 ? "true" : "false";
+my $debug = ($ENV{"CONFIGURATION"} || "Debug") ne "Release" ? "true" : "false";
 
 my $git_branch_or_tag = `git symbolic-ref -q --short HEAD || git describe --tags --exact-match`;
 my $git_commit = `git rev-parse HEAD`;
