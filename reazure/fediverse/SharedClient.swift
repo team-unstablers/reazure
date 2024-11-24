@@ -146,6 +146,8 @@ class SharedClient: ObservableObject {
                     let model = StatusModel(adaptor: adaptor)
                     self.timeline[type]?.insert(model, at: 0)
                 }
+                
+                self.timeline[type]?.sort { $0.id > $1.id }
             }
         } catch {
             // FIXME
@@ -166,6 +168,8 @@ class SharedClient: ObservableObject {
                     
                     self.notifications.insert(model, at: 0)
                 }
+                
+                self.notifications.sort { $0.id > $1.id }
             }
         } catch {
             // FIXME
@@ -241,8 +245,6 @@ extension SharedClient: StreamingClientDelegate {
                     let model = StatusModel(adaptor: adaptor)
                     self.timeline[.home]?.insert(model, at: 0)
                 }
-                
-                print("Done!")
             } catch {
                 print("SharedClient:didReceive: \(error)")
             }

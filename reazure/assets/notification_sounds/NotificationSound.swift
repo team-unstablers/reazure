@@ -14,7 +14,7 @@ enum NotificationSound: String, Identifiable {
     ]
     
     static func initialize() {
-        let sounds: [NotificationSound] = [.notify32, .boop]
+        let sounds: [NotificationSound] = [.reazure, .notify32, .boop]
         
         for sound in sounds {
             guard let url = sound.url else {
@@ -33,11 +33,13 @@ enum NotificationSound: String, Identifiable {
     }
     
     static var allCases: [NotificationSound] {
-        return [.default, .notify32, .boop]
+        return [.default, .reazure, .notify32, .boop]
     }
     
     /// plays Tri-tone sound
     case `default` = "default"
+    
+    case reazure = "reazure"
     
     /// notify32.aif - 어째선지 그리움이 느껴지는 소리
     /// - Author: Gyuhwan Park⭐️ (@cheesekun@ppiy.ac)
@@ -55,6 +57,8 @@ enum NotificationSound: String, Identifiable {
 
     var url: URL? {
         switch self {
+        case .reazure:
+            return Bundle.main.url(forResource: "reazure", withExtension: "aif")
         case .notify32:
             return Bundle.main.url(forResource: "notify32", withExtension: "aif")
         case .boop:
@@ -67,7 +71,7 @@ enum NotificationSound: String, Identifiable {
     func play(_ vibrate: Bool = true) {
         if (self == .default && PlatformMask.current == .macOS) {
             // macOS에서는 tri-tone 사운드가 재생되지 않음
-            NotificationSound.notify32.play()
+            NotificationSound.reazure.play()
             
             return
         }
@@ -87,6 +91,8 @@ enum NotificationSound: String, Identifiable {
         switch self {
         case .default:
             return NSLocalizedString("NOTIFICATION_SOUND_DEFAULT", comment: "기본 (Tri-Tone)")
+        case .reazure:
+            return NSLocalizedString("NOTIFICATION_SOUND_REAZURE", comment: "re;azure")
         case .notify32:
             return NSLocalizedString("NOTIFICATION_SOUND_NOTIFY32", comment: "notify32")
         case .boop:

@@ -19,6 +19,9 @@ class PreferencesManager: ObservableObject {
     var vibrateOnNotification: Bool = true
     
     @Published
+    var theme: AppTheme = .default
+    
+    @Published
     var compactMode: Bool = false
 
     @Published
@@ -44,6 +47,7 @@ class PreferencesManager: ObservableObject {
         self.playSoundOnNotification = defaults.bool(forKey: "playSoundOnNotification")
         self.notificationSound = NotificationSound(rawValue: defaults.string(forKey: "notificationSound") ?? "default") ?? .default
         self.vibrateOnNotification = defaults.bool(forKey: "vibrateOnNotification")
+        self.theme = AppTheme.registry[defaults.string(forKey: "theme") ?? "default"] ?? .default
         self.compactMode = defaults.bool(forKey: "compactMode")
         self.showExtKeypad = defaults.bool(forKey: "showExtKeypad")
         self.swapJKOnExtKeypad = defaults.bool(forKey: "swapJKOnExtKeypad")
@@ -57,6 +61,7 @@ class PreferencesManager: ObservableObject {
         defaults.set(self.playSoundOnNotification, forKey: "playSoundOnNotification")
         defaults.set(self.notificationSound.rawValue, forKey: "notificationSound")
         defaults.set(self.vibrateOnNotification, forKey: "vibrateOnNotification")
+        defaults.set(self.theme.id, forKey: "theme")
         defaults.set(self.compactMode, forKey: "compactMode")
         defaults.set(self.showExtKeypad, forKey: "showExtKeypad")
         defaults.set(self.swapJKOnExtKeypad, forKey: "swapJKOnExtKeypad")

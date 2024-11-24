@@ -17,6 +17,7 @@ enum StreamingState {
 protocol StreamingClientDelegate {
     func didReceive(event: Mastodon.StreamingEvent, client: StreamingClient)
     func didStateChange(state: StreamingState, client: StreamingClient)
+    // FIXME: error handler
 }
 
 class StreamingClient {
@@ -75,9 +76,8 @@ extension StreamingClient: WebSocketDelegate {
             } catch {
                 print("StreamingClient Error: \(error)")
             }
-            print("Received text: \(string)")
         case .binary(let data):
-            print("Received data: \(data.count)")
+            break
         case .ping(_):
             self.socket?.write(pong: Data())
             break

@@ -12,6 +12,8 @@ struct AppRootView: View {
         case signin
     }
     
+    @Environment(\.palette)
+    var palette: AppPalette
     
     @FocusState
     var focused: Bool
@@ -91,7 +93,7 @@ struct AppRootView: View {
                         .hidden()
                 }
             }
-            .background(AzureaTheme.win32Background)
+            .background(palette.shell32Background)
             .watchAccountManager {
                 navState.append(.signin)
             }

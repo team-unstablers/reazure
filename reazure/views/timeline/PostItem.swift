@@ -33,6 +33,9 @@ struct PostItem: View, Equatable {
     @Environment(\.openURL)
     var openURL
     
+    @Environment(\.palette)
+    var palette: AppPalette
+    
     var status: StatusAdaptor
     
     var relatedAccount: AccountAdaptor? = nil
@@ -43,9 +46,9 @@ struct PostItem: View, Equatable {
     
     var background: Color {
         if flags.contains(.rebloggedByOthers) {
-            return .init(uiColor: UIColor(r8: 135, g8: 245, b8: 66, a: 0.2))
+            return palette.postItemRebloggedBackground
         } else if flags.contains(.favouritedByOthers) {
-            return .init(uiColor: UIColor(r8: 245, g8: 239, b8: 66, a: 0.2))
+            return palette.postItemFavouritedBackground
         }
         
         return .clear
@@ -53,10 +56,10 @@ struct PostItem: View, Equatable {
     
     var textColor: Color {
         if flags.contains(.mentioned) {
-            return .init(uiColor: UIColor(r8: 66, g8: 78, b8: 245, a: 1.0))
+            return palette.postItemMentionForeground
         }
         
-        return .primary
+        return palette.postItemNormalForeground
     }
     
     var attachment: some View {

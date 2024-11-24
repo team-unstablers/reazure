@@ -15,19 +15,12 @@ struct MastodonEndpoint: RawRepresentable {
     
     static let oauthAuthorize = MastodonEndpoint(rawValue: "/oauth/authorize")
     static let oauthToken = MastodonEndpoint(rawValue: "/oauth/token")
-    
     static let instance = MastodonEndpoint(rawValue: "/api/v2/instance")
-
     static let registerApp = MastodonEndpoint(rawValue: "/api/v1/apps")
-    
     static let verifyCredentials = MastodonEndpoint(rawValue: "/api/v1/accounts/verify_credentials")
-    
     static let statuses = MastodonEndpoint(rawValue: "/api/v1/statuses")
-
     static let notifications = MastodonEndpoint(rawValue: "/api/v1/notifications")
-    
     static let homeTimeline = MastodonEndpoint(rawValue: "/api/v1/timelines/home")
-    
     static let streaming = MastodonEndpoint(rawValue: "/api/v1/streaming")
     
     static func status(of statusId: String) -> MastodonEndpoint {
@@ -152,43 +145,53 @@ class MastodonClient {
         self.account = account
     }
     
-    func verifyCredentials() async throws -> Mastodon.UserProfile {
-        let url = MastodonEndpoint.verifyCredentials.url(for: account.server.address)
-    
-        let response = await AF.request(url, headers: [
+    func request<Response>(
+        to endpoint: MastodonEndpoint,
+        expects type: Response.Type,
+        method: HTTPMethod = .get,
+        parameters: [String: String] = [:],
+        requiresAuth: Bool = true
+    ) async throws -> Response where Response: Decodable & Sendable {
+        let url = endpoint.url(for: account.server.address)
+        
+        let headers: HTTPHeaders? = (requiresAuth) ? [
             "Authorization": "Bearer \(account.accessToken)"
-        ])
+        ] : nil
+        
+        
+        let response = await AF.request(url,
+                                        method: method,
+                                        parameters: parameters,
+                                        headers: headers)
             .validate()
-            .serializingDecodable(Mastodon.UserProfile.self)
+            .serializingDecodable(type)
             .response
         
         guard let value = response.value else {
-            throw response.error!
+            let error = response.error!
+            let underlyingError = error.underlyingError
+            
+            if underlyingError is DecodingError {
+                throw FediverseAPIError.decodingError(originError: underlyingError as! DecodingError)
+            }
+            
+            throw FediverseAPIError.serverError(originError: error)
         }
         
         return value
+    }
+    
+    func verifyCredentials() async throws -> Mastodon.UserProfile {
+        return try await request(to: MastodonEndpoint.verifyCredentials,
+                                 expects: Mastodon.UserProfile.self)
     }
     
     func status(of statusId: String) async throws -> Mastodon.Status {
-        let url = MastodonEndpoint.status(of: statusId).url(for: account.server.address)
-        
-        let response = await AF.request(url, headers: [
-            "Authorization": "Bearer \(account.accessToken)"
-        ])
-            .validate()
-            .serializingDecodable(Mastodon.Status.self)
-            .response
-        
-        guard let value = response.value else {
-            throw response.error!
-        }
-        
-        return value
+        return try await request(to: MastodonEndpoint.status(of: statusId),
+                                 expects: Mastodon.Status.self)
     }
     
     func postStatus(_ status: String, visibility: Mastodon.Visibility, replyTo: String? = nil) async throws -> Mastodon.Status {
-        let url = MastodonEndpoint.statuses.url(for: account.server.address)
-        
         var parameters = [
             "status": status,
             "visibility": visibility.rawValue
@@ -197,124 +200,47 @@ class MastodonClient {
         if let replyTo = replyTo {
             parameters["in_reply_to_id"] = replyTo
         }
-            
-        let response = await AF.request(url, method: .post, parameters: parameters, headers: [
-            "Authorization": "Bearer \(account.accessToken)"
-        ])
-            .validate()
-            .serializingDecodable(Mastodon.Status.self)
-            .response
+
         
-        guard let value = response.value else {
-            throw response.error!
-        }
-        
-        return value
+        return try await request(to: MastodonEndpoint.statuses,
+                                 expects: Mastodon.Status.self,
+                                 method: .post,
+                                 parameters: parameters)
     }
     
     func notifications() async throws -> [Mastodon.Notification] {
-        let url = MastodonEndpoint.notifications.url(for: account.server.address)
-        
-        let response = await AF.request(url, headers: [
-            "Authorization": "Bearer \(account.accessToken)"
-        ])
-            .validate()
-            .serializingDecodable([Mastodon.Notification].self)
-            .response
-        
-        guard let value = response.value else {
-            throw response.error!
-        }
-        
-        return value
+        return try await request(to: MastodonEndpoint.notifications,
+                                 expects: [Mastodon.Notification].self)
     }
     
     func homeTimeline() async throws -> [Mastodon.Status] {
-        let url = MastodonEndpoint.homeTimeline.url(for: account.server.address)
-        
-            
-        let response = await AF.request(url, headers: [
-            "Authorization": "Bearer \(account.accessToken)"
-        ])
-            .validate()
-            .serializingDecodable([Mastodon.Status].self)
-            .response
-        
-        guard let value = response.value else {
-            throw response.error!
-        }
-        
-        return value
+        return try await request(to: MastodonEndpoint.homeTimeline,
+                                 expects: [Mastodon.Status].self)
     }
     
     func favourite(statusId: String) async throws -> Mastodon.Status {
-        let url = MastodonEndpoint.favourite(of: statusId).url(for: account.server.address)
-        
-        let response = await AF.request(url, method: .post, headers: [
-            "Authorization": "Bearer \(account.accessToken)"
-        ])
-            .validate()
-            .serializingDecodable(Mastodon.Status.self)
-            .response
-        
-        guard let value = response.value else {
-            throw response.error!
-        }
-        
-        return value
+        return try await request(to: MastodonEndpoint.favourite(of: statusId),
+                                 expects: Mastodon.Status.self,
+                                 method: .post)
     }
     
     func unfavourite(statusId: String) async throws -> Mastodon.Status {
-        let url = MastodonEndpoint.unfavourite(of: statusId).url(for: account.server.address)
-        
-        let response = await AF.request(url, method: .post, headers: [
-            "Authorization": "Bearer \(account.accessToken)"
-        ])
-            .validate()
-            .serializingDecodable(Mastodon.Status.self)
-            .response
-        
-        guard let value = response.value else {
-            throw response.error!
-        }
-        
-        return value
+        return try await request(to: MastodonEndpoint.unfavourite(of: statusId),
+                                 expects: Mastodon.Status.self,
+                                 method: .post)
     }
     
     func reblog(statusId: String) async throws -> Mastodon.Status {
-        let url = MastodonEndpoint.reblog(of: statusId).url(for: account.server.address)
-        
-        let response = await AF.request(url, method: .post, headers: [
-            "Authorization": "Bearer \(account.accessToken)"
-        ])
-            .validate()
-            .serializingDecodable(Mastodon.Status.self)
-            .response
-        
-        guard let value = response.value else {
-            throw response.error!
-        }
-        
-        return value
+        return try await request(to: MastodonEndpoint.reblog(of: statusId),
+                                 expects: Mastodon.Status.self,
+                                 method: .post)
     }
     
     func unreblog(statusId: String) async throws -> Mastodon.Status {
-        let url = MastodonEndpoint.unreblog(of: statusId).url(for: account.server.address)
-        
-        let response = await AF.request(url, method: .post, headers: [
-            "Authorization": "Bearer \(account.accessToken)"
-        ])
-            .validate()
-            .serializingDecodable(Mastodon.Status.self)
-            .response
-        
-        guard let value = response.value else {
-            throw response.error!
-        }
-        
-        return value
+        return try await request(to: MastodonEndpoint.unreblog(of: statusId),
+                                 expects: Mastodon.Status.self,
+                                 method: .post)
     }
-
 }
 
 fileprivate extension String {

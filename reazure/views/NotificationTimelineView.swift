@@ -29,15 +29,6 @@ struct NotificationTimelineView: View {
             .listRowSpacing(0)
             .padding(0)
             .environment(\.defaultMinListRowHeight, 0)
-            .onChange(of: sharedClient.notifications) {
-                guard let focusState = sharedClient.focusState[.notifications] else {
-                    return
-                }
-                
-                if (sharedClient.notifications.first?.id != focusState.id) {
-                    proxy.scrollTo(focusState)
-                }
-            }
             .onChange(of: sharedClient.focusState[.notifications]) { oldValue, value in
                 if oldValue == value {
                     return

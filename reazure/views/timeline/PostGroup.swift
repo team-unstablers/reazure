@@ -16,6 +16,9 @@ import SwiftUI
  */
 
 struct PostGroup: View {
+    @Environment(\.palette)
+    var palette: AppPalette
+    
     @EnvironmentObject
     var preferencesManager: PreferencesManager
     
@@ -90,7 +93,7 @@ struct PostGroup: View {
                 .padding(.leading, CGFloat(depth) * 8)
                 .background {
                     if focused {
-                        Color(uiColor: UIColor(r8: 66, g8: 203, b8: 245, a: 0.2))
+                        palette.postItemFocusedBackground
                     } else {
                         Color.clear
                     }

@@ -72,7 +72,7 @@ extension HTMLElement {
             // emojo.bounds = CGRect(x: 0, y: -4, width: 16, height: 16)
             emojo.bounds = CGRect(x: 0, y: -3, width: emojoImage.size.width, height: emojoImage.size.height)
             
-            print(emojo)
+            // print(emojo)
             
             return NSAttributedString(attachment: emojo)
         } else if (name == "br") {
@@ -264,7 +264,7 @@ func parseHTML(_ html: String) -> HTMLElement {
     
     while !scanner.isAtEnd {
         if let text = scanner.scanUpToString("<") {
-            print("text: \(text)")
+            // print("text: \(text)")
             
             let containerElement = parseEmojo(text.decodeHTMLEntity())
             currentElement.children.append(containerElement)
@@ -276,7 +276,7 @@ func parseHTML(_ html: String) -> HTMLElement {
         
         scanner.scanString(">")
         
-        print("tag: \(tag)")
+        // print("tag: \(tag)")
         
         if tag.hasPrefix("!--") && tag.hasSuffix("--") {
             continue

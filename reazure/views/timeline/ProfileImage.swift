@@ -75,7 +75,6 @@ struct ProfileImage: View, Equatable {
             return
         }
 
-        print("fetching image")
         Task { [self] in
             let image = await self.cachedImageLoader.loadImage(url: url)
             // didFetch.send(image)

@@ -513,6 +513,9 @@
         }
       }
     },
+    "FEDI_API_ERROR_DECODING_ERROR" : {
+
+    },
     "FEDI_API_ERROR_NOT_IMPLEMENTED" : {
       "localizations" : {
         "en" : {
@@ -616,7 +619,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "기본값 (가능한 경우)"
+            "value" : "시스템 기본값 (가능한 경우)"
           }
         }
       }
@@ -628,6 +631,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "notify32"
+          }
+        }
+      }
+    },
+    "NOTIFICATION_SOUND_REAZURE" : {
+      "comment" : "re;azure",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "re;azure"
           }
         }
       }
@@ -896,6 +910,9 @@
         }
       }
     },
+    "SETTINGS_FOOTER_THEME_AUTHORED_BY: %@" : {
+
+    },
     "SETTINGS_KEY_ALWAYS_SHOW_SOFT_KEYBOARD" : {
       "localizations" : {
         "en" : {
@@ -1031,6 +1048,9 @@
           }
         }
       }
+    },
+    "SETTINGS_KEY_THEME" : {
+
     },
     "SETTINGS_KEY_VIBRATE" : {
       "localizations" : {
