@@ -619,7 +619,7 @@
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "기본값 (가능한 경우)"
+            "value" : "시스템 기본값 (가능한 경우)"
           }
         }
       }
@@ -631,6 +631,17 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "notify32"
+          }
+        }
+      }
+    },
+    "NOTIFICATION_SOUND_REAZURE" : {
+      "comment" : "re;azure",
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "re;azure"
           }
         }
       }
