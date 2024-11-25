@@ -72,6 +72,39 @@ fileprivate struct KeypadButton: View {
     }
 }
 
+fileprivate struct KeypadMenuButton<Content: View>: View {
+    @Environment(\.palette)
+    var palette: AppPalette
+
+    @Binding var label: String
+    @Binding var sublabel: String?
+    
+    var content: () -> Content
+    
+    var body: some View {
+        Menu {
+            content()
+        } label: {
+            VStack {
+                Text(label)
+                    .foregroundStyle(palette.extKeypadButtonForeground)
+                    .padding(.bottom, 0)
+                
+                Text(sublabel ?? " ")
+                    .font(.caption2)
+                    .foregroundStyle(palette.extKeypadButtonSecondaryForeground)
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .center)
+        }
+        .background(palette.extKeypadButtonBackground)
+        .clipShape(.rect(cornerRadius: 4))
+        .shadow(radius: 1, x: 0, y: 1)
+        .hapticFeedback()
+    }
+}
+
 struct ExtKeypad: View {
     @Environment(\.palette)
     var palette: AppPalette
@@ -143,7 +176,14 @@ struct ExtKeypad: View {
                     sharedClient.handleShortcut(key: .t)
                 }
                 .keyboardShortcut("t", modifiers: [])
-                KeypadButton(label: .constant("v"), sublabel: .constant("context"))
+                KeypadMenuButton(label: .constant("v"), sublabel: .constant("context")) {
+                    guard let type = sharedClient.currentTimeline,
+                          let status = sharedClient.focusedStatus(for: type) else {
+                        return AnyView(Text("CONTEXT_MENU_NOT_AVAILABLE"))
+                    }
+                    
+                    return AnyView(NativePostContextMenuInner(status: status))
+                }
                     .keyboardShortcut("v", modifiers: [])
                 KeypadButton(label:
                                 !sharedClient.postAreaFocused ?

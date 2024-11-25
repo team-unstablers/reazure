@@ -109,6 +109,7 @@ struct PostGroup: View {
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
                 .listRowSeparator(.hidden)
                 .setupShortcutHandler(with: sharedClient)
+                .setupContextMenu(status)
         
         if preferencesManager.compactMode && focused {
             return AnyView(

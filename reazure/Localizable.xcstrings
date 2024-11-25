@@ -469,6 +469,99 @@
         }
       }
     },
+    "CONTEXT_MENU_COPY_URL" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL 복사"
+          }
+        }
+      }
+    },
+    "CONTEXT_MENU_DELETE" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포스트 삭제"
+          }
+        }
+      }
+    },
+    "CONTEXT_MENU_FAVOURITE" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이버릿"
+          }
+        }
+      }
+    },
+    "CONTEXT_MENU_NOT_AVAILABLE" : {
+
+    },
+    "CONTEXT_MENU_OPEN_IN_BROWSER" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "브라우저로 열기"
+          }
+        }
+      }
+    },
+    "CONTEXT_MENU_REBLOG" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부스트"
+          }
+        }
+      }
+    },
+    "CONTEXT_MENU_REPLY" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "답글 달기"
+          }
+        }
+      }
+    },
+    "CONTEXT_MENU_SHARE" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URL 공유"
+          }
+        }
+      }
+    },
+    "CONTEXT_MENU_UNFAVOURITE" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이버릿 해제"
+          }
+        }
+      }
+    },
+    "CONTEXT_MENU_UNREBLOG" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부스트 해제"
+          }
+        }
+      }
+    },
     "DIALOG_YES" : {
       "localizations" : {
         "en" : {
