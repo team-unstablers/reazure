@@ -10,6 +10,15 @@ enum StatusVisibility {
     case unlisted
     case privateType
     case direct
+    
+    var isRebloggable: Bool {
+        switch self {
+        case .publicType, .unlisted:
+            return true
+        default:
+            return false
+        }
+    }
 }
 
 enum NotificationType {
