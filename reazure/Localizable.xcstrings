@@ -499,9 +499,6 @@
         }
       }
     },
-    "CONTEXT_MENU_NOT_AVAILABLE" : {
-
-    },
     "CONTEXT_MENU_OPEN_IN_BROWSER" : {
       "localizations" : {
         "ko" : {

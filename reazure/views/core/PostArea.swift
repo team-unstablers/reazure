@@ -45,10 +45,10 @@ struct PostArea: View {
             }
         }
     }
-
+    
     @State
     var visibilityMask: Mastodon.Visibility? = nil
-
+    
     @State
     var visibilityMenuVisible: Bool = false
     
@@ -60,7 +60,7 @@ struct PostArea: View {
     var maxPostLength: Int {
         sharedClient.configuration?.maxPostLength ?? 500
     }
-
+    
     var remaining: Int {
         maxPostLength - content.count
     }
@@ -84,61 +84,39 @@ struct PostArea: View {
         VStack(alignment: .leading, spacing: 2) {
             HStack {
                 Text("Left: \(remaining)")
-                Text((visibilityMask ?? visibility).asLocalizedText)
-                    .overlay {
-                        if visibilityMenuVisible {
-                            GeometryReader { geom in
-                                ContextMenu {
-                                    Group {
-                                        Text("POST_VISIBILITY_PUBLIC")
-                                            .onTapGesture {
-                                                if visibilityMask != nil {
-                                                    visibilityMask = .publicType
-                                                } else {
-                                                    visibility = .publicType
-                                                }
-                                                visibilityMenuVisible.toggle()
-                                            }
-                                        Text("POST_VISIBILITY_UNLISTED")
-                                            .onTapGesture {
-                                                if visibilityMask != nil {
-                                                    visibilityMask = .unlisted
-                                                } else {
-                                                    visibility = .unlisted
-                                                }
-                                                visibilityMenuVisible.toggle()
-                                            }
-                                        Text("POST_VISIBILITY_PRIVATE")
-                                            .onTapGesture {
-                                                if visibilityMask != nil {
-                                                    visibilityMask = .privateType
-                                                } else {
-                                                    visibility = .privateType
-                                                }
-                                                visibilityMenuVisible.toggle()
-                                            }
-                                        Text("POST_VISIBILITY_DIRECT")
-                                            .onTapGesture {
-                                                if visibilityMask != nil {
-                                                    visibilityMask = .direct
-                                                } else {
-                                                    visibility = .direct
-                                                }
-                                                visibilityMenuVisible.toggle()
-                                            }
-                                    }
-                                }
-                                .fixedSize()
-                                .offset(x: 0, y: geom.size.height)
-                                .zIndex(100)
-                            }
-                            .allowsHitTesting(true)
-                            .zIndex(100)
+                Menu {
+                    Button("POST_VISIBILITY_PUBLIC") {
+                        if visibilityMask != nil {
+                            visibilityMask = .publicType
+                        } else {
+                            visibility = .publicType
                         }
                     }
-                    .onTapGesture {
-                        visibilityMenuVisible.toggle()
+                    Button("POST_VISIBILITY_UNLISTED") {
+                        if visibilityMask != nil {
+                            visibilityMask = .unlisted
+                        } else {
+                            visibility = .unlisted
+                        }
                     }
+                    Button("POST_VISIBILITY_PRIVATE") {
+                        if visibilityMask != nil {
+                            visibilityMask = .privateType
+                        } else {
+                            visibility = .privateType
+                        }
+                    }
+                    Button("POST_VISIBILITY_DIRECT") {
+                        if visibilityMask != nil {
+                            visibilityMask = .direct
+                        } else {
+                            visibility = .direct
+                        }
+                    }
+                } label: {
+                    Text((visibilityMask ?? visibility).asLocalizedText)
+                }
+                
                 Spacer()
                 Text("SEND_FEEDBACK")
                     .onTapGesture {
@@ -157,7 +135,7 @@ struct PostArea: View {
                 
                 TextField(text: $content) {}
                     .foregroundStyle(.black)
-                    // .focusable(false)
+                // .focusable(false)
                     .focused($isFocused)
                     .padding(.horizontal, 4)
                     .padding(.vertical, 2)
@@ -177,7 +155,7 @@ struct PostArea: View {
                         DispatchQueue.main.async {
                             isFocused = false
                         }
-
+                        
                         return .handled
                     }
             }
