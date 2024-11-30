@@ -70,7 +70,7 @@ struct PostGroup: View {
                 .equatable()
                 .setupPostItemView(depth: depth, focused: focused, palette: palette)
                 .setupFocusHandler(with: focusInfo, handler: focusChangeHandler)
-                .setupContextMenu(status)
+                .setupContextMenu(model, depth: depth)
         } else {
             let item = PostItem(status: status, relatedAccount: relatedAccount, flags: flags) { _ in
                 if (expanded) {
@@ -88,8 +88,8 @@ struct PostGroup: View {
                 .equatable()
                 .setupPostItemView(depth: depth, focused: focused, palette: palette)
                 .setupFocusHandler(with: focusInfo, handler: focusChangeHandler)
-                .setupContextMenu(status)
-            
+                .setupContextMenu(model, depth: depth)
+
             if preferencesManager.compactMode && focused {
                 AnyView(
                     item.onAppear {

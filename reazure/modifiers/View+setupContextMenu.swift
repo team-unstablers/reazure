@@ -10,8 +10,8 @@ import SwiftUI
 
 
 extension View {
-    func setupContextMenu(_ status: StatusAdaptor) -> some View {
-        self.modifier(SetupContextMenuModifier(status: status))
+    func setupContextMenu(_ model: StatusModel, depth: Int) -> some View {
+        self.modifier(SetupContextMenuModifier(model: model, depth: depth))
     }
 }
 
@@ -20,13 +20,15 @@ struct SetupContextMenuModifier: ViewModifier {
     @Environment(\.openURL)
     var openURL
     
-    let status: StatusAdaptor
+    let model: StatusModel
+    let depth: Int
+    
     
     @ViewBuilder
     func body(content: Content) -> some View {
         content
             .contextMenu {
-                NativePostContextMenuInner(status: status)
+                NativePostContextMenuInner(model: model, depth: depth)
             }
     }
 }

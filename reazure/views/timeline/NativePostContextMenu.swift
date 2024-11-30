@@ -14,7 +14,14 @@ struct NativePostContextMenuInner: View {
     @Environment(\.openURL)
     var openURL
     
-    let status: StatusAdaptor
+    @ObservedObject
+    var model: StatusModel
+    
+    let depth: Int
+    
+    var status: StatusAdaptor {
+        model.resolve(depth: depth)!
+    }
     
     var canonical: StatusAdaptor {
         self.status.canonical
@@ -33,11 +40,15 @@ struct NativePostContextMenuInner: View {
             
             Button("CONTEXT_MENU_REPLY") {}
             Button(canonical.reblogged ? "CONTEXT_MENU_UNREBLOG" : "CONTEXT_MENU_REBLOG") {
-                
+                Task {
+                    try? await model.toggleReblog(of: depth)
+                }
             }
                 .disabled(!canonical.visibility.isRebloggable)
             Button(canonical.favourited ? "CONTEXT_MENU_UNFAVOURITE" : "CONTEXT_MENU_FAVOURITE") {
-                
+                Task {
+                    try? await model.toggleFavourite(of: depth)
+                }
             }
             
             if let urlString = canonical.url,
@@ -67,7 +78,9 @@ struct NativePostContextMenuInner: View {
                 Divider()
                 
                 Button("CONTEXT_MENU_DELETE", role: .destructive) {
-                    // TODO
+                    Task {
+                        try? await model.delete(depth: depth)
+                    }
                 }
             }
         }
