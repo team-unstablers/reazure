@@ -53,11 +53,13 @@ struct AppTheme: Identifiable, Hashable {
 
 extension AppTheme {
     static let registry: [String: AppTheme] = [
-        "default": .default
+        "default": .default,
+        "AzureaSakura": .azureaSakura
     ]
     
     // 게으르다 게을러.. ㅠㅠ
     static let allCases: [AppTheme] = [
-        .default
+        .default,
+        .azureaSakura
     ]
 }
