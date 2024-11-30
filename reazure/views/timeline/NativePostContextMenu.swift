@@ -38,7 +38,11 @@ struct NativePostContextMenuInner: View {
             
             Divider()
             
-            Button("CONTEXT_MENU_REPLY") {}
+            Button("CONTEXT_MENU_REPLY") {
+                Task {
+                    try? await model.composeReply(to: depth)
+                }
+            }
             Button(canonical.reblogged ? "CONTEXT_MENU_UNREBLOG" : "CONTEXT_MENU_REBLOG") {
                 Task {
                     try? await model.toggleReblog(of: depth)
