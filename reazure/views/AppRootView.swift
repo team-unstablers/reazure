@@ -58,9 +58,9 @@ struct AppRootView: View {
                 }
                 TabView(selection: $sharedClient.currentTab) {
                     Group {
-                        TimelineView(type: .home)
+                        TimelineView(type: .home, timeline: sharedClient.timeline[.home]!)
                             .tag(Tab.home)
-                        NotificationTimelineView()
+                        TimelineView(type: .notifications, timeline: sharedClient.timeline[.notifications]!)
                             .tag(Tab.notification)
                         VStack {
                             Spacer()

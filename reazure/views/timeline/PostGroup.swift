@@ -15,24 +15,24 @@ import SwiftUI
  }
  */
 
+typealias TLFocusChangeHandler = (TimelineModel.FocusState) -> Void
+
 struct PostGroup: View {
     @Environment(\.palette)
     var palette: AppPalette
     
-    @EnvironmentObject
-    var preferencesManager: PreferencesManager
+    @Environment(\.tlFocusState)
+    var focusState: TimelineModel.FocusState?
     
     @EnvironmentObject
-    var sharedClient: SharedClient
+    var preferencesManager: PreferencesManager
     
     @ObservedObject
     var model: StatusModel
     
-    var type: TimelineType
-    
-    var focusState: FocusState<TLFocusState?>.Binding
-    
     var scrollViewProxy: ScrollViewProxy?
+    
+    var focusChangeHandler: TLFocusChangeHandler
     
     var body: some View {
         Section {
@@ -50,35 +50,29 @@ struct PostGroup: View {
         }
     }
     
+    @ViewBuilder
     func renderItem(_ status: StatusAdaptor, depth: Int) -> some View {
         let expanded = model.expandedDepth > depth
-        var flags = PostItemFlags()
+        // 게을러..
+        let flags: PostItemFlags = ((depth == 0) ? model.rootStatusFlags : [])
+            .union(expanded ? [.expanded] : [])
         
-        if expanded {
-            flags.insert(.expanded)
-        }
+        let relatedAccount: AccountAdaptor? = (depth == 0) ? model.rootRelatedAccount : nil
         
-        let focusInfo = TLFocusState(id: model.id, depth: depth)
-        let focusState = sharedClient.focusState[type]
+        let focusInfo = TimelineModel.FocusState(id: model.id, depth: depth)
+        let focusState = focusState
         let focused = focusState?.id == model.id && focusState?.depth == depth
         
         let shouldDisplayCompactRow = (preferencesManager.compactMode && !focused)
         
         if shouldDisplayCompactRow {
-            return AnyView(
-                CompactPostItem(status: status, flags: flags)
-                    .equatable()
-                    .padding(.leading, CGFloat(depth) * 8)
-                    .onTapGesture {
-                        sharedClient.focusState[type] = focusInfo
-                    }
-                    .id(focusInfo)
-                    .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                    .listRowSeparator(.hidden)
-            )
-        }
-        
-        let item = PostItem(status: status, flags: flags) { _ in
+            CompactPostItem(status: status, relatedAccount: relatedAccount, flags: flags)
+                .equatable()
+                .setupPostItemView(depth: depth, focused: focused, palette: palette)
+                .setupFocusHandler(with: focusInfo, handler: focusChangeHandler)
+                .setupContextMenu(status)
+        } else {
+            let item = PostItem(status: status, relatedAccount: relatedAccount, flags: flags) { _ in
                 if (expanded) {
                     model.expandedDepth = depth
                 } else {
@@ -86,44 +80,87 @@ struct PostGroup: View {
                 }
                 
                 if (model.parents.count < depth + 1) {
-                    model.resolveParent(of: status, using: sharedClient.client!)
+                    Task {
+                        try? await model.resolveParent(of: status)
+                    }
                 }
             }
                 .equatable()
-                .padding(.leading, CGFloat(depth) * 8)
-                .background {
-                    if focused {
-                        palette.postItemFocusedBackground
-                    } else {
-                        Color.clear
-                    }
-                }
-                .id(focusInfo)
-                .onTapGesture {
-                    sharedClient.focusState[type] = focusInfo
-                }
-                /*
-                .focusable()
-                .focused(focusState, equals: focusInfo)
-                 */
-                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                .listRowSeparator(.hidden)
-                .setupShortcutHandler(with: sharedClient)
+                .setupPostItemView(depth: depth, focused: focused, palette: palette)
+                .setupFocusHandler(with: focusInfo, handler: focusChangeHandler)
                 .setupContextMenu(status)
-        
-        if preferencesManager.compactMode && focused {
-            return AnyView(
-                item.onAppear {
-                    // HACK: compact 모드인 경우 컨텐츠가 잘린 채로 스크롤 되는 경우가 있음
-                    scrollViewProxy?.scrollTo(focusInfo)
-                }
-            )
+            
+            if preferencesManager.compactMode && focused {
+                AnyView(
+                    item.onAppear {
+                        // HACK: compact 모드인 경우 컨텐츠가 잘린 채로 스크롤 되는 경우가 있음
+                        scrollViewProxy?.scrollTo(focusInfo)
+                    }
+                )
+            } else {
+                item
+            }
+        }
+    }
+}
+
+fileprivate extension StatusModel {
+    var rootStatusFlags: PostItemFlags {
+        // check (self instanceof NotificationModel)
+        if let _self = self as? NotificationModel {
+            var flags = PostItemFlags()
+            
+            switch _self.notification.type {
+            case .mention:
+                flags.insert(.mentioned)
+            case .reblog:
+                flags.insert(.rebloggedByOthers)
+            case .favourite:
+                flags.insert(.favouritedByOthers)
+            default:
+                break
+            }
+            
+            return flags
         }
         
-        return AnyView(item)
+        return []
     }
     
-
+    var rootRelatedAccount: AccountAdaptor? {
+        // check (self instanceof NotificationModel)
+        if let _self = self as? NotificationModel {
+            return _self.notification.account
+        }
+        
+        return nil
+    }
     
 }
 
+
+fileprivate extension View {
+    @ViewBuilder
+    func setupPostItemView(depth: Int, focused: Bool, palette: AppPalette) -> some View {
+        self
+            .padding(.leading, CGFloat(depth) * 8)
+            .background {
+                if focused {
+                    palette.postItemFocusedBackground
+                } else {
+                    Color.clear
+                }
+            }
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+            .listRowSeparator(.hidden)
+    }
+    
+    @ViewBuilder
+    func setupFocusHandler(with focusInfo: TimelineModel.FocusState, handler: @escaping TLFocusChangeHandler) -> some View {
+        self
+            .id(focusInfo)
+            .onTapGesture {
+                handler(focusInfo)
+            }
+    }
+}
