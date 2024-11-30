@@ -89,6 +89,9 @@ struct AboutAppView: View {
                         }
                     }
                     .pickerStyle(MenuPickerStyle())
+                    .onChange(of: preferencesManager.theme) {
+                        preferencesManager.save()
+                    }
                 } footer: {
                     Text("SETTINGS_FOOTER_THEME_AUTHORED_BY: \(preferencesManager.theme.author)")
                 }
