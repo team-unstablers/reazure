@@ -130,7 +130,9 @@ fileprivate extension StatusModel {
     var rootRelatedAccount: AccountAdaptor? {
         // check (self instanceof NotificationModel)
         if let _self = self as? NotificationModel {
-            return _self.notification.account
+            if _self.notification.type != .mention {
+                return _self.notification.account
+            }
         }
         
         return nil
