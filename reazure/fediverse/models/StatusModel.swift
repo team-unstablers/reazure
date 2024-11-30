@@ -23,8 +23,9 @@ class StatusModel: StatusModelBase, ObservableObject {
     @Published
     var resolving: Bool = false
     
-    init(adaptor status: StatusAdaptor) {
+    init(adaptor status: StatusAdaptor, performer: Performer? = nil) {
         self.status = status
+        self.performer = performer
     }
     
 

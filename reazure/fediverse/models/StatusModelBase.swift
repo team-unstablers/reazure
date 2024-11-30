@@ -94,6 +94,11 @@ extension StatusModelBase {
     
     func delete(depth: Int) async throws {
         // TODO: 모델 자체가 지워져야 하는 오퍼레이션이기 때문에 설계에 대해 더 생각해봐야 함
+        guard let status = resolve(depth: depth) else {
+            return
+        }
+        
+        try await performer?.statusModel(wantsDelete: status, model: self)
     }
     
     func composeReply(to depth: Int) async throws {

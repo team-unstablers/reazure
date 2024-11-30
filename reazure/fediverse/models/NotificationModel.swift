@@ -13,7 +13,7 @@ class NotificationModel: StatusModel {
     var notification: NotificationAdaptor
     
     
-    init?(adaptor notification: NotificationAdaptor) {
+    init?(adaptor notification: NotificationAdaptor, performer: Performer? = nil) {
         guard let status = notification.status else {
             // FIXME: support other types of notification
             return nil
@@ -21,6 +21,6 @@ class NotificationModel: StatusModel {
         
         self.notification = notification
         
-        super.init(adaptor: status)
+        super.init(adaptor: status, performer: performer)
     }
 }
