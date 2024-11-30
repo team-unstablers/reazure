@@ -16,31 +16,38 @@ struct NativePostContextMenuInner: View {
     
     let status: StatusAdaptor
     
+    var canonical: StatusAdaptor {
+        self.status.canonical
+    }
+    
     var isOwnStatus: Bool {
-        status.account.id == sharedClient.account?.id
+        canonical.account.id == sharedClient.account?.id
     }
     
     var body: some View {
         Group {
-            ActivityPubMarkupText(content: "\(status.account.displayName) (@\(status.account.acct))",
-                                  emojos: status.account.emojis)
+            ActivityPubMarkupText(content: "\(canonical.account.displayName) (@\(canonical.account.acct))",
+                                  emojos: canonical.account.emojis)
             
             Divider()
             
             Button("CONTEXT_MENU_REPLY") {}
-            Button(status.reblogged ? "CONTEXT_MENU_UNREBLOG" : "CONTEXT_MENU_REBLOG") {
+            Button(canonical.reblogged ? "CONTEXT_MENU_UNREBLOG" : "CONTEXT_MENU_REBLOG") {
+                
             }
-                .disabled(!status.visibility.isRebloggable)
-            Button(status.favourited ? "CONTEXT_MENU_UNFAVOURITE" : "CONTEXT_MENU_FAVOURITE") {
+                .disabled(!canonical.visibility.isRebloggable)
+            Button(canonical.favourited ? "CONTEXT_MENU_UNFAVOURITE" : "CONTEXT_MENU_FAVOURITE") {
                 
             }
             
-            if let urlString = status.url,
+            if let urlString = canonical.url,
                let url = URL(string: urlString) {
                 
                 Divider()
                 
                 Text(urlString)
+                
+                Divider()
                 
                 Button("CONTEXT_MENU_COPY_URL") {
                     UIPasteboard.general.string = urlString
