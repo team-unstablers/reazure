@@ -72,6 +72,7 @@ fileprivate struct KeypadButton: View {
     }
 }
 
+
 struct ExtKeypad: View {
     @Environment(\.palette)
     var palette: AppPalette
@@ -143,8 +144,9 @@ struct ExtKeypad: View {
                     sharedClient.handleShortcut(key: .t)
                 }
                 .keyboardShortcut("t", modifiers: [])
-                KeypadButton(label: .constant("v"), sublabel: .constant("context"))
-                    .keyboardShortcut("v", modifiers: [])
+                KeypadButton(label: .constant("v"), sublabel: .constant("context")) {
+                }
+                .keyboardShortcut("v", modifiers: [])
                 KeypadButton(label:
                                 !sharedClient.postAreaFocused ?
                     .constant("u") : .constant("esc"),

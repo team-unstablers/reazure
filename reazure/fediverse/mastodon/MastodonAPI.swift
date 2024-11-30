@@ -208,6 +208,12 @@ class MastodonClient {
                                  parameters: parameters)
     }
     
+    func deleteStatus(statusId: String) async throws {
+        _ = try await request(to: MastodonEndpoint.status(of: statusId),
+                          expects: String.self, // <- FIXME: ???
+                          method: .delete)
+    }
+    
     func notifications() async throws -> [Mastodon.Notification] {
         return try await request(to: MastodonEndpoint.notifications,
                                  expects: [Mastodon.Notification].self)

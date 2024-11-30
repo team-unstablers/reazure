@@ -1,38 +1,26 @@
 //
-//  Status.swift
+//  NotificationModel.swift
 //  reazure
 //
-//  Created by Gyuhwan Park on 11/16/24.
+//  Created by Gyuhwan Park on 11/30/24.
 //
 
-import SwiftUI
+import Foundation
 
-class NotificationModel: ObservableObject {
+class NotificationModel: StatusModel {
+    
     @Published
     var notification: NotificationAdaptor
     
-    @Published
-    var statusModel: StatusModel?
     
-    init(adaptor notification: NotificationAdaptor) {
+    init?(adaptor notification: NotificationAdaptor, performer: Performer? = nil) {
+        guard let status = notification.status else {
+            // FIXME: support other types of notification
+            return nil
+        }
+        
         self.notification = notification
         
-        if let status = notification.status {
-            self.statusModel = StatusModel(adaptor: status)
-        }
-    }
-}
-
-extension NotificationModel: Hashable, Equatable, Identifiable {
-    static func == (lhs: NotificationModel, rhs: NotificationModel) -> Bool {
-        return lhs.notification.id == rhs.notification.id
-    }
-    
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(notification.id)
-    }
-    
-    var id: String {
-        return notification.id
+        super.init(adaptor: status, performer: performer)
     }
 }
