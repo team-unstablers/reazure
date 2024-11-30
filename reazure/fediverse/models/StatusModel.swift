@@ -7,7 +7,10 @@
 
 import SwiftUI
 
-class StatusModel: ObservableObject {
+
+class StatusModel: StatusModelBase, ObservableObject {
+    weak var performer: Performer?
+    
     @Published
     var status: StatusAdaptor
     
@@ -23,6 +26,8 @@ class StatusModel: ObservableObject {
     init(adaptor status: StatusAdaptor) {
         self.status = status
     }
+    
+
 }
 
 extension StatusModel: Hashable, Equatable, Identifiable {
@@ -36,37 +41,5 @@ extension StatusModel: Hashable, Equatable, Identifiable {
     
     var id: String {
         return status.id
-    }
-}
-
-extension StatusModel {
-    func resolveParent(of status: StatusAdaptor, using client: MastodonClient) {
-        guard let parentId = (status.reblog ?? status).replyToId else {
-            return
-        }
-        
-        if (self.resolving) {
-            return
-        }
-        
-        self.resolving = true
-        
-        
-        Task {
-            defer {
-                DispatchQueue.main.async {
-                    self.resolving = false
-                }
-            }
-            do {
-                let parent = try await client.status(of: parentId)
-                
-                DispatchQueue.main.async {
-                    self.parents.append(MastodonStatusAdaptor(from: parent))
-                }
-            } catch {
-                print("Failed to resolve parent: \(error)")
-            }
-        }
     }
 }
