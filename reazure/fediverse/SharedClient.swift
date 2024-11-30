@@ -26,6 +26,7 @@ enum Tab {
 }
 
 class SharedClient: ObservableObject {
+    static let shared = SharedClient()
     
     @Published
     var account: Account? {
@@ -75,7 +76,7 @@ class SharedClient: ObservableObject {
     
     var replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
     
-    init() {
+    private init() {
         self.constructTimelineModel()
     }
     

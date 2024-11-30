@@ -92,7 +92,7 @@ struct Navbar: View {
 }
 
 #Preview {
-    let sharedClient = SharedClient()
+    let sharedClient = SharedClient.shared
     
     Navbar(tabSelection: .constant(.home)) { _ in
         

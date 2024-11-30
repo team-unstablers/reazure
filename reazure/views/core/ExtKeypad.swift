@@ -187,7 +187,7 @@ struct ExtKeypad: View {
             Text("Preview of ExtKeypad")
             ExtKeypad()
                 .environmentObject(PreferencesManager())
-                .environmentObject(SharedClient())
+                .environmentObject(SharedClient.shared)
         }
         
         Spacer()

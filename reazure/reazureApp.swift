@@ -17,7 +17,7 @@ struct reazureApp: App {
     private var accountManager = AccountManager()
     
     @StateObject
-    private var sharedClient = SharedClient()
+    private var sharedClient = SharedClient.shared
 
     @UIApplicationDelegateAdaptor
     private var appDelegate: AppDelegate

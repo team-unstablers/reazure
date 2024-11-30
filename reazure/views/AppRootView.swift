@@ -113,6 +113,6 @@ struct AppRootView: View {
 #Preview {
     AppRootView()
         .environmentObject(AccountManager())
-        .environmentObject(SharedClient())
+        .environmentObject(SharedClient.shared)
         .environmentObject(PreferencesManager())
 }
