@@ -62,6 +62,9 @@ struct CompactPostItem: View, Equatable {
                     .foregroundColor(textColor)
                     .lineLimit(1)
             }
+            .if(status.deleted) {
+                $0.strikethrough()
+            }
             // .containerRelativeFrame([.horizontal], alignment: .topLeading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .contentShape(Rectangle())
@@ -75,6 +78,7 @@ struct CompactPostItem: View, Equatable {
             lhs.status.id == rhs.status.id &&
             lhs.status.favourited == rhs.status.favourited &&
             lhs.status.reblogged == rhs.status.reblogged &&
+            lhs.status.deleted == rhs.status.deleted &&
             lhs.flags == rhs.flags
         )
     }

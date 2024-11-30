@@ -86,6 +86,9 @@ protocol StatusAdaptor: AnyObject {
     var favourited: Bool { get }
     var reblogged: Bool { get }
     
+    // extension
+    var deleted: Bool { get }
+    
     var reblog: (any StatusAdaptor)? { get }
     
     var emojis: [EmojiAdaptor] { get }
@@ -119,6 +122,10 @@ class MaskedStatusAdaptor: StatusAdaptor {
         }
         var reblogged: Bool {
             _parent.reblogged
+        }
+        
+        var deleted: Bool {
+            _parent.deleted
         }
 
         var id: String { status.id }
@@ -155,6 +162,8 @@ class MaskedStatusAdaptor: StatusAdaptor {
     var favourited: Bool
     var reblogged: Bool
     
+    var deleted: Bool
+    
     var id: String { status.id }
     var createdAt: String { status.createdAt }
     
@@ -176,11 +185,12 @@ class MaskedStatusAdaptor: StatusAdaptor {
     var attachments: [AttachmentAdaptor] { status.attachments }
     var application: ApplicationAdaptor? { status.application }
     
-    init(status: StatusAdaptor, favourited: Bool? = nil, reblogged: Bool? = nil) {
+    init(status: StatusAdaptor, favourited: Bool? = nil, reblogged: Bool? = nil, deleted: Bool? = nil) {
         self.status = status
         
         self.favourited = favourited ?? status.favourited
         self.reblogged = reblogged ?? status.reblogged
+        self.deleted = deleted ?? false
         
         if let reblog = status.reblog {
             self.reblog = ReblogMaskedStatusAdaptor(self)

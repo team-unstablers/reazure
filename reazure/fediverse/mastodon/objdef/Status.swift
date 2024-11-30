@@ -293,6 +293,8 @@ class MastodonStatusAdaptor: StatusAdaptor {
     var favourited: Bool { _status.favourited }
     var reblogged: Bool { _status.reblogged }
     
+    var deleted: Bool { false }
+    
     var reblog: (any StatusAdaptor)?
     
     var emojis: [EmojiAdaptor]

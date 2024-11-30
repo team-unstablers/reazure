@@ -195,6 +195,9 @@ struct PostItem: View, Equatable {
                     }
                 }
             }
+            .if(status.deleted) {
+                $0.strikethrough()
+            }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             // .containerRelativeFrame([.horizontal], alignment: .topLeading)
@@ -211,6 +214,7 @@ struct PostItem: View, Equatable {
             lhs.status.id == rhs.status.id &&
             lhs.status.favourited == rhs.status.favourited &&
             lhs.status.reblogged == rhs.status.reblogged &&
+            lhs.status.deleted == rhs.status.deleted &&
             lhs.flags == rhs.flags
         )
     }

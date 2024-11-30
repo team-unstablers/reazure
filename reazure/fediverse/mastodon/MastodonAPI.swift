@@ -210,7 +210,7 @@ class MastodonClient {
     
     func deleteStatus(statusId: String) async throws {
         _ = try await request(to: MastodonEndpoint.status(of: statusId),
-                          expects: String.self, // <- FIXME: ???
+                          expects: String.self, // <- FIXME: 이거 때문에 요청은 성공해도 call이 실패함
                           method: .delete)
     }
     
