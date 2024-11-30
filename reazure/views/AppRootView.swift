@@ -86,12 +86,10 @@ struct AppRootView: View {
                 
                 if preferencesManager.showExtKeypad {
                     ExtKeypad()
-                } else {
-                    // 단축키는 먹어야 하니까..
-                    ExtKeypad()
-                        .frame(width: 0, height: 0)
-                        .hidden()
                 }
+                
+                ShortcutHandler()
+                    .frame(width: 0, height: 0)
             }
             .background(palette.shell32Background)
             .watchAccountManager {
