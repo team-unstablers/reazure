@@ -68,7 +68,7 @@ protocol AccountAdaptor {
     var emojis: [EmojiAdaptor] { get }
 }
 
-protocol StatusAdaptor {
+protocol StatusAdaptor: AnyObject {
     var id: String { get }
     var createdAt: String { get }
     
@@ -95,7 +95,7 @@ protocol StatusAdaptor {
     var application: ApplicationAdaptor? { get }
 }
 
-protocol NotificationAdaptor {
+protocol NotificationAdaptor: AnyObject {
     var id: String { get }
     var type: NotificationType { get }
     var createdAt: String { get }
@@ -188,16 +188,3 @@ class MaskedStatusAdaptor: StatusAdaptor {
     }
 }
 
-extension StatusAdaptor {
-    func mask(favourited: Bool? = nil, reblogged: Bool? = nil) -> MaskedStatusAdaptor {
-        // check instance of MaskedStatusAdaptor
-        if let masked = self as? MaskedStatusAdaptor {
-            let favourited = favourited ?? masked.favourited
-            let reblogged = reblogged ?? masked.reblogged
-            
-            return MaskedStatusAdaptor(status: masked.status, favourited: favourited, reblogged: reblogged)
-        }
-        
-        return MaskedStatusAdaptor(status: self, favourited: favourited, reblogged: reblogged)
-    }
-}
