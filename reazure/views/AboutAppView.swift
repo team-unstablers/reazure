@@ -174,7 +174,7 @@ struct AboutAppView: View {
 
 #Preview {
     AboutAppView(addAccountHandler: {})
-        .environmentObject(SharedClient())
+        .environmentObject(SharedClient.shared)
         .environmentObject(AccountManager())
         .environmentObject(PreferencesManager())
 }
