@@ -5,6 +5,8 @@
 //  Created by Gyuhwan Park on 11/30/24.
 //
 
+import Foundation
+
 enum ShortcutKey {
     case h
     case j
@@ -16,6 +18,20 @@ enum ShortcutKey {
     case t
     case v
     case u
+    
+    var localizedDescription: String {
+        switch self {
+        case .h: return NSLocalizedString("SHORTCUTKEY_DESCRIPTION_H", comment: "")
+        case .j: return NSLocalizedString("SHORTCUTKEY_DESCRIPTION_J", comment: "")
+        case .k: return NSLocalizedString("SHORTCUTKEY_DESCRIPTION_K", comment: "")
+        case .l: return NSLocalizedString("SHORTCUTKEY_DESCRIPTION_L", comment: "")
+        case .r: return NSLocalizedString("SHORTCUTKEY_DESCRIPTION_R", comment: "")
+        case .f: return NSLocalizedString("SHORTCUTKEY_DESCRIPTION_F", comment: "")
+        case .t: return NSLocalizedString("SHORTCUTKEY_DESCRIPTION_T", comment: "")
+        case .v: return NSLocalizedString("SHORTCUTKEY_DESCRIPTION_V", comment: "")
+        case .u: return NSLocalizedString("SHORTCUTKEY_DESCRIPTION_U", comment: "")
+        }
+    }
 }
 
 

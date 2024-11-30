@@ -1185,6 +1185,96 @@
         }
       }
     },
+    "SHORTCUTKEY_DESCRIPTION_F" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "페이버릿 / 페이버릿 취소"
+          }
+        }
+      }
+    },
+    "SHORTCUTKEY_DESCRIPTION_H" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "답글 트리 닫기"
+          }
+        }
+      }
+    },
+    "SHORTCUTKEY_DESCRIPTION_J" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "다음 포스트"
+          }
+        }
+      }
+    },
+    "SHORTCUTKEY_DESCRIPTION_K" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "이전 포스트"
+          }
+        }
+      }
+    },
+    "SHORTCUTKEY_DESCRIPTION_L" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "답글 트리 열기"
+          }
+        }
+      }
+    },
+    "SHORTCUTKEY_DESCRIPTION_R" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "답글 달기"
+          }
+        }
+      }
+    },
+    "SHORTCUTKEY_DESCRIPTION_T" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "부스트 / 부스트 취소"
+          }
+        }
+      }
+    },
+    "SHORTCUTKEY_DESCRIPTION_U" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "포스트 작성 영역에 포커스하기"
+          }
+        }
+      }
+    },
+    "SHORTCUTKEY_DESCRIPTION_V" : {
+      "localizations" : {
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "컨텍스트 메뉴 열기"
+          }
+        }
+      }
+    },
     "STREAMING_STATE_CONNECTED" : {
       "localizations" : {
         "en" : {

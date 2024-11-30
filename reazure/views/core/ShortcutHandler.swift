@@ -135,6 +135,7 @@ fileprivate extension ShortcutKey {
             action: selector
         )
         
+        command.title = self.localizedDescription
         command.wantsPriorityOverSystemBehavior = true
         
         return command
