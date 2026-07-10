@@ -108,6 +108,52 @@ final class FakeStatusAdaptor: StatusAdaptor {
     }
 }
 
+// MARK: - NotificationAdaptor
+
+/// In-memory `NotificationAdaptor`. `status == nil` models the
+/// not-yet-supported notification types that `NotificationModel.init?` drops.
+final class FakeNotificationAdaptor: NotificationAdaptor {
+    var id: String
+    var type: NotificationType
+    var createdAt: String
+    var account: AccountAdaptor?
+    var status: (any StatusAdaptor)?
+
+    init(
+        id: String = "notif-1",
+        type: NotificationType = .mention,
+        createdAt: String = "2024-01-01T00:00:00.000Z",
+        account: AccountAdaptor? = nil,
+        status: (any StatusAdaptor)? = nil
+    ) {
+        self.id = id
+        self.type = type
+        self.createdAt = createdAt
+        self.account = account
+        self.status = status
+    }
+}
+
+// MARK: - StreamingEventDecoder
+
+/// A `StreamingEventDecoder` that returns preset adaptors (or throws), so
+/// `EventIngestor` can be exercised without real Mastodon JSON.
+struct FakeStreamingEventDecoder: StreamingEventDecoder {
+    var status: (any StatusAdaptor)?
+    var notification: (any NotificationAdaptor)?
+    var error: Error?
+
+    func decodeStatus(from payload: String) throws -> StatusAdaptor {
+        if let error { throw error }
+        return status ?? FakeStatusAdaptor()
+    }
+
+    func decodeNotification(from payload: String) throws -> NotificationAdaptor {
+        if let error { throw error }
+        return notification ?? FakeNotificationAdaptor()
+    }
+}
+
 // MARK: - Performer
 
 enum FakePerformerError: Error {

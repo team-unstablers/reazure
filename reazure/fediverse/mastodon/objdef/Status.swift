@@ -325,24 +325,40 @@ class MastodonStatusAdaptor: StatusAdaptor {
 
 class MastodonNotificationAdaptor: NotificationAdaptor {
     let _notification: Mastodon.Notification
-    
+
     var id: String { _notification.id }
     var createdAt: String { _notification.created_at }
-    
+
     var type: NotificationType { NotificationType(_notification.type) }
-    
+
     var account: AccountAdaptor?
     var status: StatusAdaptor?
-    
+
     init(from notification: Mastodon.Notification) {
         self._notification = notification
-        
+
         if let account = self._notification.account {
             self.account = MastodonAccountAdaptor(from: account)
         }
-        
+
         if let status = self._notification.status {
             self.status = MastodonStatusAdaptor(from: status)
         }
+    }
+}
+
+/// Decodes Mastodon streaming payloads into fediverse adaptors — the Mastodon end
+/// of the `StreamingEventDecoder` seam consumed by `EventIngestor`. Keeps the
+/// `Mastodon.Status`/`Mastodon.Notification` parsing that used to be inlined in
+/// the server-agnostic hub alongside the rest of the Mastodon adaptor factory.
+struct MastodonEventDecoder: StreamingEventDecoder {
+    func decodeStatus(from payload: String) throws -> StatusAdaptor {
+        let status = try JSON.parse(payload, to: Mastodon.Status.self)
+        return MastodonStatusAdaptor(from: status)
+    }
+
+    func decodeNotification(from payload: String) throws -> NotificationAdaptor {
+        let notification = try JSON.parse(payload, to: Mastodon.Notification.self)
+        return MastodonNotificationAdaptor(from: notification)
     }
 }

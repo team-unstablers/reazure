@@ -47,6 +47,11 @@ class SharedClient: ObservableObject {
     /// the coordinator mirrors into it through callbacks.
     private var streamingCoordinator: StreamingCoordinator?
 
+    /// Decodes streaming events into timeline mutations behind a server-agnostic
+    /// decode seam. Rebuilt per account (its decoder is server-specific); the
+    /// coordinator forwards decoded events here.
+    private var eventIngestor: EventIngestor?
+
     @Published
     var configuration: FediverseServerConfiguration?
     
@@ -133,12 +138,23 @@ class SharedClient: ObservableObject {
         // socket for the old account.
         streamingCoordinator?.stop()
         streamingCoordinator = nil
+        eventIngestor = nil
 
         client = nil
         streamingState = .disconnected
 
         if let account = account {
             client = MastodonClient(using: account)
+
+            let ingestor = EventIngestor(
+                decoder: account.server.streamingEventDecoder(),
+                performer: actionPerformer,
+                presenter: notificationPresenter,
+                homeTimeline: { [weak self] in self?.timeline[.home] },
+                notificationTimeline: { [weak self] in self?.timeline[.notifications] },
+                isNotificationTabActive: { [weak self] in self?.currentTab == .notification }
+            )
+            eventIngestor = ingestor
 
             let coordinator = StreamingCoordinator(
                 account: account,
@@ -150,7 +166,7 @@ class SharedClient: ObservableObject {
                         self?.configuration = configuration
                     },
                     didReceiveEvent: { [weak self] event in
-                        self?.ingest(event: event)
+                        self?.eventIngestor?.ingest(event)
                     },
                     backfillHome: { [weak self] in
                         self?.timeline[.home]?.update()
@@ -159,62 +175,6 @@ class SharedClient: ObservableObject {
             )
             streamingCoordinator = coordinator
             coordinator.start()
-        }
-    }
-}
-
-extension SharedClient {
-    /// Ingests a decoded streaming event handed back from `StreamingCoordinator`:
-    /// builds the Mastodon adaptor/model and prepends it to the correct timeline,
-    /// running the notification presentation side effects. (Server-agnostic
-    /// decode extraction is a later roadmap step; this preserves the existing
-    /// Mastodon ingest verbatim.)
-    fileprivate func ingest(event: Mastodon.StreamingEvent) {
-        switch event.event {
-        case "update":
-            do {
-                guard let payload = event.payload else {
-                    print("XXX: Invalid payload")
-                    return
-                }
-
-                let status = try JSON.parse(payload, to: Mastodon.Status.self)
-                // home timeline
-
-                DispatchQueue.main.async {
-                    let adaptor = MastodonStatusAdaptor(from: status)
-                    let model = StatusModel(adaptor: adaptor, performer: self.actionPerformer)
-                    self.timeline[.home]?.prepend(model)
-                }
-            } catch {
-                print("SharedClient:ingest: \(error)")
-            }
-            break
-        case "notification":
-            do {
-                guard let payload = event.payload else {
-                    print("XXX: Invalid payload")
-                    return
-                }
-
-                let notification = try JSON.parse(payload, to: Mastodon.Notification.self)
-
-                DispatchQueue.main.async {
-                    let adaptor = MastodonNotificationAdaptor(from: notification)
-                    guard let model = NotificationModel(adaptor: adaptor, performer: self.actionPerformer) else {
-                        return
-                    }
-
-                    self.timeline[.notifications]?.prepend(model)
-
-                    self.notificationPresenter.present(isNotificationTabActive: self.currentTab == .notification)
-                }
-            } catch {
-                print("SharedClient:ingest: \(error)")
-            }
-            break
-        default:
-            break
         }
     }
 }

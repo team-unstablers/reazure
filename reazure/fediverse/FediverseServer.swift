@@ -60,6 +60,20 @@ enum FediverseServer: Codable {
             throw FediverseAPIError.notImplemented
         }
     }
+
+    /// The decode seam for this server's streaming payloads. Adding a real Misskey
+    /// decoder here is all a Misskey backend needs on the ingest side — neither
+    /// `EventIngestor` nor `SharedClient` changes.
+    func streamingEventDecoder() -> StreamingEventDecoder {
+        switch self {
+        case .mastodon:
+            return MastodonEventDecoder()
+        case .misskey:
+            // Misskey streaming is unimplemented (its `configuration()` throws, so
+            // streaming never starts); a real decoder slots in here later.
+            return MastodonEventDecoder()
+        }
+    }
 }
 
 struct FediverseServerConfiguration {
