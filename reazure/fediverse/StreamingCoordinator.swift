@@ -170,12 +170,21 @@ final class StreamingCoordinator {
         let delay = reconnectDelay(forAttempt: attempt)
         attempt += 1
 
-        let work = DispatchWorkItem { [weak self] in
+        // Capture `client` weakly: the fire-time guard already tolerates it being
+        // gone (nil !== the live client), so a strong capture would only pin the
+        // superseded client + socket alive until the scheduler's deadline.
+        let work = DispatchWorkItem { [weak self, weak client] in
             guard let self else { return }
             self.reconnectWorkItem = nil
             // Re-check at fire time: the account may have been torn down or
             // superseded while this attempt was pending.
-            guard !self.stopped, client === self.streamingClient else { return }
+            guard !self.stopped, let client, client === self.streamingClient else { return }
+
+            // Tear down the previous socket before reopening (restores the
+            // pre-refactor `client.stop()`): a socket dropped via `.error` is
+            // otherwise left half-open, and this keeps a single live socket per
+            // client so the identity guard has exactly one socket to fence.
+            client.stop()
 
             self.callbacks.backfillHome()
             self.openConnection()

@@ -53,7 +53,13 @@ protocol WebSocketProviding {
 /// Live factory backed by Starscream.
 struct StarscreamWebSocketProvider: WebSocketProviding {
     func webSocket(with request: URLRequest) -> WebSocketConnecting {
-        WebSocket(request: request)
+        let socket = WebSocket(request: request)
+        // Pin delivery to the main queue explicitly. `StreamingCoordinator`
+        // confines its state to the main thread and relies on delegate callbacks
+        // arriving there; this makes that guarantee local rather than an implicit
+        // dependency on Starscream's default `callbackQueue`.
+        socket.callbackQueue = .main
+        return socket
     }
 }
 

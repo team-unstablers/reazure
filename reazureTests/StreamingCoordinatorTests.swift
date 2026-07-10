@@ -77,6 +77,9 @@ struct StreamingCoordinatorTests {
 
         coordinator.start()
         await eventually { provider.createdSockets.count == 1 }
+        // Fail loudly if startup never connected — otherwise a negative assertion
+        // (`pendingCount == 0`) in a caller would pass vacuously against a nil socket.
+        #expect(provider.createdSockets.count == 1)
 
         return Harness(coordinator: coordinator, provider: provider, scheduler: scheduler, spy: spy)
     }
@@ -233,5 +236,62 @@ struct StreamingCoordinatorTests {
         h.coordinator.stop()
 
         #expect(h.spy.states.last == .disconnected)
+    }
+
+    /// Isolates the cancellation guard: `stop()` must actually cancel the pending
+    /// work item, not merely rely on the downstream `stopped`/identity re-checks.
+    /// (Without this, deleting `cancelPendingReconnect()` from `stop()` would
+    /// leave the end-to-end zombie tests green.)
+    @Test func stop_cancelsThePendingReconnectWorkItem() async {
+        let h = await startedHarness()
+        h.socket?.emit(.connected([:]))
+        h.socket?.emit(.disconnected("x", 1006))
+        let pending = h.scheduler.scheduled.first?.work
+
+        h.coordinator.stop()
+
+        #expect(pending?.isCancelled == true)
+    }
+
+    // MARK: - defect 3: main-thread confinement (live scheduler)
+
+    /// Pins D3 against the *real* `MainQueueReconnectScheduler` and the async
+    /// configuration hop: both the configuration load and the reconnect work must
+    /// run on the main thread. Reverting either to an off-main queue (the original
+    /// defect) flips a recorded flag and fails this test.
+    @Test func liveScheduler_runsReconnectWorkAndConfigLoadOnMain() async {
+        let provider = FakeWebSocketProvider()
+        var configOnMain: [Bool] = []
+        var backfillOnMain: [Bool] = []
+
+        let coordinator = StreamingCoordinator(
+            account: .fixture(),
+            socketProvider: provider,
+            scheduler: MainQueueReconnectScheduler(),
+            configurationProvider: { _ in .fixture() },
+            baseDelay: 0.01,
+            callbacks: StreamingCoordinator.Callbacks(
+                stateDidChange: { _ in },
+                configurationDidLoad: { _ in configOnMain.append(Thread.isMainThread) },
+                didReceiveEvent: { _ in },
+                backfillHome: { backfillOnMain.append(Thread.isMainThread) }
+            )
+        )
+
+        coordinator.start()
+        for _ in 0..<200 where provider.createdSockets.isEmpty {
+            await flushMainQueue()
+        }
+        #expect(provider.createdSockets.count == 1)
+
+        provider.latest?.emit(.connected([:]))
+        provider.latest?.emit(.disconnected("x", 1006))   // arms a real asyncAfter reconnect
+
+        // Allow the ~10ms backoff to elapse on the main queue.
+        try? await Task.sleep(nanoseconds: 150_000_000)
+
+        #expect(configOnMain == [true])
+        #expect(backfillOnMain == [true])
+        withExtendedLifetime(coordinator) {}
     }
 }
