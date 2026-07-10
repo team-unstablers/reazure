@@ -35,7 +35,11 @@ class SharedClient: ObservableObject {
         }
     }
     
-    var client: MastodonClient?
+    var client: MastodonClient? {
+        didSet {
+            actionPerformer.client = client
+        }
+    }
     var streamingClient: StreamingClient?
 
     @Published
@@ -74,8 +78,13 @@ class SharedClient: ObservableObject {
         }
     }
     
-    var replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
-    
+    let replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
+
+    /// Concrete executor for status-model write actions (reblog/favourite/reply/
+    /// delete/resolve). Owns the active `MastodonClient` reference, which is
+    /// mirrored in via `client`'s `didSet` on account change.
+    lazy var actionPerformer = MastodonActionPerformer(replyTo: replyTo)
+
     private init() {
         self.constructTimelineModel()
     }
@@ -86,7 +95,7 @@ class SharedClient: ObservableObject {
                 return []
             }
             
-            return statuses.map { StatusModel(adaptor: MastodonStatusAdaptor(from: $0), performer: self) }
+            return statuses.map { StatusModel(adaptor: MastodonStatusAdaptor(from: $0), performer: self?.actionPerformer) }
         }
         
         let notificationsTimeline = TimelineModel(with: self) { [weak self] (args) in
@@ -94,7 +103,7 @@ class SharedClient: ObservableObject {
                 return []
             }
             
-            return notifications.compactMap { NotificationModel(adaptor: MastodonNotificationAdaptor(from: $0), performer: self) }
+            return notifications.compactMap { NotificationModel(adaptor: MastodonNotificationAdaptor(from: $0), performer: self?.actionPerformer) }
         }
         
         timeline = [
@@ -154,7 +163,7 @@ extension SharedClient: StreamingClientDelegate {
                 
                 DispatchQueue.main.async {
                     let adaptor = MastodonStatusAdaptor(from: status)
-                    let model = StatusModel(adaptor: adaptor, performer: self)
+                    let model = StatusModel(adaptor: adaptor, performer: self.actionPerformer)
                     self.timeline[.home]?.prepend(model)
                 }
             } catch {
@@ -172,7 +181,7 @@ extension SharedClient: StreamingClientDelegate {
                 
                 DispatchQueue.main.async {
                     let adaptor = MastodonNotificationAdaptor(from: notification)
-                    guard let model = NotificationModel(adaptor: adaptor, performer: self) else {
+                    guard let model = NotificationModel(adaptor: adaptor, performer: self.actionPerformer) else {
                         return
                     }
                     
