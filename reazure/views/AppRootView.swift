@@ -37,7 +37,7 @@ struct AppRootView: View {
         PostArea { request in
             Task {
                 do {
-                    let _ = try await sharedClient.client?.postStatus(request.content, visibility: request.visibility, replyTo: request.replyTo)
+                    try await sharedClient.post(request)
                 } catch {
                     print(error)
                 }

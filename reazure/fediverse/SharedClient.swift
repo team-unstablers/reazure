@@ -239,6 +239,14 @@ extension SharedClient: StreamingClientDelegate {
 }
 
 extension SharedClient {
+    /// Submits a new post through the action performer so composer views never
+    /// reach into `client` (or the performer) directly.
+    func post(_ request: PostRequest) async throws {
+        try await actionPerformer.post(request)
+    }
+}
+
+extension SharedClient {
     func handleShortcut(key: ShortcutKey) {
         switch key {
         case .u:

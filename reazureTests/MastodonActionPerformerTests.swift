@@ -45,4 +45,14 @@ struct MastodonActionPerformerTests {
         // `nil` seed from the CurrentValueSubject, then the published reply target.
         #expect(received == [nil, "s1"])
     }
+
+    @Test func post_whileSignedOut_isASilentNoOp() async throws {
+        // With no active `MastodonClient` (signed out) the compose seam must not
+        // throw — it silently no-ops, matching the pre-refactor `client?.postStatus`
+        // optional-chaining behaviour.
+        let performer = MastodonActionPerformer(replyTo: .init(nil))
+        let request = PostRequest(content: "hello", visibility: .publicType, replyTo: nil)
+
+        try await performer.post(request)
+    }
 }

@@ -61,4 +61,15 @@ final class MastodonActionPerformer: StatusModelActionPerformer {
     func statusModel(wantsComposeReplyTo status: any StatusAdaptor, model: any StatusModelBase) async throws {
         self.replyTo.send(status)
     }
+
+    /// Submits a new post through the active REST client.
+    ///
+    /// Not part of the `StatusModelActionPerformer` protocol — this is the
+    /// compose seam used by the post composer, routed here so no view touches
+    /// `MastodonClient` directly.
+    func post(_ request: PostRequest) async throws {
+        _ = try await self.client?.postStatus(request.content,
+                                              visibility: request.visibility,
+                                              replyTo: request.replyTo)
+    }
 }
