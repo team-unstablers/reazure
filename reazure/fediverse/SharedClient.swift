@@ -28,29 +28,20 @@ enum Tab {
 class SharedClient: ObservableObject {
     static let shared = SharedClient()
     
+    /// The active account, or `nil` while signed out. Set through `use(account:)`
+    /// / `signOut()` rather than assigned directly, so the session lifecycle stays
+    /// in one place.
     @Published
-    var account: Account? {
-        didSet {
-            didAccountChanged(account: account)
-        }
-    }
-    
+    var account: Account?
+
+    /// The active session's REST client, mirrored from `AccountSession` on
+    /// `use(account:)`. Its `didSet` keeps the action performer pointed at the
+    /// live client.
     var client: MastodonClient? {
         didSet {
             actionPerformer.client = client
         }
     }
-
-    /// Owns the streaming lifecycle (client, configuration fetch, reconnect loop)
-    /// for the active account. Rebuilt per account; `nil` while signed out. The
-    /// facade keeps the `@Published streamingState`/`configuration` surface and
-    /// the coordinator mirrors into it through callbacks.
-    private var streamingCoordinator: StreamingCoordinator?
-
-    /// Decodes streaming events into timeline mutations behind a server-agnostic
-    /// decode seam. Rebuilt per account (its decoder is server-specific); the
-    /// coordinator forwards decoded events here.
-    private var eventIngestor: EventIngestor?
 
     @Published
     var configuration: FediverseServerConfiguration?
@@ -102,80 +93,58 @@ class SharedClient: ObservableObject {
         self?.unreadNotificationCount += 1
     })
 
+    /// Builds and owns the live account session (client, timelines, streaming
+    /// coordinator, event ingestor), centralizing the per-account creation and
+    /// teardown order. Driven by `use(account:)` / `signOut()`; the session
+    /// mirrors streaming state / configuration / decoded events back onto this
+    /// facade through the injected environment closures.
+    lazy var sessionManager = SessionManager(environment: SessionManager.Environment(
+        performer: actionPerformer,
+        presenter: notificationPresenter,
+        focusPostArea: { [weak self] in self?.postAreaFocused.toggle() },
+        stateDidChange: { [weak self] state in self?.streamingState = state },
+        configurationDidLoad: { [weak self] configuration in self?.configuration = configuration },
+        isNotificationTabActive: { [weak self] in self?.currentTab == .notification },
+        backfillHome: { [weak self] in self?.timeline[.home]?.update() }
+    ))
+
     private init() {
-        self.constructTimelineModel()
+        self.timeline = makeIdleTimelines()
     }
-    
-    private func constructTimelineModel() {
-        let homeTimeline = TimelineModel(focusPostArea: { [weak self] in self?.postAreaFocused.toggle() }) { [weak self] (args) in
-            guard let statuses = try await self?.client?.homeTimeline() else {
-                return []
-            }
 
-            return statuses.map { StatusModel(adaptor: MastodonStatusAdaptor(from: $0), performer: self?.actionPerformer) }
-        }
-
-        let notificationsTimeline = TimelineModel(focusPostArea: { [weak self] in self?.postAreaFocused.toggle() }) { [weak self] (args) in
-            guard let notifications = try await self?.client?.notifications() else {
-                return []
-            }
-            
-            return notifications.compactMap { NotificationModel(adaptor: MastodonNotificationAdaptor(from: $0), performer: self?.actionPerformer) }
-        }
-        
-        timeline = [
-            .home: homeTimeline,
-            .notifications: notificationsTimeline
-        ]
-        
-    }
-    
-    private func didAccountChanged(account: Account?) {
-        self.constructTimelineModel()
-
-        // Tear down the previous session's streaming first: `stop()` cancels any
-        // pending reconnect so a superseded coordinator can never resurrect a
-        // socket for the old account.
-        streamingCoordinator?.stop()
-        streamingCoordinator = nil
-        eventIngestor = nil
-
-        client = nil
+    /// Switches the app to `account`: tears down any previous session, builds a
+    /// new one (client, timelines, streaming), and mirrors it onto the facade's
+    /// reactive surface. Views call this instead of assigning `account` directly.
+    func use(account: Account) {
         streamingState = .disconnected
 
-        if let account = account {
-            client = MastodonClient(using: account)
+        let session = sessionManager.use(account: account)
 
-            let ingestor = EventIngestor(
-                decoder: account.server.streamingEventDecoder(),
-                performer: actionPerformer,
-                presenter: notificationPresenter,
-                homeTimeline: { [weak self] in self?.timeline[.home] },
-                notificationTimeline: { [weak self] in self?.timeline[.notifications] },
-                isNotificationTabActive: { [weak self] in self?.currentTab == .notification }
-            )
-            eventIngestor = ingestor
+        self.account = account
+        self.client = session.client
+        self.timeline = session.timelines
+    }
 
-            let coordinator = StreamingCoordinator(
-                account: account,
-                callbacks: StreamingCoordinator.Callbacks(
-                    stateDidChange: { [weak self] state in
-                        self?.streamingState = state
-                    },
-                    configurationDidLoad: { [weak self] configuration in
-                        self?.configuration = configuration
-                    },
-                    didReceiveEvent: { [weak self] event in
-                        self?.eventIngestor?.ingest(event)
-                    },
-                    backfillHome: { [weak self] in
-                        self?.timeline[.home]?.update()
-                    }
-                )
-            )
-            streamingCoordinator = coordinator
-            coordinator.start()
-        }
+    /// Tears down the current session and returns the facade to its signed-out
+    /// state. The timeline map keeps `.home`/`.notifications` seeded (empty) so
+    /// the views that force-unwrap those keys stay valid.
+    func signOut() {
+        sessionManager.signOut()
+
+        self.client = nil
+        self.account = nil
+        self.streamingState = .disconnected
+        self.timeline = makeIdleTimelines()
+    }
+
+    /// Empty home / notifications timelines for the signed-out state (no fetch
+    /// client), keeping both keys present for the facade's force-unwraps.
+    private func makeIdleTimelines() -> [TimelineType: TimelineModel] {
+        let focus: () -> Void = { [weak self] in self?.postAreaFocused.toggle() }
+        return [
+            .home: TimelineModel(focusPostArea: focus),
+            .notifications: TimelineModel(focusPostArea: focus)
+        ]
     }
 }
 

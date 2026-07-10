@@ -29,10 +29,10 @@ struct WatchAccountManager: ViewModifier {
         content
             .onAppear {
                 accountManager.refresh()
-                if accountManager.isEmpty {
-                    showAlert = true
+                if let account = accountManager.accounts.first {
+                    sharedClient.use(account: account)
                 } else {
-                    sharedClient.account = accountManager.accounts.first!
+                    showAlert = true
                 }
             }
             .alert(isPresented: $showAlert) {
