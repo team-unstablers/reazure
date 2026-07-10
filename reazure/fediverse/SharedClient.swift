@@ -85,6 +85,13 @@ class SharedClient: ObservableObject {
     /// mirrored in via `client`'s `didSet` on account change.
     lazy var actionPerformer = MastodonActionPerformer(replyTo: replyTo)
 
+    /// Presentation side effects (unread accrual + sound/haptic) for incoming
+    /// streaming notifications. The unread count stays a `@Published` property
+    /// here; the presenter nudges it through the injected `incrementUnread`.
+    lazy var notificationPresenter = NotificationPresenter(incrementUnread: { [weak self] in
+        self?.unreadNotificationCount += 1
+    })
+
     private init() {
         self.constructTimelineModel()
     }
@@ -186,23 +193,8 @@ extension SharedClient: StreamingClientDelegate {
                     }
                     
                     self.timeline[.notifications]?.prepend(model)
-                    
-                    if (self.currentTab != .notification) {
-                        self.unreadNotificationCount += 1
-                    }
-                    
-                    let preferencesManager = PreferencesManager.shared
-                    let notifySound = preferencesManager.notificationSound
-                    let shouldPlaySound = preferencesManager.playSoundOnNotification
-                    let shouldVibrate = (
-                        preferencesManager.vibrateOnNotification
-                    )
-                    
-                    if (shouldPlaySound) {
-                        notifySound.play()
-                    } else if (shouldVibrate) {
-                        HapticManager.shared.vibrate()
-                    }
+
+                    self.notificationPresenter.present(isNotificationTabActive: self.currentTab == .notification)
                 }
             } catch {
                 print("SharedClient:didReceive: \(error)")
