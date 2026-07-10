@@ -93,22 +93,41 @@ class SharedClient: ObservableObject {
         self?.unreadNotificationCount += 1
     })
 
+    // Streaming seams handed to each session's `StreamingCoordinator`. `.shared`
+    // uses the live defaults; the injectable initializer lets tests drive the
+    // whole session/streaming wiring without a network.
+    private let streamingSocketProvider: WebSocketProviding
+    private let streamingScheduler: ReconnectScheduling
+    private let streamingConfigurationProvider: (Account) async throws -> FediverseServerConfiguration
+
     /// Builds and owns the live account session (client, timelines, streaming
     /// coordinator, event ingestor), centralizing the per-account creation and
     /// teardown order. Driven by `use(account:)` / `signOut()`; the session
     /// mirrors streaming state / configuration / decoded events back onto this
     /// facade through the injected environment closures.
-    lazy var sessionManager = SessionManager(environment: SessionManager.Environment(
-        performer: actionPerformer,
-        presenter: notificationPresenter,
-        focusPostArea: { [weak self] in self?.postAreaFocused.toggle() },
-        stateDidChange: { [weak self] state in self?.streamingState = state },
-        configurationDidLoad: { [weak self] configuration in self?.configuration = configuration },
-        isNotificationTabActive: { [weak self] in self?.currentTab == .notification },
-        backfillHome: { [weak self] in self?.timeline[.home]?.update() }
-    ))
+    lazy var sessionManager = SessionManager(
+        environment: SessionManager.Environment(
+            performer: actionPerformer,
+            presenter: notificationPresenter,
+            focusPostArea: { [weak self] in self?.postAreaFocused.toggle() },
+            stateDidChange: { [weak self] state in self?.streamingState = state },
+            configurationDidLoad: { [weak self] configuration in self?.configuration = configuration },
+            isNotificationTabActive: { [weak self] in self?.currentTab == .notification },
+            backfillHome: { [weak self] in self?.timeline[.home]?.update() }
+        ),
+        socketProvider: streamingSocketProvider,
+        scheduler: streamingScheduler,
+        configurationProvider: streamingConfigurationProvider
+    )
 
-    private init() {
+    /// Designated initializer. `.shared` uses the live streaming defaults; tests
+    /// inject fakes to exercise the session/streaming wiring without a network.
+    init(socketProvider: WebSocketProviding = StarscreamWebSocketProvider(),
+         scheduler: ReconnectScheduling = MainQueueReconnectScheduler(),
+         configurationProvider: @escaping (Account) async throws -> FediverseServerConfiguration = { try await $0.server.configuration() }) {
+        self.streamingSocketProvider = socketProvider
+        self.streamingScheduler = scheduler
+        self.streamingConfigurationProvider = configurationProvider
         self.timeline = makeIdleTimelines()
     }
 

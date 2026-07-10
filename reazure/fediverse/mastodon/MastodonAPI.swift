@@ -52,6 +52,57 @@ struct MastodonEndpoint: RawRepresentable {
     }
 }
 
+/// The HTTP transport seam behind `MastodonClient`. Abstracts the single global
+/// `AF.request` call so REST paths can be exercised with canned responses in
+/// tests. Its surface is Foundation-only (no Alamofire types) so a fake conforms
+/// without importing Alamofire.
+protocol RequestPerforming {
+    func perform<Response: Decodable & Sendable>(
+        url: URL,
+        method: String,
+        parameters: [String: String],
+        headers: [String: String],
+        expecting type: Response.Type
+    ) async throws -> Response
+}
+
+/// Live `RequestPerforming` backed by Alamofire. Holds the request +
+/// validation + decoding + error mapping that used to be inlined in
+/// `MastodonClient.request`.
+struct AlamofireRequestPerformer: RequestPerforming {
+    func perform<Response: Decodable & Sendable>(
+        url: URL,
+        method: String,
+        parameters: [String: String],
+        headers: [String: String],
+        expecting type: Response.Type
+    ) async throws -> Response {
+        let httpMethod = HTTPMethod(rawValue: method)
+        let httpHeaders: HTTPHeaders? = headers.isEmpty ? nil : HTTPHeaders(headers)
+
+        let response = await AF.request(url,
+                                        method: httpMethod,
+                                        parameters: parameters,
+                                        headers: httpHeaders)
+            .validate()
+            .serializingDecodable(type)
+            .response
+
+        guard let value = response.value else {
+            let error = response.error!
+            let underlyingError = error.underlyingError
+
+            if underlyingError is DecodingError {
+                throw FediverseAPIError.decodingError(originError: underlyingError as! DecodingError)
+            }
+
+            throw FediverseAPIError.serverError(originError: error)
+        }
+
+        return value
+    }
+}
+
 class MastodonClient {
     static func defaultScope(for version: String) -> [String] {
         let version = version.split(separator: ".")
@@ -88,11 +139,11 @@ class MastodonClient {
             .validate()
             .serializingDecodable(Mastodon.Instance.self)
             .response
-        
+
         guard let value = response.value else {
-            throw response.error!
+            throw response.error ?? FediverseAPIError.unknownError(originError: nil)
         }
-        
+
         return value
     }
     
@@ -109,11 +160,11 @@ class MastodonClient {
             .validate()
             .serializingDecodable(Mastodon.OAuthApplication.self)
             .response
-        
+
         guard let value = response.value else {
-            throw response.error!
+            throw response.error ?? FediverseAPIError.unknownError(originError: nil)
         }
-        
+
         return value
     }
     
@@ -131,20 +182,23 @@ class MastodonClient {
             .validate()
             .serializingDecodable(Mastodon.OAuthToken.self)
             .response
-        
+
         guard let value = response.value else {
-            throw response.error!
+            throw response.error ?? FediverseAPIError.unknownError(originError: nil)
         }
-        
+
         return value
     }
     
     let account: Account
-    
-    init(using account: Account) {
+
+    private let performer: RequestPerforming
+
+    init(using account: Account, performer: RequestPerforming = AlamofireRequestPerformer()) {
         self.account = account
+        self.performer = performer
     }
-    
+
     func request<Response>(
         to endpoint: MastodonEndpoint,
         expects type: Response.Type,
@@ -153,32 +207,16 @@ class MastodonClient {
         requiresAuth: Bool = true
     ) async throws -> Response where Response: Decodable & Sendable {
         let url = endpoint.url(for: account.server.address)
-        
-        let headers: HTTPHeaders? = (requiresAuth) ? [
+
+        let headers: [String: String] = (requiresAuth) ? [
             "Authorization": "Bearer \(account.accessToken)"
-        ] : nil
-        
-        
-        let response = await AF.request(url,
-                                        method: method,
-                                        parameters: parameters,
-                                        headers: headers)
-            .validate()
-            .serializingDecodable(type)
-            .response
-        
-        guard let value = response.value else {
-            let error = response.error!
-            let underlyingError = error.underlyingError
-            
-            if underlyingError is DecodingError {
-                throw FediverseAPIError.decodingError(originError: underlyingError as! DecodingError)
-            }
-            
-            throw FediverseAPIError.serverError(originError: error)
-        }
-        
-        return value
+        ] : [:]
+
+        return try await performer.perform(url: url,
+                                           method: method.rawValue,
+                                           parameters: parameters,
+                                           headers: headers,
+                                           expecting: type)
     }
     
     func verifyCredentials() async throws -> Mastodon.UserProfile {
@@ -209,9 +247,12 @@ class MastodonClient {
     }
     
     func deleteStatus(statusId: String) async throws {
+        // DELETE /api/v1/statuses/:id returns the deleted status object; decoding
+        // it as `String` made every successful delete throw. Decode the status
+        // and discard it.
         _ = try await request(to: MastodonEndpoint.status(of: statusId),
-                          expects: String.self, // <- FIXME: 이거 때문에 요청은 성공해도 call이 실패함
-                          method: .delete)
+                              expects: Mastodon.Status.self,
+                              method: .delete)
     }
     
     func notifications() async throws -> [Mastodon.Notification] {

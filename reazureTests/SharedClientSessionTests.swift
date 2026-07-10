@@ -1,0 +1,92 @@
+//
+//  SharedClientSessionTests.swift
+//  reazureTests
+//
+//  End-to-end coverage of the facade's session wiring (roadmap step 4.3's
+//  injectable initializer, over 4.2's `use(account:)` / `signOut()`). The
+//  injectable `SharedClient.init` lets a non-`.shared` instance run the whole
+//  session/streaming path with fakes, so the facade mirroring — account / client
+//  / performer sync / timelines / streamingState — is pinned without a network.
+//
+
+import Foundation
+import Testing
+
+@testable import reazure
+
+@MainActor
+struct SharedClientSessionTests {
+
+    private func makeHub(_ provider: FakeWebSocketProvider) -> SharedClient {
+        SharedClient(
+            socketProvider: provider,
+            scheduler: ManualReconnectScheduler(),
+            configurationProvider: { _ in .fixture() }
+        )
+    }
+
+    private func eventually(iterations: Int = 500, _ condition: () -> Bool) async {
+        for _ in 0..<iterations {
+            if condition() { return }
+            await flushMainQueue()
+        }
+    }
+
+    @Test func use_mirrorsSessionOntoFacadeSurface() async {
+        let provider = FakeWebSocketProvider()
+        let hub = makeHub(provider)
+
+        hub.use(account: .fixture())
+
+        #expect(hub.account != nil)
+        #expect(hub.client != nil)
+        #expect(hub.actionPerformer.client === hub.client)   // client → performer mirror
+        #expect(hub.timeline[.home] != nil)
+        #expect(hub.timeline[.notifications] != nil)
+
+        await eventually { provider.createdSockets.count == 1 }
+        #expect(provider.createdSockets.count == 1)          // streaming started
+
+        withExtendedLifetime(hub) {}
+    }
+
+    @Test func signOut_returnsFacadeToIdleState() async {
+        let provider = FakeWebSocketProvider()
+        let hub = makeHub(provider)
+
+        hub.use(account: .fixture())
+        await eventually { provider.createdSockets.count == 1 }
+        let socket = provider.createdSockets[0]
+
+        hub.signOut()
+
+        #expect(hub.account == nil)
+        #expect(hub.client == nil)
+        #expect(hub.actionPerformer.client == nil)
+        #expect(hub.streamingState == .disconnected)
+        #expect(hub.timeline[.home] != nil)                  // idle timelines reseeded
+        #expect(hub.timeline[.notifications] != nil)
+        #expect(socket.disconnectCount == 1)                 // previous streaming torn down
+
+        withExtendedLifetime(hub) {}
+    }
+
+    @Test func switchingAccounts_tearsDownPreviousStream() async {
+        let provider = FakeWebSocketProvider()
+        let hub = makeHub(provider)
+        let a = Account(id: "a", username: "a", server: .mastodon(address: "a.example"), accessToken: "ta")
+        let b = Account(id: "b", username: "b", server: .mastodon(address: "b.example"), accessToken: "tb")
+
+        hub.use(account: a)
+        await eventually { provider.createdSockets.count == 1 }
+        let socketA = provider.createdSockets[0]
+
+        hub.use(account: b)
+
+        #expect(socketA.disconnectCount == 1)
+        #expect(hub.account == b)
+        await eventually { provider.createdSockets.count == 2 }
+
+        withExtendedLifetime(hub) {}
+    }
+}

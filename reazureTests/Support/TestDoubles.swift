@@ -154,6 +154,42 @@ struct FakeStreamingEventDecoder: StreamingEventDecoder {
     }
 }
 
+// MARK: - RequestPerforming
+
+/// Records each REST call `MastodonClient` routes through the transport seam and
+/// decodes a canned JSON body into the requested type — so the decode path (and
+/// the historical `deleteStatus` `String.self` bug) is exercised without a
+/// network. Conforms without importing Alamofire (the seam is Foundation-only).
+final class FakeRequestPerformer: RequestPerforming {
+    struct Call {
+        let url: URL
+        let method: String
+        let parameters: [String: String]
+        let headers: [String: String]
+    }
+
+    private(set) var calls: [Call] = []
+    var lastCall: Call? { calls.last }
+
+    /// JSON body decoded into the requested type on each call.
+    var responseJSON: String?
+    /// When set, thrown after recording the call.
+    var error: Error?
+
+    func perform<Response: Decodable & Sendable>(
+        url: URL,
+        method: String,
+        parameters: [String: String],
+        headers: [String: String],
+        expecting type: Response.Type
+    ) async throws -> Response {
+        calls.append(Call(url: url, method: method, parameters: parameters, headers: headers))
+        if let error { throw error }
+        let data = (responseJSON ?? "").data(using: .utf8) ?? Data()
+        return try JSONDecoder().decode(type, from: data)
+    }
+}
+
 // MARK: - Performer
 
 enum FakePerformerError: Error {
