@@ -85,10 +85,10 @@ struct AppRootView: View {
                 }
                 
                 if preferencesManager.showExtKeypad {
-                    ExtKeypad()
+                    ExtKeypad(router: sharedClient)
                 }
-                
-                ShortcutHandler()
+
+                ShortcutHandler(router: sharedClient)
                     .frame(width: 0, height: 0)
             }
             .background(palette.shell32Background)

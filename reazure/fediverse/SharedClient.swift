@@ -246,7 +246,7 @@ extension SharedClient {
     }
 }
 
-extension SharedClient {
+extension SharedClient: ShortcutRouting {
     func handleShortcut(key: ShortcutKey) {
         switch key {
         case .u:
