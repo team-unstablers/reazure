@@ -40,7 +40,12 @@ class SharedClient: ObservableObject {
             actionPerformer.client = client
         }
     }
-    var streamingClient: StreamingClient?
+
+    /// Owns the streaming lifecycle (client, configuration fetch, reconnect loop)
+    /// for the active account. Rebuilt per account; `nil` while signed out. The
+    /// facade keeps the `@Published streamingState`/`configuration` surface and
+    /// the coordinator mirrors into it through callbacks.
+    private var streamingCoordinator: StreamingCoordinator?
 
     @Published
     var configuration: FediverseServerConfiguration?
@@ -122,41 +127,49 @@ class SharedClient: ObservableObject {
     
     private func didAccountChanged(account: Account?) {
         self.constructTimelineModel()
-        
-        streamingClient?.delegate = nil
-        streamingClient?.stop()
-        
+
+        // Tear down the previous session's streaming first: `stop()` cancels any
+        // pending reconnect so a superseded coordinator can never resurrect a
+        // socket for the old account.
+        streamingCoordinator?.stop()
+        streamingCoordinator = nil
+
         client = nil
-        streamingClient = nil
-        
         streamingState = .disconnected
-        
+
         if let account = account {
             client = MastodonClient(using: account)
-            streamingClient = StreamingClient(using: account)
-            streamingState = .disconnected
-            
-            streamingClient?.delegate = self
 
-            Task {
-                // FIXME: handle errors
-                guard let configuration = try? await account.server.configuration() else {
-                    return
-                }
-                
-                DispatchQueue.main.async {
-                    self.configuration = configuration
-                }
-                streamingClient?.start(configuration)
-            }
-        } else {
-            client = nil
+            let coordinator = StreamingCoordinator(
+                account: account,
+                callbacks: StreamingCoordinator.Callbacks(
+                    stateDidChange: { [weak self] state in
+                        self?.streamingState = state
+                    },
+                    configurationDidLoad: { [weak self] configuration in
+                        self?.configuration = configuration
+                    },
+                    didReceiveEvent: { [weak self] event in
+                        self?.ingest(event: event)
+                    },
+                    backfillHome: { [weak self] in
+                        self?.timeline[.home]?.update()
+                    }
+                )
+            )
+            streamingCoordinator = coordinator
+            coordinator.start()
         }
     }
 }
 
-extension SharedClient: StreamingClientDelegate {
-    func didReceive(event: Mastodon.StreamingEvent, client: StreamingClient) {
+extension SharedClient {
+    /// Ingests a decoded streaming event handed back from `StreamingCoordinator`:
+    /// builds the Mastodon adaptor/model and prepends it to the correct timeline,
+    /// running the notification presentation side effects. (Server-agnostic
+    /// decode extraction is a later roadmap step; this preserves the existing
+    /// Mastodon ingest verbatim.)
+    fileprivate func ingest(event: Mastodon.StreamingEvent) {
         switch event.event {
         case "update":
             do {
@@ -164,17 +177,17 @@ extension SharedClient: StreamingClientDelegate {
                     print("XXX: Invalid payload")
                     return
                 }
-                
+
                 let status = try JSON.parse(payload, to: Mastodon.Status.self)
                 // home timeline
-                
+
                 DispatchQueue.main.async {
                     let adaptor = MastodonStatusAdaptor(from: status)
                     let model = StatusModel(adaptor: adaptor, performer: self.actionPerformer)
                     self.timeline[.home]?.prepend(model)
                 }
             } catch {
-                print("SharedClient:didReceive: \(error)")
+                print("SharedClient:ingest: \(error)")
             }
             break
         case "notification":
@@ -183,49 +196,25 @@ extension SharedClient: StreamingClientDelegate {
                     print("XXX: Invalid payload")
                     return
                 }
-                
+
                 let notification = try JSON.parse(payload, to: Mastodon.Notification.self)
-                
+
                 DispatchQueue.main.async {
                     let adaptor = MastodonNotificationAdaptor(from: notification)
                     guard let model = NotificationModel(adaptor: adaptor, performer: self.actionPerformer) else {
                         return
                     }
-                    
+
                     self.timeline[.notifications]?.prepend(model)
 
                     self.notificationPresenter.present(isNotificationTabActive: self.currentTab == .notification)
                 }
             } catch {
-                print("SharedClient:didReceive: \(error)")
+                print("SharedClient:ingest: \(error)")
             }
             break
         default:
             break
-        }
-    }
-    
-    func didStateChange(state: StreamingState, client: StreamingClient) {
-        print("streaming state changed: \(state)")
-        DispatchQueue.main.async {
-            self.streamingState = state
-        }
-        
-        
-        if state == .disconnected {
-            client.stop()
-            
-            DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-                Task {
-                    self.timeline[.home]?.update()
-                }
-                
-                guard let configuration = self.configuration else {
-                    return
-                }
-                
-                client.start(configuration)
-            }
         }
     }
 }

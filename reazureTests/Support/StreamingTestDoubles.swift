@@ -85,6 +85,32 @@ final class RecordingStreamingDelegate: StreamingClientDelegate {
     }
 }
 
+// MARK: - Reconnect scheduler
+
+/// A `ReconnectScheduling` that never touches a real clock: it records each
+/// scheduled work item with its requested delay so a test can inspect the
+/// backoff sequence and fire pending work deterministically.
+final class ManualReconnectScheduler: ReconnectScheduling {
+    private(set) var scheduled: [(work: DispatchWorkItem, delay: TimeInterval)] = []
+
+    var pendingCount: Int { scheduled.count }
+    var delays: [TimeInterval] { scheduled.map { $0.delay } }
+
+    func schedule(_ work: DispatchWorkItem, after delay: TimeInterval) {
+        scheduled.append((work, delay))
+    }
+
+    /// Runs the oldest pending work item (skipping it if cancelled), mirroring
+    /// how `DispatchQueue.asyncAfter` drops a cancelled item.
+    func fireNext() {
+        guard !scheduled.isEmpty else { return }
+        let next = scheduled.removeFirst()
+        if !next.work.isCancelled {
+            next.work.perform()
+        }
+    }
+}
+
 // MARK: - Fixtures
 
 extension Account {
