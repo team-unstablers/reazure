@@ -14,50 +14,90 @@ enum StreamingState {
     case disconnected
 }
 
-protocol StreamingClientDelegate {
+/// A transport-level failure surfaced separately from an ordinary `.disconnected`
+/// transition, so a reconnect controller can treat a genuine error (handshake
+/// rejection, network drop) differently from a routine disconnect. Resolves the
+/// former `// FIXME: error handler`.
+enum StreamingClientError: Error {
+    case transport(Error?)
+}
+
+protocol StreamingClientDelegate: AnyObject {
     func didReceive(event: Mastodon.StreamingEvent, client: StreamingClient)
     func didStateChange(state: StreamingState, client: StreamingClient)
-    // FIXME: error handler
+    func streamingClient(_ client: StreamingClient, didFailWith error: StreamingClientError)
+}
+
+extension StreamingClientDelegate {
+    /// Default no-op so conformers adopt the failure channel incrementally; the
+    /// reconnect controller consumes it.
+    func streamingClient(_ client: StreamingClient, didFailWith error: StreamingClientError) {}
+}
+
+/// The slice of a Starscream `WebSocket` that `StreamingClient` drives, declared
+/// as a protocol (refining Starscream's `WebSocketClient`) so a synthetic socket
+/// can be injected in tests. The concrete `WebSocket` conforms as-is.
+protocol WebSocketConnecting: WebSocketClient {
+    var delegate: WebSocketDelegate? { get set }
+}
+
+extension WebSocket: WebSocketConnecting {}
+
+/// Factory seam producing a `WebSocketConnecting` for a request. Injected into
+/// `StreamingClient` so `start()` no longer hard-instantiates a `WebSocket`,
+/// which was the only barrier to exercising the state machine without a network.
+protocol WebSocketProviding {
+    func webSocket(with request: URLRequest) -> WebSocketConnecting
+}
+
+/// Live factory backed by Starscream.
+struct StarscreamWebSocketProvider: WebSocketProviding {
+    func webSocket(with request: URLRequest) -> WebSocketConnecting {
+        WebSocket(request: request)
+    }
 }
 
 class StreamingClient {
     let account: Account
-    
-    private(set) public var socket: WebSocketClient?
+
+    private let socketProvider: WebSocketProviding
+
+    private(set) public var socket: WebSocketConnecting?
     private(set) public var state: StreamingState = .disconnected {
         didSet {
             self.delegate?.didStateChange(state: self.state, client: self)
         }
     }
-    
-    var delegate: StreamingClientDelegate?
-    
-    init(using account: Account) {
+
+    weak var delegate: StreamingClientDelegate?
+
+    init(using account: Account, socketProvider: WebSocketProviding = StarscreamWebSocketProvider()) {
         self.account = account
+        self.socketProvider = socketProvider
     }
-    
+
     func start(_ configuration: FediverseServerConfiguration) {
         var url = MastodonEndpoint.streaming.url(for: configuration.streamingEndpoint)
         url = url.appending(queryItems: [
             URLQueryItem(name: "access_token", value: self.account.accessToken),
             URLQueryItem(name: "stream", value: "user")
         ])
-        
-        let socket = WebSocket(request: URLRequest(url: url))
-        
+
+        let socket = socketProvider.webSocket(with: URLRequest(url: url))
+
         self.state = .connecting
-        
+
         socket.delegate = self
         socket.connect()
-        
+
         self.socket = socket
     }
-    
+
     func stop() {
         guard let socket = self.socket else {
             return
         }
-        
+
         socket.disconnect()
     }
 }
@@ -91,6 +131,7 @@ extension StreamingClient: WebSocketDelegate {
             break
         case .error(let error):
             self.state = .disconnected
+            self.delegate?.streamingClient(self, didFailWith: .transport(error))
             break
         case .peerClosed:
             self.state = .disconnected
