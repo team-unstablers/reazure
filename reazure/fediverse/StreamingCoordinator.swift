@@ -209,6 +209,14 @@ final class StreamingCoordinator {
 extension StreamingCoordinator: StreamingClientDelegate {
     func didReceive(event: Mastodon.StreamingEvent, client: StreamingClient) {
         guard client === streamingClient else { return }
+
+        // A decoded event proves the connection is doing useful work — this, not
+        // the bare `.connected` handshake, is what resets the reconnect backoff.
+        // A server that completes the handshake and then immediately drops without
+        // ever delivering an event keeps backing off toward the attempt cap
+        // instead of hammering at the base delay forever.
+        attempt = 0
+
         callbacks.didReceiveEvent(event)
     }
 
@@ -220,8 +228,9 @@ extension StreamingCoordinator: StreamingClientDelegate {
 
         switch state {
         case .connected:
-            // Success resets the backoff; any stale pending reconnect is moot.
-            attempt = 0
+            // Handshake completion alone does not reset the backoff (see
+            // `didReceive` — reset is gated on an actual event); just drop any
+            // now-moot pending reconnect.
             cancelPendingReconnect()
         case .disconnected:
             scheduleReconnect(for: client)

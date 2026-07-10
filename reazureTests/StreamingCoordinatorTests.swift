@@ -184,9 +184,10 @@ struct StreamingCoordinatorTests {
         #expect(h.scheduler.pendingCount == 0)
     }
 
-    /// A successful `.connected` resets the backoff, so a later drop starts again
-    /// from the base delay rather than continuing to grow.
-    @Test func successfulConnect_resetsBackoff() async {
+    /// Receiving an actual streaming event resets the backoff, so a later drop
+    /// starts again from the base delay. The bare `.connected` handshake between
+    /// the reconnect and the event does NOT reset it.
+    @Test func receivingEvent_resetsBackoff() async {
         let h = await startedHarness()
         h.socket?.emit(.connected([:]))
 
@@ -194,10 +195,34 @@ struct StreamingCoordinatorTests {
         #expect(h.scheduler.delays.last == 1)
         h.scheduler.fireNext()
 
-        h.socket?.emit(.connected([:]))            // reset
+        h.socket?.emit(.connected([:]))            // handshake alone: no reset
+        h.socket?.emit(.text(#"{"event":"update","payload":"x"}"#))  // real event: reset
         h.socket?.emit(.disconnected("y", 1006))
 
         #expect(h.scheduler.delays.last == 1)
+    }
+
+    /// The flap defect: a server that completes the handshake and then immediately
+    /// drops, over and over, delivering no events. `.connected` must NOT reset the
+    /// backoff, so the delay grows and the attempt cap is reached — rather than
+    /// hammering at the base delay indefinitely.
+    @Test func handshakeFlapWithoutEvents_backsOffAndReachesCap() async {
+        let h = await startedHarness(maxAttempts: 4)
+
+        var delays: [TimeInterval] = []
+        for _ in 0..<4 {
+            h.socket?.emit(.connected([:]))          // handshake completes...
+            h.socket?.emit(.disconnected("x", 1006)) // ...then drops, no event delivered
+            delays.append(h.scheduler.delays.last ?? -1)
+            h.scheduler.fireNext()
+        }
+
+        #expect(delays == [1, 2, 4, 8])
+
+        // 5th flap is past the cap (attempt == maxAttempts) — nothing scheduled.
+        h.socket?.emit(.connected([:]))
+        h.socket?.emit(.disconnected("x", 1006))
+        #expect(h.scheduler.pendingCount == 0)
     }
 
     // MARK: - defect 4: no zombie client after teardown
