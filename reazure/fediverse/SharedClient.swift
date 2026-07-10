@@ -90,15 +90,15 @@ class SharedClient: ObservableObject {
     }
     
     private func constructTimelineModel() {
-        let homeTimeline = TimelineModel(with: self) { [weak self] (args) in
+        let homeTimeline = TimelineModel(focusPostArea: { [weak self] in self?.postAreaFocused.toggle() }) { [weak self] (args) in
             guard let statuses = try await self?.client?.homeTimeline() else {
                 return []
             }
-            
+
             return statuses.map { StatusModel(adaptor: MastodonStatusAdaptor(from: $0), performer: self?.actionPerformer) }
         }
-        
-        let notificationsTimeline = TimelineModel(with: self) { [weak self] (args) in
+
+        let notificationsTimeline = TimelineModel(focusPostArea: { [weak self] in self?.postAreaFocused.toggle() }) { [weak self] (args) in
             guard let notifications = try await self?.client?.notifications() else {
                 return []
             }

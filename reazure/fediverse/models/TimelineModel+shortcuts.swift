@@ -57,7 +57,7 @@ extension TimelineModel {
         case .v:
             break
         case .u:
-            sharedClient.postAreaFocused.toggle()
+            focusPostArea()
         default:
             break
         }

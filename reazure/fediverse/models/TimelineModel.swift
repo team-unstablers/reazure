@@ -25,18 +25,22 @@ class TimelineModel: ObservableObject {
         var depth: Int
     }
     
-    var sharedClient: SharedClient
-    
+    /// Narrow seam for the `.u` shortcut to focus the post composer. Injected as
+    /// a closure so `TimelineModel` no longer holds a strong back-reference to
+    /// `SharedClient` (the former hub cycle, kept alive only by the immortal
+    /// singleton). Production wires this to `SharedClient.postAreaFocused.toggle`.
+    let focusPostArea: () -> Void
+
     @Published
     var statuses: OrderedSet<StatusModel> = []
-    
+
     @Published
     var focusState: FocusState? = nil
-    
+
     var fetchFunction: FetchFunction?
-    
-    init(with sharedClient: SharedClient, fetchFunction: FetchFunction? = nil) {
-        self.sharedClient = sharedClient
+
+    init(focusPostArea: @escaping () -> Void = {}, fetchFunction: FetchFunction? = nil) {
+        self.focusPostArea = focusPostArea
         self.fetchFunction = fetchFunction
     }
     

@@ -19,11 +19,22 @@ struct FocusTransitionTests {
 
     /// Builds a timeline whose display order matches `models` (index 0 first).
     private func makeTimeline(_ models: [StatusModel]) -> TimelineModel {
-        let timeline = TimelineModel(with: SharedClient.shared)
+        let timeline = TimelineModel()
         for model in models.reversed() {
             timeline.prepend(model)
         }
         return timeline
+    }
+
+    // MARK: - focusPostArea seam (.u)
+
+    @Test func handleShortcutU_invokesInjectedFocusPostAreaSeam() {
+        var toggleCount = 0
+        let timeline = TimelineModel(focusPostArea: { toggleCount += 1 })
+
+        timeline.handleShortcut(.u)
+
+        #expect(toggleCount == 1)
     }
 
     private func status(_ id: String, replyToId: String? = nil) -> StatusModel {
