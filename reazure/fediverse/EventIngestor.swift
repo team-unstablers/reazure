@@ -7,9 +7,12 @@
 
 import Foundation
 
-/// Server-agnostic decode seam for a streaming payload: turns a raw event
-/// payload string into the fediverse adaptors the models wrap, so `EventIngestor`
-/// never names a concrete backend type. The Mastodon implementation
+/// Decode seam for a streaming *payload*: turns a raw event payload string into
+/// the fediverse adaptors the models wrap. This abstracts the payload decode
+/// only — the streaming *envelope* (`Mastodon.StreamingEvent`) and the
+/// `update`/`notification` demux in `EventIngestor` are still Mastodon-shaped, so
+/// a real (non-stub) Misskey backend would also need a server-agnostic event
+/// abstraction, not just a new decoder. The Mastodon implementation
 /// (`MastodonEventDecoder`) lives alongside the other Mastodon adaptors.
 protocol StreamingEventDecoder {
     func decodeStatus(from payload: String) throws -> StatusAdaptor

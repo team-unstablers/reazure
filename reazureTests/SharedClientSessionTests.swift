@@ -32,6 +32,19 @@ struct SharedClientSessionTests {
         }
     }
 
+    /// AppRootView force-unwraps `timeline[.home]!` / `[.notifications]!` on every
+    /// render, including cold launch before any account is selected. A fresh hub
+    /// must seed both keys from `init` alone — with no `use()`/`signOut()` first.
+    @Test func freshHub_seedsBothTimelinesBeforeAnySession() {
+        let hub = makeHub(FakeWebSocketProvider())
+
+        #expect(hub.timeline[.home] != nil)
+        #expect(hub.timeline[.notifications] != nil)
+        #expect(hub.account == nil)
+
+        withExtendedLifetime(hub) {}
+    }
+
     @Test func use_mirrorsSessionOntoFacadeSurface() async {
         let provider = FakeWebSocketProvider()
         let hub = makeHub(provider)

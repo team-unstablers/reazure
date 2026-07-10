@@ -151,6 +151,46 @@ struct EventIngestorTests {
         #expect(unread == 0)
     }
 
+    // MARK: - main-thread hop
+
+    /// In production `ingest` is invoked from the streaming coordinator on
+    /// Starscream's background callback thread; the `DispatchQueue.main.async`
+    /// inside `ingest` is what moves the `@Published` timeline / presenter work to
+    /// the main thread. Drive `ingest` off-main and assert the presenter side
+    /// effect actually runs on main — removing the hop would fail this.
+    @Test func notificationIngest_drivenOffMain_runsPresenterOnMainThread() async {
+        let home = TimelineModel()
+        let notifications = TimelineModel()
+        var presentedOnMain: Bool?
+        let presenter = NotificationPresenter(
+            preferences: silentPreferences(),
+            effects: NotificationPresenter.Effects(playSound: { _ in }, vibrate: {}),
+            incrementUnread: { presentedOnMain = Thread.isMainThread }
+        )
+        let ingestor = EventIngestor(
+            decoder: FakeStreamingEventDecoder(notification: FakeNotificationAdaptor(status: FakeStatusAdaptor(id: "s-1"))),
+            performer: nil,
+            presenter: presenter,
+            homeTimeline: { home },
+            notificationTimeline: { notifications },
+            isNotificationTabActive: { false }
+        )
+        let evt = Mastodon.StreamingEvent(event: "notification", payload: "{}")
+
+        await withCheckedContinuation { (cont: CheckedContinuation<Void, Never>) in
+            DispatchQueue.global().async {
+                ingestor.ingest(evt)
+                cont.resume()
+            }
+        }
+        for _ in 0..<500 where presentedOnMain == nil {
+            await flushMainQueue()
+        }
+
+        #expect(presentedOnMain == true)
+        #expect(notifications.statuses.count == 1)
+    }
+
     // MARK: - unknown
 
     @Test func unknownEvent_isIgnored() async {
