@@ -342,7 +342,7 @@ struct ActivityPubMarkupText: View, Equatable {
     }
     
     func resolveEmojo(url: String, for code: String) async {
-        guard let image = try? await CachedImageLoader.shared.loadImage(url: url) else {
+        guard let image = await CachedImageLoader.shared.loadImage(url: url) else {
             print("failed to resolve emojo \"\(code)\": (\(url))")
             return
         }
