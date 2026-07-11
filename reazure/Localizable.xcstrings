@@ -1301,6 +1301,72 @@
         }
       }
     },
+    "SETTINGS_FOOTER_FONT_SIZE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "When 'Respect System Font Size' is off, the whole app uses the fixed size above."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "「システムのフォントサイズを尊重する」がオフのとき、アプリ全体が上記の固定サイズで表示されます。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "'시스템 폰트 크기를 존중하기'가 꺼져 있으면 앱 전체가 위 고정 크기로 표시됩니다."
+          }
+        }
+      }
+    },
+    "SETTINGS_KEY_FONT_SIZE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Font Size"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォントサイズ"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "폰트 크기"
+          }
+        }
+      }
+    },
+    "SETTINGS_KEY_RESPECT_SYSTEM_FONT_SIZE" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Respect System Font Size"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムのフォントサイズを尊重する"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "시스템 폰트 크기를 존중하기"
+          }
+        }
+      }
+    },
     "SETTINGS_KEY_LIFT_DOWN_POST_AREA" : {
       "localizations" : {
         "en" : {

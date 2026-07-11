@@ -32,7 +32,10 @@ struct PostItemFlags: RawRepresentable, OptionSet {
 struct PostItem: View, Equatable {
     @Environment(\.palette)
     var palette: AppPalette
-    
+
+    @Environment(\.appFontMetrics)
+    var appFontMetrics: AppFontMetrics
+
     var status: StatusAdaptor
     
     var relatedAccount: AccountAdaptor? = nil
@@ -130,6 +133,7 @@ struct PostItem: View, Equatable {
                     
                     HStack(alignment: .firstTextBaseline) {
                         Text(verbatim: status.footerContent)
+                            .font(appFontMetrics.body)
                             .foregroundColor(.secondary)
                         
                         

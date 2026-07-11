@@ -21,6 +21,9 @@ fileprivate struct AboutAppFooterBackground: View {
 
 
 struct AboutAppFooter: View {
+    @Environment(\.appFontMetrics)
+    var appFontMetrics: AppFontMetrics
+
     var body: some View {
         VStack(alignment: .leading) {
             (Text(Image(systemName: "exclamationmark.triangle.fill")) + Text(" ") + Text("ABOUT_APP_FOOTER_NOTICE_TITLE"))
@@ -29,17 +32,17 @@ struct AboutAppFooter: View {
                 .shadow(color: .black.opacity(0.25), radius: 1, x: 0, y: 1)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.bottom, 4)
-            
+
             Text("ABOUT_APP_FOOTER_NOTICE_CONTENT")
-                .font(.caption)
+                .font(appFontMetrics.caption)
                 .foregroundStyle(.black.opacity(0.8))
                 .shadow(color: .black.opacity(0.25), radius: 1, x: 0, y: 1)
-            
+
             Group {
                 Text("")
                 Text("ABOUT_APP_FOOTER_NOTICE_CONTENT_FOOTER")
             }
-                .font(.caption2)
+                .font(appFontMetrics.caption2)
                 .italic()
                 .foregroundStyle(.black.opacity(0.8))
                 .shadow(color: .black.opacity(0.25), radius: 1, x: 0, y: 1)

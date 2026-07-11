@@ -22,7 +22,10 @@ fileprivate struct AboutAppHeaderBackground: View {
 
 struct AboutAppHeader: View {
     let appIcon = Bundle.main.icon
-    
+
+    @Environment(\.appFontMetrics)
+    var appFontMetrics: AppFontMetrics
+
     @State
     private var fadeAnimation = false
 
@@ -41,7 +44,7 @@ struct AboutAppHeader: View {
                     .padding(.bottom, 8)
                 
                 Text("PRODUCT_SLOGAN")
-                    .font(.caption)
+                    .font(appFontMetrics.caption)
             }
             .foregroundStyle(.white)
             .shadow(color: .black.opacity(0.25), radius: 2, x: 0, y: 4)

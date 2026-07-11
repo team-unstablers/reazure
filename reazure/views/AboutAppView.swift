@@ -95,7 +95,27 @@ struct AboutAppView: View {
                 } footer: {
                     Text("SETTINGS_FOOTER_THEME_AUTHORED_BY: \(preferencesManager.theme.author)")
                 }
-                
+
+                Section {
+                    PreferenceSwitch(isOn: $preferencesManager.respectSystemFontSize) {
+                        Text("SETTINGS_KEY_RESPECT_SYSTEM_FONT_SIZE")
+                    }
+                    Stepper(value: $preferencesManager.fontSize, in: 12...22, step: 1) {
+                        HStack {
+                            Text("SETTINGS_KEY_FONT_SIZE")
+                            Spacer()
+                            Text(verbatim: "\(preferencesManager.fontSize)pt")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    .disabled(preferencesManager.respectSystemFontSize)
+                    .onChange(of: preferencesManager.fontSize) {
+                        preferencesManager.save()
+                    }
+                } footer: {
+                    Text("SETTINGS_FOOTER_FONT_SIZE")
+                }
+
                 Section {
                     PreferenceSwitch(isOn: $preferencesManager.liftDownPostArea) {
                         Text("SETTINGS_KEY_LIFT_DOWN_POST_AREA")

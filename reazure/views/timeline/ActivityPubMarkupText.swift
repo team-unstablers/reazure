@@ -50,12 +50,12 @@ extension HTMLElement {
         }.joined()
     }
     
-    func asNSAttributedString(emojis: [EmojiAdaptor]) -> NSAttributedString {
+    func asNSAttributedString(emojis: [EmojiAdaptor], fontSize: CGFloat = 16) -> NSAttributedString {
         if (name == "__TEXT__") {
             let string = NSMutableAttributedString(string: text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
-            
-            string.addAttributes([.font: UIFont.systemFont(ofSize: 16)], range: NSRange(location: 0, length: string.length))
-            
+
+            string.addAttributes([.font: UIFont.systemFont(ofSize: fontSize)], range: NSRange(location: 0, length: string.length))
+
             return string
         } else if (name == "__EMOJO__") {
             // FIXME: 비동기 처리가 필요함
@@ -79,31 +79,31 @@ extension HTMLElement {
             return NSAttributedString(string: "\n")
         } else if (name == "strong" || name == "b") {
             let result = NSMutableAttributedString()
-            
+
             for child in children {
-                result.append(child.asNSAttributedString(emojis: emojis))
+                result.append(child.asNSAttributedString(emojis: emojis, fontSize: fontSize))
             }
-            
-            result.addAttributes([.font: UIFont.boldSystemFont(ofSize: 16)], range: NSRange(location: 0, length: result.length))
-            
+
+            result.addAttributes([.font: UIFont.boldSystemFont(ofSize: fontSize)], range: NSRange(location: 0, length: result.length))
+
             return result
         } else if (name == "a") {
             let result = NSMutableAttributedString()
-            
+
             for child in children {
-                result.append(child.asNSAttributedString(emojis: emojis))
+                result.append(child.asNSAttributedString(emojis: emojis, fontSize: fontSize))
             }
-            
+
             result.addAttributes([.link: attributes["href"] ?? ""], range: NSRange(location: 0, length: result.length))
-            
+
             return result
         } else {
             let result = NSMutableAttributedString()
-            
+
             for child in children {
-                result.append(child.asNSAttributedString(emojis: emojis))
+                result.append(child.asNSAttributedString(emojis: emojis, fontSize: fontSize))
             }
-            
+
             return result
         }
     }
@@ -318,9 +318,12 @@ func parseHTML(_ html: String) -> HTMLElement {
 
 // CustomText에서 UIImage를 포함하는 NSAttributedString 생성 예시
 struct ActivityPubMarkupText: View, Equatable {
+    @Environment(\.appFontMetrics)
+    var appFontMetrics: AppFontMetrics
+
     @State
     var resolvedEmojos: [String: UIImage] = [:]
-    
+
     var element: HTMLElement
     var emojos: [EmojiAdaptor]
 
@@ -339,15 +342,16 @@ struct ActivityPubMarkupText: View, Equatable {
     
     var body: some View {
         buildTextView(element: element, emojis: emojos)
+            .font(appFontMetrics.body)
     }
-    
+
     func resolveEmojo(url: String, for code: String) async {
         guard let image = await CachedImageLoader.shared.loadImage(url: url) else {
             print("failed to resolve emojo \"\(code)\": (\(url))")
             return
         }
-        
-        let scaledImage = image.scale(to: 18.0)
+
+        let scaledImage = image.scale(to: appFontMetrics.emojiPointSize)
 
         resolvedEmojos[code] = scaledImage
     }
@@ -408,13 +412,13 @@ struct ActivityPubMarkupText: View, Equatable {
         } else if (element.name == "a") {
             // FIXME: a 태그 안에 emoji 있으면 표시 안됨
             let result = NSMutableAttributedString()
-            
+
             for child in element.children {
-                result.append(child.asNSAttributedString(emojis: emojis))
+                result.append(child.asNSAttributedString(emojis: emojis, fontSize: appFontMetrics.linkPointSize))
             }
-            
+
             result.addAttributes([.link: element.attributes["href"] ?? ""], range: NSRange(location: 0, length: result.length))
-            
+
             return Text(AttributedString(result))
         } else {
             var result: Text = Text("")

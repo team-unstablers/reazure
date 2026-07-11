@@ -43,22 +43,26 @@ fileprivate struct KeypadButton: View {
     @Environment(\.palette)
     var palette: AppPalette
 
+    @Environment(\.appFontMetrics)
+    var appFontMetrics: AppFontMetrics
+
     @Binding var label: String
     @Binding var sublabel: String?
-    
+
     var handler: () -> Void = {}
-    
+
     var body: some View {
         Button {
             handler()
         } label: {
             VStack {
                 Text(label)
+                    .font(appFontMetrics.body)
                     .foregroundStyle(palette.extKeypadButtonForeground)
                     .padding(.bottom, 0)
-                
+
                 Text(sublabel ?? " ")
-                    .font(.caption2)
+                    .font(appFontMetrics.caption2)
                     .foregroundStyle(palette.extKeypadButtonSecondaryForeground)
             }
             .padding(.horizontal, 8)

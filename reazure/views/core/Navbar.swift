@@ -10,7 +10,10 @@ import SwiftUI
 struct Navbar: View {
     @Environment(\.palette)
     var palette: AppPalette
-    
+
+    @Environment(\.appFontMetrics)
+    var appFontMetrics: AppFontMetrics
+
     @EnvironmentObject
     var sharedClient: SharedClient
     
@@ -27,7 +30,7 @@ struct Navbar: View {
                     tabChange(.home)
                 } label: {
                     Text(Image(systemName: "house"))
-                        .font(.system(size: 20))
+                        .font(appFontMetrics.navbarIcon)
                         .foregroundStyle(palette.navbarForeground)
                 }
                 .shadow(color: palette.navbarForeground, radius: tabSelection == .home ? 4 : 0)
@@ -39,12 +42,12 @@ struct Navbar: View {
                     tabChange(.notification)
                 } label: {
                     Text(Image(systemName: "at"))
-                        .font(.system(size: 20))
+                        .font(appFontMetrics.navbarIcon)
                         .foregroundStyle(palette.navbarForeground)
                         .overlay {
                             if sharedClient.unreadNotificationCount > 0 {
                                 Text(verbatim: String(sharedClient.unreadNotificationCount))
-                                    .font(.system(size: 12))
+                                    .font(appFontMetrics.navbarBadge)
                                     .foregroundColor(.white)
                                     .padding(4)
                                     .background(Color.red)
@@ -62,7 +65,7 @@ struct Navbar: View {
                     tabChange(.profile)
                 } label: {
                     Text(Image(systemName: "globe"))
-                        .font(.system(size: 20))
+                        .font(appFontMetrics.navbarIcon)
                         .foregroundStyle(palette.navbarForeground)
                 }
                 .shadow(color: palette.navbarForeground, radius: tabSelection == .profile ? 4 : 0)
@@ -74,7 +77,7 @@ struct Navbar: View {
                     tabChange(.settings)
                 } label: {
                     Text(Image(systemName: "gear"))
-                        .font(.system(size: 20))
+                        .font(appFontMetrics.navbarIcon)
                         .foregroundStyle(palette.navbarForeground)
                 }
                 .shadow(color: palette.navbarForeground, radius: tabSelection == .settings ? 4 : 0)
