@@ -79,26 +79,32 @@ struct ExtKeypad: View {
     
     @EnvironmentObject
     var preferencesManager: PreferencesManager
-    
+
     @EnvironmentObject
     var sharedClient: SharedClient
-    
+
+    /// Shortcut dispatch seam. Routes key presses through the same
+    /// `ShortcutRouting` protocol the UIKit `ShortcutHandler` uses, rather than
+    /// reaching into the shared hub directly. `sharedClient` above is retained
+    /// only for reading `postAreaFocused` (the u/esc label state).
+    var router: ShortcutRouting
+
     var directionalPad: some View {
         
         let h = KeypadButton(label: .constant("h"), sublabel: .constant("←")) {
-            sharedClient.handleShortcut(key: .h)
+            router.handleShortcut(key: .h)
         }
         
         let j = KeypadButton(label: .constant("j"), sublabel: .constant("↓")) {
-            sharedClient.handleShortcut(key: .j)
+            router.handleShortcut(key: .j)
         }
         
         let k = KeypadButton(label: .constant("k"), sublabel: .constant("↑")) {
-            sharedClient.handleShortcut(key: .k)
+            router.handleShortcut(key: .k)
         }
         
         let l = KeypadButton(label: .constant("l"), sublabel: .constant("→")) {
-            sharedClient.handleShortcut(key: .l)
+            router.handleShortcut(key: .l)
         }
 
         
@@ -125,13 +131,13 @@ struct ExtKeypad: View {
             self.directionalPad
             HStack {
                 KeypadButton(label: .constant("r"), sublabel: .constant("reply")) {
-                    sharedClient.handleShortcut(key: .r)
+                    router.handleShortcut(key: .r)
                 }
                 KeypadButton(label: .constant("f"), sublabel: .constant("favourite")) {
-                    sharedClient.handleShortcut(key: .f)
+                    router.handleShortcut(key: .f)
                 }
                 KeypadButton(label: .constant("t"), sublabel: .constant("boost")) {
-                    sharedClient.handleShortcut(key: .t)
+                    router.handleShortcut(key: .t)
                 }
                 KeypadButton(label: .constant("v"), sublabel: .constant("context")) {
                 }
@@ -142,7 +148,7 @@ struct ExtKeypad: View {
                                 !sharedClient.postAreaFocused ?
                     .constant("new post") : .constant("unfocus")
                 ) {
-                    sharedClient.handleShortcut(key: .u)
+                    router.handleShortcut(key: .u)
                 }
                     .onLongPressGesture(minimumDuration: 0.1, maximumDistance: 0) {
                         print("TODO: discard")
@@ -172,7 +178,7 @@ struct ExtKeypad: View {
         
         VStack {
             Text("Preview of ExtKeypad")
-            ExtKeypad()
+            ExtKeypad(router: SharedClient.shared)
                 .environmentObject(PreferencesManager())
                 .environmentObject(SharedClient.shared)
         }

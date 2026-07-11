@@ -28,15 +28,20 @@ enum Tab {
 class SharedClient: ObservableObject {
     static let shared = SharedClient()
     
+    /// The active account, or `nil` while signed out. Set through `use(account:)`
+    /// / `signOut()` rather than assigned directly, so the session lifecycle stays
+    /// in one place.
     @Published
-    var account: Account? {
+    var account: Account?
+
+    /// The active session's REST client, mirrored from `AccountSession` on
+    /// `use(account:)`. Its `didSet` keeps the action performer pointed at the
+    /// live client.
+    var client: MastodonClient? {
         didSet {
-            didAccountChanged(account: account)
+            actionPerformer.client = client
         }
     }
-    
-    var client: MastodonClient?
-    var streamingClient: StreamingClient?
 
     @Published
     var configuration: FediverseServerConfiguration?
@@ -74,162 +79,103 @@ class SharedClient: ObservableObject {
         }
     }
     
-    var replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
-    
-    private init() {
-        self.constructTimelineModel()
+    let replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
+
+    /// Concrete executor for status-model write actions (reblog/favourite/reply/
+    /// delete/resolve). Owns the active `MastodonClient` reference, which is
+    /// mirrored in via `client`'s `didSet` on account change.
+    lazy var actionPerformer = MastodonActionPerformer(replyTo: replyTo)
+
+    /// Presentation side effects (unread accrual + sound/haptic) for incoming
+    /// streaming notifications. The unread count stays a `@Published` property
+    /// here; the presenter nudges it through the injected `incrementUnread`.
+    lazy var notificationPresenter = NotificationPresenter(incrementUnread: { [weak self] in
+        self?.unreadNotificationCount += 1
+    })
+
+    // Streaming seams handed to each session's `StreamingCoordinator`. `.shared`
+    // uses the live defaults; the injectable initializer lets tests drive the
+    // whole session/streaming wiring without a network.
+    private let streamingSocketProvider: WebSocketProviding
+    private let streamingScheduler: ReconnectScheduling
+    private let streamingConfigurationProvider: (Account) async throws -> FediverseServerConfiguration
+
+    /// Builds and owns the live account session (client, timelines, streaming
+    /// coordinator, event ingestor), centralizing the per-account creation and
+    /// teardown order. Driven by `use(account:)` / `signOut()`; the session
+    /// mirrors streaming state / configuration / decoded events back onto this
+    /// facade through the injected environment closures.
+    lazy var sessionManager = SessionManager(
+        environment: SessionManager.Environment(
+            performer: actionPerformer,
+            presenter: notificationPresenter,
+            focusPostArea: { [weak self] in self?.postAreaFocused.toggle() },
+            stateDidChange: { [weak self] state in self?.streamingState = state },
+            configurationDidLoad: { [weak self] configuration in self?.configuration = configuration },
+            isNotificationTabActive: { [weak self] in self?.currentTab == .notification },
+            backfillHome: { [weak self] in self?.timeline[.home]?.update() }
+        ),
+        socketProvider: streamingSocketProvider,
+        scheduler: streamingScheduler,
+        configurationProvider: streamingConfigurationProvider
+    )
+
+    /// Designated initializer. `.shared` uses the live streaming defaults; tests
+    /// inject fakes to exercise the session/streaming wiring without a network.
+    init(socketProvider: WebSocketProviding = StarscreamWebSocketProvider(),
+         scheduler: ReconnectScheduling = MainQueueReconnectScheduler(),
+         configurationProvider: @escaping (Account) async throws -> FediverseServerConfiguration = { try await $0.server.configuration() }) {
+        self.streamingSocketProvider = socketProvider
+        self.streamingScheduler = scheduler
+        self.streamingConfigurationProvider = configurationProvider
+        self.timeline = makeIdleTimelines()
     }
-    
-    private func constructTimelineModel() {
-        let homeTimeline = TimelineModel(with: self) { [weak self] (args) in
-            guard let statuses = try await self?.client?.homeTimeline() else {
-                return []
-            }
-            
-            return statuses.map { StatusModel(adaptor: MastodonStatusAdaptor(from: $0), performer: self) }
-        }
-        
-        let notificationsTimeline = TimelineModel(with: self) { [weak self] (args) in
-            guard let notifications = try await self?.client?.notifications() else {
-                return []
-            }
-            
-            return notifications.compactMap { NotificationModel(adaptor: MastodonNotificationAdaptor(from: $0), performer: self) }
-        }
-        
-        timeline = [
-            .home: homeTimeline,
-            .notifications: notificationsTimeline
-        ]
-        
-    }
-    
-    private func didAccountChanged(account: Account?) {
-        self.constructTimelineModel()
-        
-        streamingClient?.delegate = nil
-        streamingClient?.stop()
-        
-        client = nil
-        streamingClient = nil
-        
+
+    /// Switches the app to `account`: tears down any previous session, builds a
+    /// new one (client, timelines, streaming), and mirrors it onto the facade's
+    /// reactive surface. Views call this instead of assigning `account` directly.
+    func use(account: Account) {
         streamingState = .disconnected
-        
-        if let account = account {
-            client = MastodonClient(using: account)
-            streamingClient = StreamingClient(using: account)
-            streamingState = .disconnected
-            
-            streamingClient?.delegate = self
 
-            Task {
-                // FIXME: handle errors
-                guard let configuration = try? await account.server.configuration() else {
-                    return
-                }
-                
-                DispatchQueue.main.async {
-                    self.configuration = configuration
-                }
-                streamingClient?.start(configuration)
-            }
-        } else {
-            client = nil
-        }
-    }
-}
+        let session = sessionManager.use(account: account)
 
-extension SharedClient: StreamingClientDelegate {
-    func didReceive(event: Mastodon.StreamingEvent, client: StreamingClient) {
-        switch event.event {
-        case "update":
-            do {
-                guard let payload = event.payload else {
-                    print("XXX: Invalid payload")
-                    return
-                }
-                
-                let status = try JSON.parse(payload, to: Mastodon.Status.self)
-                // home timeline
-                
-                DispatchQueue.main.async {
-                    let adaptor = MastodonStatusAdaptor(from: status)
-                    let model = StatusModel(adaptor: adaptor, performer: self)
-                    self.timeline[.home]?.prepend(model)
-                }
-            } catch {
-                print("SharedClient:didReceive: \(error)")
-            }
-            break
-        case "notification":
-            do {
-                guard let payload = event.payload else {
-                    print("XXX: Invalid payload")
-                    return
-                }
-                
-                let notification = try JSON.parse(payload, to: Mastodon.Notification.self)
-                
-                DispatchQueue.main.async {
-                    let adaptor = MastodonNotificationAdaptor(from: notification)
-                    guard let model = NotificationModel(adaptor: adaptor, performer: self) else {
-                        return
-                    }
-                    
-                    self.timeline[.notifications]?.prepend(model)
-                    
-                    if (self.currentTab != .notification) {
-                        self.unreadNotificationCount += 1
-                    }
-                    
-                    let preferencesManager = PreferencesManager.shared
-                    let notifySound = preferencesManager.notificationSound
-                    let shouldPlaySound = preferencesManager.playSoundOnNotification
-                    let shouldVibrate = (
-                        preferencesManager.vibrateOnNotification
-                    )
-                    
-                    if (shouldPlaySound) {
-                        notifySound.play()
-                    } else if (shouldVibrate) {
-                        HapticManager.shared.vibrate()
-                    }
-                }
-            } catch {
-                print("SharedClient:didReceive: \(error)")
-            }
-            break
-        default:
-            break
-        }
+        self.account = account
+        self.client = session.client
+        self.timeline = session.timelines
     }
-    
-    func didStateChange(state: StreamingState, client: StreamingClient) {
-        print("streaming state changed: \(state)")
-        DispatchQueue.main.async {
-            self.streamingState = state
-        }
-        
-        
-        if state == .disconnected {
-            client.stop()
-            
-            DispatchQueue.global().asyncAfter(deadline: .now() + 1) {
-                Task {
-                    self.timeline[.home]?.update()
-                }
-                
-                guard let configuration = self.configuration else {
-                    return
-                }
-                
-                client.start(configuration)
-            }
-        }
+
+    /// Tears down the current session and returns the facade to its signed-out
+    /// state. The timeline map keeps `.home`/`.notifications` seeded (empty) so
+    /// the views that force-unwrap those keys stay valid.
+    func signOut() {
+        sessionManager.signOut()
+
+        self.client = nil
+        self.account = nil
+        self.streamingState = .disconnected
+        self.timeline = makeIdleTimelines()
+    }
+
+    /// Empty home / notifications timelines for the signed-out state (no fetch
+    /// client), keeping both keys present for the facade's force-unwraps.
+    private func makeIdleTimelines() -> [TimelineType: TimelineModel] {
+        let focus: () -> Void = { [weak self] in self?.postAreaFocused.toggle() }
+        return [
+            .home: TimelineModel(focusPostArea: focus),
+            .notifications: TimelineModel(focusPostArea: focus)
+        ]
     }
 }
 
 extension SharedClient {
+    /// Submits a new post through the action performer so composer views never
+    /// reach into `client` (or the performer) directly.
+    func post(_ request: PostRequest) async throws {
+        try await actionPerformer.post(request)
+    }
+}
+
+extension SharedClient: ShortcutRouting {
     func handleShortcut(key: ShortcutKey) {
         switch key {
         case .u:

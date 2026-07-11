@@ -8,12 +8,18 @@
 import SwiftUI
 import UIKit
 
+/// Narrow seam for dispatching keyboard shortcuts, adopted by `SharedClient`.
+/// Injected into the shortcut plumbing so it no longer hard-references the
+/// `SharedClient.shared` singleton and can be exercised in isolation.
+protocol ShortcutRouting: AnyObject {
+    func handleShortcut(key: ShortcutKey)
+}
+
 class ShortcutHandlerInternal: UIViewController {
-    var sharedClient: SharedClient {
-        SharedClient.shared
-    }
-    
-    init() {
+    private let router: ShortcutRouting
+
+    init(router: ShortcutRouting) {
+        self.router = router
         super.init(nibName: nil, bundle: nil)
         
         registerShortcut(.h, action: #selector(handlerH))
@@ -48,54 +54,56 @@ class ShortcutHandlerInternal: UIViewController {
     
     @objc
     func handlerH() {
-        sharedClient.handleShortcut(key: .h)
+        router.handleShortcut(key: .h)
     }
     
     @objc
     func handlerJ() {
-        sharedClient.handleShortcut(key: .j)
+        router.handleShortcut(key: .j)
     }
     
     @objc
     func handlerK() {
-        sharedClient.handleShortcut(key: .k)
+        router.handleShortcut(key: .k)
     }
     
     @objc
     func handlerL() {
-        sharedClient.handleShortcut(key: .l)
+        router.handleShortcut(key: .l)
     }
     
     @objc
     func handlerF() {
-        sharedClient.handleShortcut(key: .f)
+        router.handleShortcut(key: .f)
     }
     
     @objc
     func handlerR() {
-        sharedClient.handleShortcut(key: .r)
+        router.handleShortcut(key: .r)
     }
     
     @objc
     func handlerT() {
-        sharedClient.handleShortcut(key: .t)
+        router.handleShortcut(key: .t)
     }
     
     @objc
     func handlerV() {
-        sharedClient.handleShortcut(key: .v)
+        router.handleShortcut(key: .v)
     }
     
     @objc
     func handlerU() {
-        sharedClient.handleShortcut(key: .u)
+        router.handleShortcut(key: .u)
     }
 }
 
 struct ShortcutHandler: UIViewControllerRepresentable {
+    let router: ShortcutRouting
+
     func makeUIViewController(context: Context) -> ShortcutHandlerInternal {
-        let controller = ShortcutHandlerInternal()
-        
+        let controller = ShortcutHandlerInternal(router: router)
+
         return controller
     }
     

@@ -37,7 +37,7 @@ struct AppRootView: View {
         PostArea { request in
             Task {
                 do {
-                    let _ = try await sharedClient.client?.postStatus(request.content, visibility: request.visibility, replyTo: request.replyTo)
+                    try await sharedClient.post(request)
                 } catch {
                     print(error)
                 }
@@ -85,10 +85,10 @@ struct AppRootView: View {
                 }
                 
                 if preferencesManager.showExtKeypad {
-                    ExtKeypad()
+                    ExtKeypad(router: sharedClient)
                 }
-                
-                ShortcutHandler()
+
+                ShortcutHandler(router: sharedClient)
                     .frame(width: 0, height: 0)
             }
             .background(palette.shell32Background)

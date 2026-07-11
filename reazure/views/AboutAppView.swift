@@ -136,7 +136,7 @@ struct AboutAppView: View {
                     Section(header: Text("\(account.username)@\(account.server.address)")) {
                         Button("ACTION_LOGOUT") {
                             accountManager.remove(account)
-                            sharedClient.account = nil
+                            sharedClient.signOut()
                         }
                         .foregroundColor(.red)
                     }

@@ -111,7 +111,9 @@ class MaskedStatusAdaptor: StatusAdaptor {
     
     // FIXME: HACK: 난 너무 게을러
     class ReblogMaskedStatusAdaptor: StatusAdaptor {
-        var _parent: MaskedStatusAdaptor
+        // 부모(MaskedStatusAdaptor)가 이 인스턴스를 강참조로 소유하므로,
+        // 역참조는 unowned로 두어 마스크 쌍의 순환 참조를 방지한다.
+        unowned var _parent: MaskedStatusAdaptor
         
         var status: StatusAdaptor {
             return _parent.status.reblog!
