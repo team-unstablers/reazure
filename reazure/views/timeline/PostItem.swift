@@ -65,7 +65,7 @@ struct PostItem: View, Equatable {
     var attachment: some View {
         Group {
             if !status.attachments.isEmpty {
-                AttachmentRow(attachments: status.attachments)
+                AttachmentRow(attachments: status.attachments, statusId: status.id)
             }
 
             if let relatedAccount = self.relatedAccount {
@@ -186,15 +186,44 @@ struct PostItem: View, Equatable {
 
 /// 첨부된 이미지 썸네일을 가로로 나열합니다.
 struct AttachmentRow: View {
+    @Environment(\.openWindow)
+    private var openWindow
+
     var attachments: [AttachmentAdaptor]
+    var statusId: String
+
+    @State private var presentedGallery: AttachmentGalleryContext?
 
     var body: some View {
         HStack {
             ForEach(attachments, id: \.id) { attachment in
                 if attachment.type == "image" {
-                    AttachmentThumbnail(attachment: attachment)
+                    AttachmentThumbnail(attachment: attachment) {
+                        openGallery(tappedId: attachment.id)
+                    }
                 }
             }
+        }
+        .fullScreenCover(item: $presentedGallery) { context in
+            AttachmentGalleryView(context: context)
+        }
+    }
+
+    /// iPad/macOS에서는 별도 윈도우로, iPhone(멀티 씬 미지원)에서는
+    /// `fullScreenCover`로 이미지 갤러리를 연다.
+    private func openGallery(tappedId: String) {
+        guard let context = AttachmentGalleryContext.make(
+            statusId: statusId,
+            attachments: attachments,
+            tappedId: tappedId
+        ) else {
+            return
+        }
+
+        if UIApplication.shared.supportsMultipleScenes {
+            openWindow(value: context)
+        } else {
+            presentedGallery = context
         }
     }
 }
@@ -202,10 +231,8 @@ struct AttachmentRow: View {
 /// 개별 첨부 이미지 썸네일. 로딩/캐싱은 `RemoteImage`에 위임하며,
 /// preview_url이 없거나 로딩 중일 때는 중립 placeholder를 표시합니다.
 private struct AttachmentThumbnail: View {
-    @Environment(\.openURL)
-    var openURL
-
     var attachment: AttachmentAdaptor
+    var onTap: () -> Void
 
     var body: some View {
         RemoteImage(url: attachment.previewUrl ?? "") { image in
@@ -222,11 +249,7 @@ private struct AttachmentThumbnail: View {
                 .frame(width: 64, height: 64)
         }
         .onTapGesture {
-            guard let url = URL(string: attachment.originUrl ?? attachment.url) else {
-                return
-            }
-
-            openURL(url)
+            onTap()
         }
     }
 }

@@ -52,5 +52,15 @@ struct reazureApp: App {
                     }
                 }
         }
+
+        // 첨부 이미지 뷰어 전용 윈도우. iPad/macOS에서 `openWindow(value:)`로 열리며,
+        // iPhone에서는 멀티 씬을 지원하지 않으므로 사용되지 않는다(대신 fullScreenCover).
+        WindowGroup(for: AttachmentGalleryContext.self) { $context in
+            if let context {
+                AttachmentGalleryView(context: context)
+                    .environmentObject(preferencesManager)
+                    .environment(\.appTheme, preferencesManager.theme)
+            }
+        }
     }
 }
