@@ -140,6 +140,7 @@ struct ExtKeypad: View {
                     router.handleShortcut(key: .t)
                 }
                 KeypadButton(label: .constant("v"), sublabel: .constant("context")) {
+                    router.handleShortcut(key: .v)
                 }
                 KeypadButton(label:
                                 !sharedClient.postAreaFocused ?

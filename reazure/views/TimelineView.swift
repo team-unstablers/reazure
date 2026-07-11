@@ -5,6 +5,7 @@
 //  Created by cheesekun on 11/2/24.
 //
 
+import Combine
 import SwiftUI
 
 struct NoButtonStyle: ButtonStyle {
@@ -29,7 +30,9 @@ struct TimelineView: View {
         ScrollViewReader { proxy in
             List {
                 ForEach(timeline.statuses) { model in
-                    PostGroup(model: model, scrollViewProxy: proxy) { focusState in
+                    PostGroup(model: model,
+                              scrollViewProxy: proxy,
+                              contextMenuRequest: timeline.contextMenuRequest.eraseToAnyPublisher()) { focusState in
                         timeline.focusState = focusState
                     }
                 }

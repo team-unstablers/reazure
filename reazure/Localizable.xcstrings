@@ -516,6 +516,7 @@
       }
     },
     "CONTEXT_MENU_FAVOURITE" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -560,6 +561,7 @@
       }
     },
     "CONTEXT_MENU_REBLOG" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -626,6 +628,7 @@
       }
     },
     "CONTEXT_MENU_UNFAVOURITE" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {
@@ -648,6 +651,7 @@
       }
     },
     "CONTEXT_MENU_UNREBLOG" : {
+      "extractionState" : "stale",
       "localizations" : {
         "en" : {
           "stringUnit" : {

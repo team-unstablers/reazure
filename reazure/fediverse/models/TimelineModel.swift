@@ -5,6 +5,7 @@
 //  Created by Gyuhwan Park on 11/30/24.
 //
 
+import Combine
 import Foundation
 
 import Collections
@@ -30,6 +31,12 @@ class TimelineModel: ObservableObject {
     /// `SharedClient` (the former hub cycle, kept alive only by the immortal
     /// singleton). Production wires this to `SharedClient.postAreaFocused.toggle`.
     let focusPostArea: () -> Void
+
+    /// Fired by the `.v` shortcut (hardware keyboard / ExtKeypad) with the
+    /// focus state whose row should present its context menu. Presentation is
+    /// delegated to the matching row's `ProgrammaticContextMenuHost`, since a
+    /// context menu can only be presented from a view.
+    let contextMenuRequest = PassthroughSubject<FocusState, Never>()
 
     @Published
     var statuses: OrderedSet<StatusModel> = []

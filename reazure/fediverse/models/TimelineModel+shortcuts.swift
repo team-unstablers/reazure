@@ -55,7 +55,7 @@ extension TimelineModel {
         case .t:
             toggleReblogFocused()
         case .v:
-            break
+            showContextMenuFocused()
         case .u:
             focusPostArea()
         default:
@@ -183,6 +183,16 @@ extension TimelineModel {
         }
     }
     
+    func showContextMenuFocused() {
+        guard let focusState = self.focusState,
+              statuses.contains(where: { $0.id == focusState.id })
+        else {
+            return
+        }
+
+        contextMenuRequest.send(focusState)
+    }
+
     func composeReplyFocused() {
         guard let focusState = self.focusState,
               let index = statuses.firstIndex(where: { $0.id == focusState.id })

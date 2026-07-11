@@ -5,6 +5,7 @@
 //  Created by cheesekun on 11/2/24.
 //
 
+import Combine
 import SwiftUI
 
 /*
@@ -31,7 +32,9 @@ struct PostGroup: View {
     var model: StatusModel
     
     var scrollViewProxy: ScrollViewProxy?
-    
+
+    var contextMenuRequest: AnyPublisher<TimelineModel.FocusState, Never>
+
     var focusChangeHandler: TLFocusChangeHandler
     
     var body: some View {
@@ -70,7 +73,7 @@ struct PostGroup: View {
                 .equatable()
                 .setupPostItemView(depth: depth, focused: focused, palette: palette)
                 .setupFocusHandler(with: focusInfo, handler: focusChangeHandler)
-                .setupContextMenu(model, depth: depth)
+                .setupContextMenu(model, depth: depth, presentRequest: contextMenuRequest)
         } else {
             let item = PostItem(status: status, relatedAccount: relatedAccount, flags: flags) { _ in
                 if (expanded) {
@@ -88,7 +91,7 @@ struct PostGroup: View {
                 .equatable()
                 .setupPostItemView(depth: depth, focused: focused, palette: palette)
                 .setupFocusHandler(with: focusInfo, handler: focusChangeHandler)
-                .setupContextMenu(model, depth: depth)
+                .setupContextMenu(model, depth: depth, presentRequest: contextMenuRequest)
 
             if preferencesManager.compactMode && focused {
                 AnyView(
