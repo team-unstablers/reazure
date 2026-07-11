@@ -2,16 +2,16 @@
   "sourceLanguage" : "ko",
   "strings" : {
     "" : {
-
+      "shouldTranslate" : false
     },
     "\n" : {
-
+      "shouldTranslate" : false
     },
     " " : {
-
+      "shouldTranslate" : false
     },
     ":%@:" : {
-
+      "shouldTranslate" : false
     },
     "%@ - %@" : {
       "localizations" : {
@@ -21,7 +21,8 @@
             "value" : "%1$@ - %2$@"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "%@@%@" : {
       "localizations" : {
@@ -31,32 +32,33 @@
             "value" : "%1$@@%2$@"
           }
         }
-      }
+      },
+      "shouldTranslate" : false
     },
     "©️ %@" : {
-
+      "shouldTranslate" : false
     },
     "✉️" : {
-
+      "shouldTranslate" : false
     },
     "⭐️" : {
-
+      "shouldTranslate" : false
     },
     "🌙" : {
-
+      "shouldTranslate" : false
     },
     "🔁" : {
-
+      "shouldTranslate" : false
     },
     "🔒" : {
-
+      "shouldTranslate" : false
     },
     "ABOUT_APP_FOOTER_NOTICE_CONTENT" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "re;azure is inspired by tmyt's Twitter client 〈Azurea〉.\n\nThis software is free software provided under the MIT license. You can view or contribute to the source code of re;azure on the [GitHub repository](https://github.com/team-unstablers/reazure).\n\n ©️ 2024 team unstablers Inc. and re;azure contributors. All rights reserved."
+            "value" : "re;azure is inspired by tmyt's Twitter client 〈Azurea〉.\n\nThis software is free software provided under the MIT license. You can view or contribute to the source code of re;azure on the [GitHub repository](https://github.com/team-unstablers/reazure).\n\n©️ 2024 team unstablers Inc. and re;azure contributors. All rights reserved."
           }
         },
         "ja" : {
@@ -144,13 +146,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Finish"
+            "value" : "Finish Authorization"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "確定する"
+            "value" : "認証を完了する"
           }
         },
         "ko" : {
@@ -254,7 +256,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "클라이언트 ID를 수동으로 지정"
+            "value" : "Specify Client ID Manually"
           }
         },
         "ja" : {
@@ -276,19 +278,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "필요한 경우 클라이언트 ID를 수동으로 지정할 수 있습니다. via芸를 하고 싶을 때 유용합니다.  참고 사항: - profile, read, write에 대한 OAuth scope가 필요합니다."
+            "value" : "If necessary, you can specify the client ID manually. This is useful when you want to use a custom client name (via芸).\n\nNote:\n- OAuth scopes profile, read, and write are required."
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "必要な場合、クライアントIDを手動で指定できます。via芸がしたい時に活用できます。  NOTE: - profile, read, writeのOAuth scopeを必要とします。"
+            "value" : "必要な場合、クライアントIDを手動で指定できます。via芸がしたい時に活用できます。\n\nNOTE:\n- profile, read, writeのOAuth scopeを必要とします。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "필요한 경우 클라이언트 ID를 수동으로 지정할 수 있습니다. via芸를 하고 싶을 때 유용합니다.  참고 사항: - profile, read, write에 대한 OAuth scope가 필요합니다."
+            "value" : "필요한 경우 클라이언트 ID를 수동으로 지정할 수 있습니다. via芸를 하고 싶을 때 유용합니다.\n\n참고 사항:\n- profile, read, write에 대한 OAuth scope가 필요합니다."
           }
         }
       }
@@ -298,19 +300,19 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "re;azure는 현재 Mastodon v4 계열 서버만 지원합니다. Mastodon 계정을 가지고 있지 않은 경우, https://\njoinmastodon.org 를 참조하십시오."
+            "value" : "re;azure currently supports Mastodon v4 series servers only. If you do not have a Mastodon account, please refer to https://joinmastodon.org."
           }
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "現在、re;azureは Mastodon v4系のサーバーのみサポートしています。Mastodonアカウントを持っていない場合、 https://joinmastodon.org を参照してください。"
+            "state" : "translated",
+            "value" : "現在、re;azureはMastodon v4系のサーバーのみサポートしています。Mastodonアカウントを持っていない場合は、https://joinmastodon.org を参照してください。"
           }
         },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "re;azure는 현재 Mastodon v4 계열 서버만 지원합니다. Mastodon 계정을 가지고 있지 않은 경우, https://\njoinmastodon.org 를 참조하십시오."
+            "value" : "re;azure는 현재 Mastodon v4 계열 서버만 지원합니다. Mastodon 계정을 가지고 있지 않은 경우, https://joinmastodon.org 를 참조하십시오."
           }
         }
       }
@@ -320,7 +322,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "인증 화면에 표시된 인증 코드를 입력해주세요."
+            "value" : "Enter the authorization code shown on the authorization page."
           }
         },
         "ja" : {
@@ -342,7 +344,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "고급 설정"
+            "value" : "Advanced Settings"
           }
         },
         "ja" : {
@@ -364,7 +366,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OAuth 인증 코드 입력"
+            "value" : "OAuth Authorization Code"
           }
         },
         "ja" : {
@@ -386,7 +388,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fediverse 서버 정보"
+            "value" : "Fediverse Server Information"
           }
         },
         "ja" : {
@@ -408,7 +410,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "새 계정 추가"
+            "value" : "Add New Account"
           }
         },
         "ja" : {
@@ -430,7 +432,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "OAuth 인증 코드"
+            "value" : "Authorization Code"
           }
         },
         "ja" : {
@@ -452,7 +454,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fediverse 서버 주소"
+            "value" : "Fediverse Server Address"
           }
         },
         "ja" : {
@@ -471,6 +473,18 @@
     },
     "CONTEXT_MENU_COPY_URL" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Copy URL"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URLをコピー"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -481,6 +495,18 @@
     },
     "CONTEXT_MENU_DELETE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Delete Post"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投稿を削除"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -491,6 +517,18 @@
     },
     "CONTEXT_MENU_FAVOURITE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favourite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お気に入り"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -501,6 +539,18 @@
     },
     "CONTEXT_MENU_OPEN_IN_BROWSER" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open in Browser"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブラウザで開く"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -511,6 +561,18 @@
     },
     "CONTEXT_MENU_REBLOG" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Boost"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブースト"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -521,6 +583,18 @@
     },
     "CONTEXT_MENU_REPLY" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返信"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -531,6 +605,18 @@
     },
     "CONTEXT_MENU_SHARE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Share URL"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "URLを共有"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -541,6 +627,18 @@
     },
     "CONTEXT_MENU_UNFAVOURITE" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Unfavourite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お気に入り解除"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -551,6 +649,18 @@
     },
     "CONTEXT_MENU_UNREBLOG" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Undo Boost"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブースト解除"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -564,7 +674,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "예"
+            "value" : "Yes"
           }
         },
         "ja" : {
@@ -586,13 +696,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "오류: %@"
+            "value" : "Error: %@"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "エラー： %@"
+            "value" : "エラー: %@"
           }
         },
         "ko" : {
@@ -605,6 +715,18 @@
     },
     "FEDI_API_ERROR_DECODING_ERROR" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Could not decode the data received from the server."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバーから受信したデータを解析できませんでした。"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -617,8 +739,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "이 버전의 re;azure에서는 아직 구현되지 않았습니다."
+            "state" : "translated",
+            "value" : "This feature is not yet implemented in this version of re;azure."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "この機能は、このバージョンのre;azureではまだ実装されていません。"
           }
         },
         "ko" : {
@@ -633,8 +761,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "소속되어 계신 서버에서는 이 기능을 지원하지 않습니다."
+            "state" : "translated",
+            "value" : "Your server does not support this operation."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "所属しているサーバーでは、この操作はサポートされていません。"
           }
         },
         "ko" : {
@@ -649,8 +783,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "서버에서 오류를 반환하였습니다."
+            "state" : "translated",
+            "value" : "The server returned an error."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "サーバーがエラーを返しました。"
           }
         },
         "ko" : {
@@ -665,8 +805,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "알 수 없는 오류가 발생하였습니다."
+            "state" : "translated",
+            "value" : "An unknown error has occurred."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "不明なエラーが発生しました。"
           }
         },
         "ko" : {
@@ -681,8 +827,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "이 버전의 re;azure는 소속되어 계신 서버를 지원하지 않습니다."
+            "state" : "translated",
+            "value" : "This version of re;azure does not support your server."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このバージョンのre;azureは、所属しているサーバーをサポートしていません。"
           }
         },
         "ko" : {
@@ -694,14 +846,26 @@
       }
     },
     "IN CONSTRUCTION" : {
-
+      "shouldTranslate" : false
     },
     "Left: %lld" : {
-
+      "shouldTranslate" : false
     },
     "NOTIFICATION_SOUND_BOOP" : {
       "comment" : "boop (Mastodon 기본)",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "boop"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "boop"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -713,6 +877,18 @@
     "NOTIFICATION_SOUND_DEFAULT" : {
       "comment" : "기본 (Tri-Tone)",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "System default (if available)"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "システムデフォルト（可能な場合）"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -724,6 +900,18 @@
     "NOTIFICATION_SOUND_NOTIFY32" : {
       "comment" : "notify32",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "notify32"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "notify32"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -735,6 +923,18 @@
     "NOTIFICATION_SOUND_REAZURE" : {
       "comment" : "re;azure",
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "re;azure"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "re;azure"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -820,7 +1020,7 @@
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Unlisted"
+            "value" : "未収載"
           }
         },
         "ko" : {
@@ -871,7 +1071,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "즐거웠던 그 시절은 다시 돌아오지 않아."
+            "value" : "Those good old days are never coming back."
           }
         },
         "ja" : {
@@ -896,6 +1096,12 @@
             "value" : "Feedback?"
           }
         },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フィードバックを送る"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -909,7 +1115,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "기본 설정"
+            "value" : "General"
           }
         },
         "ja" : {
@@ -931,7 +1137,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "물리 QWERTY 자판이 탑재된 스마트폰과 유사한 경험을 할 수 있도록 앱 내에서 항상 가상 키보드를 표시합니다."
+            "value" : "Always shows the software keyboard in the app, providing an experience similar to smartphones with a physical QWERTY keyboard."
           }
         },
         "ja" : {
@@ -953,7 +1159,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "포커스 중이 아닌 포스트를 한줄로 표시합니다."
+            "value" : "Displays posts that are not focused in a single line."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "フォーカスされていない投稿を1行で表示します。"
           }
         },
         "ko" : {
@@ -977,6 +1189,18 @@
     },
     "SETTINGS_FOOTER_DEFAULT_SOUND_LICENSED_WITH: %@" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "This sound file is licensed under the %@ license."
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "このサウンドファイルには%@ライセンスが適用されます。"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -990,7 +1214,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "휴대폰에서도 Azurea 단축키를 사용할 수 있도록 확장 키패드를 표시합니다."
+            "value" : "Shows the extended keypad so you can use Azurea shortcut keys even on your phone."
           }
         },
         "ja" : {
@@ -1009,6 +1233,18 @@
     },
     "SETTINGS_FOOTER_THEME_AUTHORED_BY: %@" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme by %@"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーマ作者: %@"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1022,7 +1258,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "항상 가상 키보드 표시"
+            "value" : "Always Show Software Keyboard"
           }
         },
         "ja" : {
@@ -1043,8 +1279,14 @@
       "localizations" : {
         "en" : {
           "stringUnit" : {
-            "state" : "needs_review",
-            "value" : "컴팩트 모드"
+            "state" : "translated",
+            "value" : "Compact Mode"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンパクトモード"
           }
         },
         "ko" : {
@@ -1060,13 +1302,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "포스트 영역을 아래로 내리기"
+            "value" : "Move Post Area to Bottom"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "포스트 영역을 아래로 내리기"
+            "value" : "投稿エリアを下に配置する"
           }
         },
         "ko" : {
@@ -1082,7 +1324,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "알림 수신 시 소리 재생"
+            "value" : "Play Sound on Notifications"
           }
         },
         "ja" : {
@@ -1104,7 +1346,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "확장 키패드 표시"
+            "value" : "Show Extended Keypad"
           }
         },
         "ja" : {
@@ -1123,6 +1365,18 @@
     },
     "SETTINGS_KEY_SOUND_NAME" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Notification Sound"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "通知音"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1136,13 +1390,13 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "j, k (↓, ↑) 버튼 순서를 바꾸기"
+            "value" : "Swap j, k (↓, ↑) Buttons"
           }
         },
         "ja" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "j, k (↓, ↑) ボタンをswapする"
+            "value" : "j, k (↓, ↑) ボタンを入れ替える"
           }
         },
         "ko" : {
@@ -1155,6 +1409,18 @@
     },
     "SETTINGS_KEY_THEME" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Theme"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "テーマ"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1168,7 +1434,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "알림 수신 시 진동"
+            "value" : "Vibrate on Notifications"
           }
         },
         "ja" : {
@@ -1187,6 +1453,18 @@
     },
     "SHORTCUTKEY_DESCRIPTION_F" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Favourite / Unfavourite"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "お気に入り / お気に入り解除"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1197,6 +1475,18 @@
     },
     "SHORTCUTKEY_DESCRIPTION_H" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Collapse reply tree"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返信ツリーを閉じる"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1207,6 +1497,18 @@
     },
     "SHORTCUTKEY_DESCRIPTION_J" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Next post"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "次の投稿"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1217,6 +1519,18 @@
     },
     "SHORTCUTKEY_DESCRIPTION_K" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Previous post"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "前の投稿"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1227,6 +1541,18 @@
     },
     "SHORTCUTKEY_DESCRIPTION_L" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Expand reply tree"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返信ツリーを開く"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1237,6 +1563,18 @@
     },
     "SHORTCUTKEY_DESCRIPTION_R" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Reply"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "返信"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1247,6 +1585,18 @@
     },
     "SHORTCUTKEY_DESCRIPTION_T" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Boost / Undo boost"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "ブースト / ブースト解除"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1257,6 +1607,18 @@
     },
     "SHORTCUTKEY_DESCRIPTION_U" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Focus the post composer"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "投稿エリアにフォーカス"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1267,6 +1629,18 @@
     },
     "SHORTCUTKEY_DESCRIPTION_V" : {
       "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Open context menu"
+          }
+        },
+        "ja" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "コンテキストメニューを開く"
+          }
+        },
         "ko" : {
           "stringUnit" : {
             "state" : "translated",
@@ -1285,7 +1659,7 @@
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "接続済み"
           }
         },
@@ -1307,7 +1681,7 @@
         },
         "ja" : {
           "stringUnit" : {
-            "state" : "needs_review",
+            "state" : "translated",
             "value" : "接続中"
           }
         },
@@ -1342,14 +1716,14 @@
       }
     },
     "version %@" : {
-
+      "shouldTranslate" : false
     },
     "WATCH_ACCOUNT_MANAGER_NO_ACCOUNT_MESSAGE" : {
       "localizations" : {
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "새 Fediverse 계정을 추가합니까?"
+            "value" : "Would you like to add a new Fediverse account?"
           }
         },
         "ja" : {
@@ -1371,7 +1745,7 @@
         "en" : {
           "stringUnit" : {
             "state" : "translated",
-            "value" : "Fediverse 계정 없음"
+            "value" : "No Fediverse Account"
           }
         },
         "ja" : {
