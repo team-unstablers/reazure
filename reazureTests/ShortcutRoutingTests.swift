@@ -27,7 +27,7 @@ final class RecordingShortcutRouter: ShortcutRouting {
 @MainActor
 struct ShortcutRoutingTests {
 
-    @Test func internalHandlers_dispatchThroughInjectedRouter() {
+    @Test func internalHandlers_dispatchThroughInjectedRouter() async throws {
         let router = RecordingShortcutRouter()
         let controller = ShortcutHandlerInternal(router: router)
 
@@ -38,9 +38,19 @@ struct ShortcutRoutingTests {
         controller.handlerF()
         controller.handlerR()
         controller.handlerT()
-        controller.handlerV()
         controller.handlerU()
 
-        #expect(router.received == ["h", "j", "k", "l", "f", "r", "t", "v", "u"])
+        // 동기 핸들러는 즉시 라우터로 전달된다.
+        #expect(router.received == ["h", "j", "k", "l", "f", "r", "t", "u"])
+
+        // handlerV는 UIKit 무한 루프 우회를 위해 약 0.2초 지연 후 라우팅된다
+        // (ShortcutHandler.handlerV 참조). 도착할 때까지 여유를 두고 기다린다.
+        controller.handlerV()
+
+        for _ in 0..<50 where !router.received.contains("v") {
+            try await Task.sleep(for: .milliseconds(20))
+        }
+
+        #expect(router.received == ["h", "j", "k", "l", "f", "r", "t", "u", "v"])
     }
 }
