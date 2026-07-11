@@ -123,28 +123,6 @@
         }
       }
     },
-    "ACTION_FINISH_OAUTH": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Finish Authorization"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "認証を完了する"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OAuth 인증 끝마치기"
-          }
-        }
-      }
-    },
     "ACTION_LOGOUT": {
       "localizations": {
         "en": {
@@ -299,28 +277,6 @@
         }
       }
     },
-    "ADD_ACCOUNT_FOOTER_OAUTH_CODE": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Enter the authorization code shown on the authorization page."
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "ブラウザに表示された認証コードを入力してください。"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "인증 화면에 표시된 인증 코드를 입력해주세요."
-          }
-        }
-      }
-    },
     "ADD_ACCOUNT_HEADER_EXTRA_SETTINGS": {
       "localizations": {
         "en": {
@@ -339,28 +295,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "고급 설정"
-          }
-        }
-      }
-    },
-    "ADD_ACCOUNT_HEADER_OAUTH_CODE": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OAuth Authorization Code"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OAuth認証コード"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OAuth 인증 코드 입력"
           }
         }
       }
@@ -405,28 +339,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "새 계정 추가"
-          }
-        }
-      }
-    },
-    "ADD_ACCOUNT_OAUTH_CODE": {
-      "localizations": {
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Authorization Code"
-          }
-        },
-        "ja": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OAuth認証コード"
-          }
-        },
-        "ko": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "OAuth 인증 코드"
           }
         }
       }

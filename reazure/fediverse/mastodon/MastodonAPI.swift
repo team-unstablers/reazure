@@ -104,6 +104,13 @@ struct AlamofireRequestPerformer: RequestPerforming {
 }
 
 class MastodonClient {
+    /// OAuth redirect URI used across app registration, the authorize URL, and the
+    /// token exchange. A custom URL scheme lets `ASWebAuthenticationSession` capture
+    /// the authorization code in-app instead of the out-of-band copy/paste flow.
+    static let oauthRedirectURI = "reazure://oauth-callback"
+    /// The scheme component of `oauthRedirectURI`, passed as `callbackURLScheme`.
+    static let oauthCallbackScheme = "reazure"
+
     static func defaultScope(for version: String) -> [String] {
         let version = version.split(separator: ".")
         guard let major = Int(version[0]),
@@ -151,7 +158,7 @@ class MastodonClient {
         let url = MastodonEndpoint.registerApp.url(for: server)
         let parameters: [String: Any] = [
             "client_name": "re;azure",
-            "redirect_uris": "urn:ietf:wg:oauth:2.0:oob",
+            "redirect_uris": MastodonClient.oauthRedirectURI,
             "scopes": "read write follow",
             "website": "https://reazure.unstabler.pl"
         ]
@@ -175,7 +182,7 @@ class MastodonClient {
             "code": code,
             "client_id": application.client_id,
             "client_secret": application.client_secret,
-            "redirect_uri": "urn:ietf:wg:oauth:2.0:oob"
+            "redirect_uri": MastodonClient.oauthRedirectURI
         ]
         
         let response = await AF.request(url, method: .post, parameters: parameters, encoding: JSONEncoding.default)
