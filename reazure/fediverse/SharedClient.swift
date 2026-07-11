@@ -99,6 +99,7 @@ class SharedClient: ObservableObject {
     private let streamingSocketProvider: WebSocketProviding
     private let streamingScheduler: ReconnectScheduling
     private let streamingConfigurationProvider: (Account) async throws -> FediverseServerConfiguration
+    private let streamingPathMonitorFactory: () -> PathMonitoring
 
     /// Builds and owns the live account session (client, timelines, streaming
     /// coordinator, event ingestor), centralizing the per-account creation and
@@ -117,17 +118,20 @@ class SharedClient: ObservableObject {
         ),
         socketProvider: streamingSocketProvider,
         scheduler: streamingScheduler,
-        configurationProvider: streamingConfigurationProvider
+        configurationProvider: streamingConfigurationProvider,
+        pathMonitorFactory: streamingPathMonitorFactory
     )
 
     /// Designated initializer. `.shared` uses the live streaming defaults; tests
     /// inject fakes to exercise the session/streaming wiring without a network.
     init(socketProvider: WebSocketProviding = StarscreamWebSocketProvider(),
          scheduler: ReconnectScheduling = MainQueueReconnectScheduler(),
-         configurationProvider: @escaping (Account) async throws -> FediverseServerConfiguration = { try await $0.server.configuration() }) {
+         configurationProvider: @escaping (Account) async throws -> FediverseServerConfiguration = { try await $0.server.configuration() },
+         pathMonitorFactory: @escaping () -> PathMonitoring = { NWPathMonitorAdaptor() }) {
         self.streamingSocketProvider = socketProvider
         self.streamingScheduler = scheduler
         self.streamingConfigurationProvider = configurationProvider
+        self.streamingPathMonitorFactory = pathMonitorFactory
         self.timeline = makeIdleTimelines()
     }
 
@@ -142,6 +146,13 @@ class SharedClient: ObservableObject {
         self.account = account
         self.client = session.client
         self.timeline = session.timelines
+    }
+
+    /// Forces the active session's stream to reconnect immediately, bypassing the
+    /// backoff. Called when the app returns to the foreground; a no-op while signed
+    /// out or when the stream is already healthy.
+    func reconnectStreamingIfNeeded() {
+        sessionManager.reconnectStreaming()
     }
 
     /// Tears down the current session and returns the facade to its signed-out

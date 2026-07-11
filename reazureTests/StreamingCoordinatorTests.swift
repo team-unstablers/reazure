@@ -53,6 +53,7 @@ struct StreamingCoordinatorTests {
         let coordinator: StreamingCoordinator
         let provider: FakeWebSocketProvider
         let scheduler: ManualReconnectScheduler
+        let pathMonitor: FakePathMonitor
         let spy: FacadeSpy
 
         /// The most recently created socket — each `start()`/reconnect makes a
@@ -65,12 +66,14 @@ struct StreamingCoordinatorTests {
     private func startedHarness(maxAttempts: Int = 10) async -> Harness {
         let provider = FakeWebSocketProvider()
         let scheduler = ManualReconnectScheduler()
+        let pathMonitor = FakePathMonitor()
         let spy = FacadeSpy()
         let coordinator = StreamingCoordinator(
             account: .fixture(),
             socketProvider: provider,
             scheduler: scheduler,
             configurationProvider: { _ in .fixture() },
+            pathMonitor: pathMonitor,
             maxAttempts: maxAttempts,
             callbacks: spy.callbacks()
         )
@@ -81,7 +84,7 @@ struct StreamingCoordinatorTests {
         // (`pendingCount == 0`) in a caller would pass vacuously against a nil socket.
         #expect(provider.createdSockets.count == 1)
 
-        return Harness(coordinator: coordinator, provider: provider, scheduler: scheduler, spy: spy)
+        return Harness(coordinator: coordinator, provider: provider, scheduler: scheduler, pathMonitor: pathMonitor, spy: spy)
     }
 
     /// Spins the main queue until `condition` holds or the bound is hit, letting
@@ -294,6 +297,7 @@ struct StreamingCoordinatorTests {
             socketProvider: provider,
             scheduler: MainQueueReconnectScheduler(),
             configurationProvider: { _ in .fixture() },
+            pathMonitor: FakePathMonitor(),
             baseDelay: 0.01,
             callbacks: StreamingCoordinator.Callbacks(
                 stateDidChange: { _ in },
@@ -318,5 +322,85 @@ struct StreamingCoordinatorTests {
         #expect(configOnMain == [true])
         #expect(backfillOnMain == [true])
         withExtendedLifetime(coordinator) {}
+    }
+
+    // MARK: - connectivity-driven reconnect
+
+    /// The give-up recovery: after the attempt cap is reached the coordinator no
+    /// longer schedules reconnects, so a restored network is the only way back —
+    /// an `unsatisfied → satisfied` edge forces a fresh connect and resets the budget.
+    @Test func networkRestore_afterGiveUp_reconnects() async {
+        let h = await startedHarness(maxAttempts: 3)
+        h.socket?.emit(.connected([:]))
+
+        for _ in 0..<3 {
+            h.socket?.emit(.disconnected("x", 1006))
+            h.scheduler.fireNext()
+        }
+        h.socket?.emit(.disconnected("x", 1006))   // past the cap — nothing scheduled
+        #expect(h.scheduler.pendingCount == 0)
+        let socketsBeforeRestore = h.provider.createdSockets.count
+
+        // Connectivity drops, then returns: the restore edge reconnects immediately.
+        h.pathMonitor.emit(satisfied: false)
+        h.pathMonitor.emit(satisfied: true)
+
+        #expect(h.provider.createdSockets.count == socketsBeforeRestore + 1)
+
+        // The budget was reset, so a subsequent drop backs off from the base delay.
+        h.socket?.emit(.disconnected("y", 1006))
+        #expect(h.scheduler.delays.last == 1)
+    }
+
+    /// Restoring connectivity while a backoff timer is pending cancels the wait and
+    /// reconnects now, instead of idling until the (up to 30s) delay elapses.
+    @Test func networkRestore_duringBackoff_skipsWaitAndReconnects() async {
+        let h = await startedHarness()
+        h.socket?.emit(.connected([:]))
+        h.socket?.emit(.disconnected("x", 1006))
+        #expect(h.scheduler.pendingCount == 1)
+        let pending = h.scheduler.scheduled.first?.work
+        let socketsBefore = h.provider.createdSockets.count
+
+        h.pathMonitor.emit(satisfied: false)
+        h.pathMonitor.emit(satisfied: true)
+
+        #expect(pending?.isCancelled == true)                          // backoff timer cancelled
+        #expect(h.provider.createdSockets.count == socketsBefore + 1)  // reconnected immediately
+    }
+
+    /// A path change while the stream is healthy must not churn the socket: a
+    /// Wi-Fi↔cellular handoff (`satisfied` throughout) leaves the connection alone.
+    @Test func pathChange_whileConnected_isNoop() async {
+        let h = await startedHarness()
+        h.socket?.emit(.connected([:]))
+        let socketsBefore = h.provider.createdSockets.count
+
+        h.pathMonitor.emit(satisfied: false)
+        h.pathMonitor.emit(satisfied: true)
+
+        #expect(h.provider.createdSockets.count == socketsBefore)
+    }
+
+    /// The initial (already-satisfied) callback the live monitor delivers right
+    /// after `start()` must not open a second socket racing the startup connect.
+    @Test func initialSatisfiedCallback_isNoop() async {
+        let h = await startedHarness()
+        let socketsBefore = h.provider.createdSockets.count
+
+        h.pathMonitor.emit(satisfied: true)
+
+        #expect(h.provider.createdSockets.count == socketsBefore)
+    }
+
+    /// `stop()` cancels path monitoring so a late restore edge cannot resurrect a
+    /// torn-down connection.
+    @Test func stop_cancelsPathMonitor() async {
+        let h = await startedHarness()
+        #expect(h.pathMonitor.started == true)
+
+        h.coordinator.stop()
+
+        #expect(h.pathMonitor.cancelled == true)
     }
 }

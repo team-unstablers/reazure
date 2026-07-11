@@ -41,6 +41,12 @@ final class AccountSession {
     func stop() {
         coordinator.stop()
     }
+
+    /// Forces an immediate stream reconnect, bypassing the backoff. Used when the
+    /// app returns to the foreground.
+    func reconnectStreaming() {
+        coordinator.reconnectNow()
+    }
 }
 
 /// Builds and owns the live `AccountSession`, centralizing the per-account
@@ -68,17 +74,22 @@ final class SessionManager {
     private let socketProvider: WebSocketProviding
     private let scheduler: ReconnectScheduling
     private let configurationProvider: (Account) async throws -> FediverseServerConfiguration
+    // A factory (not a single instance) because `NWPathMonitor` is single-use: each
+    // session's coordinator needs its own monitor.
+    private let pathMonitorFactory: () -> PathMonitoring
 
     private(set) var current: AccountSession?
 
     init(environment: Environment,
          socketProvider: WebSocketProviding = StarscreamWebSocketProvider(),
          scheduler: ReconnectScheduling = MainQueueReconnectScheduler(),
-         configurationProvider: @escaping (Account) async throws -> FediverseServerConfiguration = { try await $0.server.configuration() }) {
+         configurationProvider: @escaping (Account) async throws -> FediverseServerConfiguration = { try await $0.server.configuration() },
+         pathMonitorFactory: @escaping () -> PathMonitoring = { NWPathMonitorAdaptor() }) {
         self.environment = environment
         self.socketProvider = socketProvider
         self.scheduler = scheduler
         self.configurationProvider = configurationProvider
+        self.pathMonitorFactory = pathMonitorFactory
     }
 
     /// Tears down the previous session and builds + starts one for `account`.
@@ -96,6 +107,11 @@ final class SessionManager {
     func signOut() {
         current?.stop()
         current = nil
+    }
+
+    /// Forces the current session (if any) to reconnect its stream now.
+    func reconnectStreaming() {
+        current?.reconnectStreaming()
     }
 
     private func makeSession(for account: Account) -> AccountSession {
@@ -116,6 +132,7 @@ final class SessionManager {
             socketProvider: socketProvider,
             scheduler: scheduler,
             configurationProvider: configurationProvider,
+            pathMonitor: pathMonitorFactory(),
             callbacks: StreamingCoordinator.Callbacks(
                 stateDidChange: environment.stateDidChange,
                 configurationDidLoad: environment.configurationDidLoad,

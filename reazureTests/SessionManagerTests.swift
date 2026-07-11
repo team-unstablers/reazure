@@ -63,7 +63,8 @@ struct SessionManagerTests {
             environment: makeEnvironment(recorder),
             socketProvider: provider,
             scheduler: scheduler,
-            configurationProvider: { _ in .fixture() }
+            configurationProvider: { _ in .fixture() },
+            pathMonitorFactory: { FakePathMonitor() }
         )
         return Harness(manager: manager, provider: provider, scheduler: scheduler, recorder: recorder)
     }

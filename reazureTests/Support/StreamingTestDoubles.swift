@@ -111,6 +111,31 @@ final class ManualReconnectScheduler: ReconnectScheduling {
     }
 }
 
+// MARK: - Path monitor
+
+/// A `PathMonitoring` with no real interface: records `start`/`cancel` and lets a
+/// test push reachability transitions through the stored handler, exactly as the
+/// live monitor would deliver them on the main thread.
+final class FakePathMonitor: PathMonitoring {
+    private(set) var started = false
+    private(set) var cancelled = false
+    private var onChange: ((Bool) -> Void)?
+
+    func start(onChange: @escaping (Bool) -> Void) {
+        started = true
+        self.onChange = onChange
+    }
+
+    func cancel() {
+        cancelled = true
+    }
+
+    /// Delivers a reachability change to the coordinator.
+    func emit(satisfied: Bool) {
+        onChange?(satisfied)
+    }
+}
+
 // MARK: - Fixtures
 
 extension Account {

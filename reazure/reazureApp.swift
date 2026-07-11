@@ -21,7 +21,10 @@ struct reazureApp: App {
 
     @UIApplicationDelegateAdaptor
     private var appDelegate: AppDelegate
-    
+
+    @Environment(\.scenePhase)
+    private var scenePhase
+
     var body: some Scene {
         WindowGroup {
             AppRootView()
@@ -29,6 +32,14 @@ struct reazureApp: App {
                 .environmentObject(accountManager)
                 .environmentObject(sharedClient)
                 .environment(\.appTheme, preferencesManager.theme)
+                .onChange(of: scenePhase) { _, newPhase in
+                    // Streaming sockets die while suspended; reconnect on return to
+                    // the foreground so the timeline resumes without waiting on the
+                    // backoff (or after it has given up).
+                    if newPhase == .active {
+                        sharedClient.reconnectStreamingIfNeeded()
+                    }
+                }
         }
     }
 }

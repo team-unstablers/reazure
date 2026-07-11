@@ -21,7 +21,8 @@ struct SharedClientSessionTests {
         SharedClient(
             socketProvider: provider,
             scheduler: ManualReconnectScheduler(),
-            configurationProvider: { _ in .fixture() }
+            configurationProvider: { _ in .fixture() },
+            pathMonitorFactory: { FakePathMonitor() }
         )
     }
 
@@ -80,6 +81,25 @@ struct SharedClientSessionTests {
         #expect(hub.timeline[.home] != nil)                  // idle timelines reseeded
         #expect(hub.timeline[.notifications] != nil)
         #expect(socket.disconnectCount == 1)                 // previous streaming torn down
+
+        withExtendedLifetime(hub) {}
+    }
+
+    /// Foreground return drives an immediate reconnect through the facade: a
+    /// dropped stream is reopened via `reconnectStreamingIfNeeded()` without
+    /// waiting on the backoff.
+    @Test func reconnectStreamingIfNeeded_reconnectsCurrentSession() async {
+        let provider = FakeWebSocketProvider()
+        let hub = makeHub(provider)
+
+        hub.use(account: .fixture())
+        await eventually { provider.createdSockets.count == 1 }
+        provider.latest?.emit(.connected([:]))
+        provider.latest?.emit(.disconnected("x", 1006))   // stream drops
+
+        hub.reconnectStreamingIfNeeded()                   // app returns to foreground
+
+        #expect(provider.createdSockets.count == 2)        // reconnected immediately
 
         withExtendedLifetime(hub) {}
     }

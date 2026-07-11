@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Network
 
 /// Schedules the single pending reconnect attempt after a delay. Abstracted so
 /// tests can drive the reconnect loop deterministically instead of waiting on a
@@ -21,6 +22,43 @@ protocol ReconnectScheduling {
 struct MainQueueReconnectScheduler: ReconnectScheduling {
     func schedule(_ work: DispatchWorkItem, after delay: TimeInterval) {
         DispatchQueue.main.asyncAfter(deadline: .now() + delay, execute: work)
+    }
+}
+
+/// Observes whether the network path is usable, so the coordinator can
+/// short-circuit its exponential backoff the moment connectivity is restored.
+/// Abstracted behind a protocol — like `WebSocketProviding` / `ReconnectScheduling`
+/// — so tests can drive path transitions without a real interface.
+protocol PathMonitoring: AnyObject {
+    /// Begins monitoring. `onChange` is invoked on the main thread with the
+    /// current reachability on every path update, including the initial state.
+    /// Call at most once per instance.
+    func start(onChange: @escaping (Bool) -> Void)
+    /// Stops monitoring. Idempotent.
+    func cancel()
+}
+
+/// Live monitor backed by `NWPathMonitor`. A fresh instance is built per account
+/// session because `NWPathMonitor` is single-use — it cannot be restarted after
+/// `cancel()`.
+final class NWPathMonitorAdaptor: PathMonitoring {
+    private let monitor = NWPathMonitor()
+    private let queue = DispatchQueue(label: "pl.unstabler.reazure.network-path-monitor")
+
+    func start(onChange: @escaping (Bool) -> Void) {
+        monitor.pathUpdateHandler = { path in
+            let satisfied = path.status == .satisfied
+            // Hop to main so the coordinator's main-thread confinement holds.
+            DispatchQueue.main.async {
+                onChange(satisfied)
+            }
+        }
+        monitor.start(queue: queue)
+    }
+
+    func cancel() {
+        monitor.pathUpdateHandler = nil
+        monitor.cancel()
     }
 }
 
@@ -58,6 +96,7 @@ final class StreamingCoordinator {
     private let socketProvider: WebSocketProviding
     private let scheduler: ReconnectScheduling
     private let configurationProvider: (Account) async throws -> FediverseServerConfiguration
+    private let pathMonitor: PathMonitoring
     private let callbacks: Callbacks
 
     /// Backoff ceiling on the number of consecutive reconnect attempts. Reset to
@@ -81,10 +120,16 @@ final class StreamingCoordinator {
     /// defect on account switch).
     private var stopped: Bool = false
 
+    /// Last reachability reported by the path monitor. Seeded optimistically so
+    /// the initial (already-satisfied) callback is a no-op and startup never opens
+    /// a second connection racing the one `start()` kicks off.
+    private var pathSatisfied: Bool = true
+
     init(account: Account,
          socketProvider: WebSocketProviding = StarscreamWebSocketProvider(),
          scheduler: ReconnectScheduling = MainQueueReconnectScheduler(),
          configurationProvider: @escaping (Account) async throws -> FediverseServerConfiguration = { try await $0.server.configuration() },
+         pathMonitor: PathMonitoring = NWPathMonitorAdaptor(),
          maxAttempts: Int = 10,
          baseDelay: TimeInterval = 1,
          maxDelay: TimeInterval = 30,
@@ -93,6 +138,7 @@ final class StreamingCoordinator {
         self.socketProvider = socketProvider
         self.scheduler = scheduler
         self.configurationProvider = configurationProvider
+        self.pathMonitor = pathMonitor
         self.maxAttempts = maxAttempts
         self.baseDelay = baseDelay
         self.maxDelay = maxDelay
@@ -101,10 +147,36 @@ final class StreamingCoordinator {
 
     // MARK: - lifecycle
 
-    /// Fetches the server configuration, then opens the first connection. Safe to
-    /// call once per coordinator; the facade builds a fresh coordinator per
-    /// account.
+    /// Starts network-path monitoring, fetches the server configuration, then
+    /// opens the first connection. Safe to call once per coordinator; the facade
+    /// builds a fresh coordinator per account.
     func start() {
+        pathMonitor.start { [weak self] satisfied in
+            self?.handlePathChange(satisfied: satisfied)
+        }
+        loadConfigurationThenOpen()
+    }
+
+    /// Tears down the connection, stops path monitoring, and cancels any pending
+    /// reconnect. Idempotent. After this the coordinator is inert — no scheduled
+    /// work or path callback can reopen a socket.
+    func stop() {
+        stopped = true
+        pathMonitor.cancel()
+        cancelPendingReconnect()
+
+        streamingClient?.delegate = nil
+        streamingClient?.stop()
+        streamingClient = nil
+
+        callbacks.stateDidChange(.disconnected)
+    }
+
+    /// Fetches the (one-time) server configuration off-main, then hops back to
+    /// main to cache it, mirror it to the facade, and open the connection. Shared
+    /// by `start()` and `reconnectNow()` (the latter re-runs it if the launch-time
+    /// fetch never succeeded, e.g. the app started offline).
+    private func loadConfigurationThenOpen() {
         Task { [weak self] in
             guard let self else { return }
             // FIXME: surface configuration failures instead of silently giving up.
@@ -119,19 +191,6 @@ final class StreamingCoordinator {
                 self.openConnection()
             }
         }
-    }
-
-    /// Tears down the connection and cancels any pending reconnect. Idempotent.
-    /// After this the coordinator is inert — no scheduled work can reopen a socket.
-    func stop() {
-        stopped = true
-        cancelPendingReconnect()
-
-        streamingClient?.delegate = nil
-        streamingClient?.stop()
-        streamingClient = nil
-
-        callbacks.stateDidChange(.disconnected)
     }
 
     // MARK: - connection
@@ -203,6 +262,51 @@ final class StreamingCoordinator {
     private func reconnectDelay(forAttempt attempt: Int) -> TimeInterval {
         let raw = baseDelay * pow(2.0, Double(attempt))
         return min(maxDelay, raw)
+    }
+
+    // MARK: - connectivity-driven reconnect
+
+    /// Reachability transition from the path monitor. Only an
+    /// `unsatisfied → satisfied` edge (connectivity restored) forces a reconnect;
+    /// the initial callback and Wi-Fi↔cellular handoffs are inert.
+    private func handlePathChange(satisfied: Bool) {
+        guard !stopped else { return }
+
+        let wasSatisfied = pathSatisfied
+        pathSatisfied = satisfied
+
+        guard satisfied, !wasSatisfied else { return }
+        reconnectNow()
+    }
+
+    /// Short-circuits the exponential backoff and forces an immediate reconnect,
+    /// used when connectivity is restored or the app returns to the foreground.
+    /// A restored network is treated as a clean slate, so the attempt budget is
+    /// reset even mid-attempt; a healthy or already-dialing connection is left
+    /// untouched so a mere path change never churns a working socket.
+    func reconnectNow() {
+        guard !stopped else { return }
+
+        attempt = 0
+        cancelPendingReconnect()
+
+        switch streamingClient?.state {
+        case .connected, .connecting:
+            return
+        case .disconnected, .none:
+            break
+        }
+
+        if configuration == nil {
+            // The launch-time configuration fetch never succeeded (e.g. started
+            // offline); redo it, which opens the connection on completion.
+            loadConfigurationThenOpen()
+        } else {
+            // Tear down a possibly half-open socket before reopening, mirroring the
+            // backoff path so the identity guard has exactly one socket to fence.
+            streamingClient?.stop()
+            openConnection()
+        }
     }
 }
 
