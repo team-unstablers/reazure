@@ -8,7 +8,23 @@
 import SwiftUI
 import UIKit
 
-class HTMLElement: Equatable, Hashable {
+func validatedActivityPubLinkURL(_ value: String?) -> URL? {
+    guard let value,
+          value == value.trimmingCharacters(in: .whitespacesAndNewlines),
+          value.unicodeScalars.allSatisfy({ !CharacterSet.controlCharacters.contains($0) }),
+          let components = URLComponents(string: value),
+          let scheme = components.scheme?.lowercased(),
+          scheme == "http" || scheme == "https",
+          components.host != nil,
+          components.user == nil,
+          components.password == nil else {
+        return nil
+    }
+
+    return components.url
+}
+
+class HTMLElement: Equatable {
     var name: String
     var attributes: [String: String] = [:]
     
@@ -26,12 +42,6 @@ class HTMLElement: Equatable, Hashable {
                lhs.text == rhs.text
     }
     
-    func hash(into hasher: inout Hasher) {
-        hasher.combine(name)
-        hasher.combine(attributes)
-        hasher.combine(children)
-        hasher.combine(text)
-    }
 }
 
 extension HTMLElement {
@@ -50,7 +60,10 @@ extension HTMLElement {
         }.joined()
     }
     
-    func asNSAttributedString(emojis: [EmojiAdaptor], fontSize: CGFloat = 16) -> NSAttributedString {
+    func asNSAttributedString(
+        resolvedEmojos: [String: UIImage],
+        fontSize: CGFloat = 16
+    ) -> NSAttributedString {
         if (name == "__TEXT__") {
             let string = NSMutableAttributedString(string: text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
 
@@ -58,22 +71,14 @@ extension HTMLElement {
 
             return string
         } else if (name == "__EMOJO__") {
-            // FIXME: 비동기 처리가 필요함
-            guard let emojoDef = emojis.first(where: { $0.shortcode == text }),
-                  let emojoData = try? Data(contentsOf: URL(string: emojoDef.url)!)
-            else {
+            guard let emojoImage = resolvedEmojos[text] else {
                 return NSAttributedString(string: ":\(text):")
             }
-            
+
             let emojo = NSTextAttachment()
-            let emojoImage = UIImage(data: emojoData)!
             emojo.image = emojoImage
-            
-            // emojo.bounds = CGRect(x: 0, y: -4, width: 16, height: 16)
             emojo.bounds = CGRect(x: 0, y: -3, width: emojoImage.size.width, height: emojoImage.size.height)
-            
-            // print(emojo)
-            
+
             return NSAttributedString(attachment: emojo)
         } else if (name == "br") {
             return NSAttributedString(string: "\n")
@@ -81,7 +86,7 @@ extension HTMLElement {
             let result = NSMutableAttributedString()
 
             for child in children {
-                result.append(child.asNSAttributedString(emojis: emojis, fontSize: fontSize))
+                result.append(child.asNSAttributedString(resolvedEmojos: resolvedEmojos, fontSize: fontSize))
             }
 
             result.addAttributes([.font: UIFont.boldSystemFont(ofSize: fontSize)], range: NSRange(location: 0, length: result.length))
@@ -91,72 +96,21 @@ extension HTMLElement {
             let result = NSMutableAttributedString()
 
             for child in children {
-                result.append(child.asNSAttributedString(emojis: emojis, fontSize: fontSize))
+                result.append(child.asNSAttributedString(resolvedEmojos: resolvedEmojos, fontSize: fontSize))
             }
 
-            result.addAttributes([.link: attributes["href"] ?? ""], range: NSRange(location: 0, length: result.length))
+            if let url = validatedActivityPubLinkURL(attributes["href"]) {
+                result.addAttributes([.link: url], range: NSRange(location: 0, length: result.length))
+            }
 
             return result
         } else {
             let result = NSMutableAttributedString()
 
             for child in children {
-                result.append(child.asNSAttributedString(emojis: emojis, fontSize: fontSize))
+                result.append(child.asNSAttributedString(resolvedEmojos: resolvedEmojos, fontSize: fontSize))
             }
 
-            return result
-        }
-    }
-    
-    func asSwiftUIView(emojis: [EmojiAdaptor]) -> Text {
-        if (name == "__TEXT__") {
-            return Text(text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
-        } else if (name == "__EMOJO__") {
-            // FIXME: 비동기 처리가 필요함
-            guard let emojoDef = emojis.first(where: { $0.shortcode == text }),
-                  let emojoData = try? Data(contentsOf: URL(string: emojoDef.url)!)
-            else {
-                return Text(":\(text):")
-            }
-            
-            let emojoImage = UIImage(data: emojoData)!
-            let height = 24.0
-            let scale = emojoImage.size.height / height
-            
-            let scaledImage = UIImage(cgImage: emojoImage.cgImage!, scale: scale, orientation: emojoImage.imageOrientation)
-            
-            return Text(
-                Image(uiImage: scaledImage)
-                    .resizable()
-            )
-        } else if (name == "br") {
-            return Text("\n")
-        } else if (name == "strong" || name == "b") {
-            var result: Text = Text("")
-            
-            for child in children {
-                result = result + child.asSwiftUIView(emojis: emojis)
-            }
-            
-            return result.bold()
-        } else if (name == "a") {
-            // FIXME: a 태그 안에 emoji 있으면 표시 안됨
-            let result = NSMutableAttributedString()
-            
-            for child in children {
-                result.append(child.asNSAttributedString(emojis: emojis))
-            }
-            
-            result.addAttributes([.link: attributes["href"] ?? ""], range: NSRange(location: 0, length: result.length))
-            
-            return Text(AttributedString(result))
-        } else {
-            var result: Text = Text("")
-            
-            for child in children {
-                result = result + child.asSwiftUIView(emojis: emojis)
-            }
-            
             return result
         }
     }
@@ -174,43 +128,97 @@ extension HTMLElement {
 }
 
 func parseTag(_ tag: String) -> HTMLElement? {
-    let scanner = Scanner(string: tag)
-    scanner.charactersToBeSkipped = nil
-    
-    guard let tagName = scanner.scanUpToCharacters(from: .whitespacesAndNewlines) else {
+    let characters = Array(tag)
+    var cursor = 0
+
+    func skipWhitespace() {
+        while cursor < characters.count, characters[cursor].isWhitespace {
+            cursor += 1
+        }
+    }
+
+    skipWhitespace()
+
+    let tagNameStart = cursor
+    while cursor < characters.count,
+          !characters[cursor].isWhitespace,
+          characters[cursor] != "/" {
+        cursor += 1
+    }
+
+    guard tagNameStart < cursor else {
         return nil
     }
+
+    let tagName = String(characters[tagNameStart..<cursor]).lowercased()
     let element = HTMLElement(name: tagName)
-    
-    while !scanner.isAtEnd {
-        scanner.scanCharacters(from: .whitespacesAndNewlines)
-        
-        // [a-zA-Z0-9\-]
-        guard let key = scanner.scanCharacters(from: .alphanumerics.union(.init(charactersIn: "-"))) else {
+
+    while cursor < characters.count {
+        skipWhitespace()
+
+        guard cursor < characters.count, characters[cursor] != "/" else {
             break
         }
-        
-        guard let _ = scanner.scanString("=") else {
+
+        let keyStart = cursor
+        while cursor < characters.count,
+              !characters[cursor].isWhitespace,
+              characters[cursor] != "=",
+              characters[cursor] != "/" {
+            cursor += 1
+        }
+
+        guard keyStart < cursor else {
+            cursor += 1
+            continue
+        }
+
+        let key = String(characters[keyStart..<cursor]).lowercased()
+        skipWhitespace()
+
+        guard cursor < characters.count, characters[cursor] == "=" else {
             element.attributes[key] = "true"
             continue
         }
-        
-        scanner.scanString("\"")
-        
-        guard let value = scanner.scanUpToString("\"") else {
-            break
+
+        cursor += 1
+        skipWhitespace()
+
+        guard cursor < characters.count else {
+            element.attributes[key] = ""
+            continue
         }
-        
-        scanner.scanString("\"")
-        
-        element.attributes[key] = value
+
+        let value: String
+        if characters[cursor] == "\"" || characters[cursor] == "'" {
+            let quote = characters[cursor]
+            cursor += 1
+
+            let valueStart = cursor
+            while cursor < characters.count, characters[cursor] != quote {
+                cursor += 1
+            }
+
+            value = String(characters[valueStart..<cursor])
+            if cursor < characters.count {
+                cursor += 1
+            }
+        } else {
+            let valueStart = cursor
+            while cursor < characters.count, !characters[cursor].isWhitespace {
+                cursor += 1
+            }
+            value = String(characters[valueStart..<cursor])
+        }
+
+        element.attributes[key] = value.decodeHTMLEntity()
     }
 
     return element
 }
 
 func parseEmojo(_ rootText: String) -> HTMLElement {
-    var root = HTMLElement(name: "__TEXT_CONTAINER__")
+    let root = HTMLElement(name: "__TEXT_CONTAINER__")
     
     let scanner = Scanner(string: rootText)
     scanner.charactersToBeSkipped = nil
@@ -253,85 +261,210 @@ func parseEmojo(_ rootText: String) -> HTMLElement {
 }
 
 
-func parseHTML(_ html: String) -> HTMLElement {
-    var root = HTMLElement(name: "body")
-    
-    var stack: [HTMLElement] = []
-    var currentElement: HTMLElement = root
-    
-    let scanner = Scanner(string: html)
-    scanner.charactersToBeSkipped = nil
-    
-    while !scanner.isAtEnd {
-        if let text = scanner.scanUpToString("<") {
-            // print("text: \(text)")
-            
-            let containerElement = parseEmojo(text.decodeHTMLEntity())
-            currentElement.children.append(containerElement)
-        }
-        scanner.scanString("<")
-        guard let tag = scanner.scanUpToString(">") else {
-            continue // ??
-        }
-        
-        scanner.scanString(">")
-        
-        // print("tag: \(tag)")
-        
-        if tag.hasPrefix("!--") && tag.hasSuffix("--") {
-            continue
-        }
-        
-        if tag.hasPrefix("/") {
-            let tagName = tag.dropFirst()
-            
-            guard currentElement.name == tagName else {
-                fatalError("Invalid HTML")
+private let maximumHTMLNestingDepth = 128
+
+private func appendHTMLText(_ text: Substring, to element: HTMLElement) {
+    guard !text.isEmpty else {
+        return
+    }
+
+    let container = parseEmojo(String(text).decodeHTMLEntity())
+    if !container.children.isEmpty {
+        element.children.append(container)
+    }
+}
+
+private func endOfHTMLTag(in html: String, startingAt start: String.Index) -> String.Index? {
+    var cursor = start
+    var quote: Character?
+
+    while cursor < html.endIndex {
+        let character = html[cursor]
+
+        if let activeQuote = quote {
+            if character == activeQuote {
+                quote = nil
             }
-            
-            let parent = stack.popLast()
-            
-            if let parent = parent {
-                parent.children.append(currentElement)
-                currentElement = parent
-            }
-            
+        } else if character == "\"" || character == "'" {
+            quote = character
+        } else if character == ">" {
+            return cursor
+        }
+
+        cursor = html.index(after: cursor)
+    }
+
+    return nil
+}
+
+private func closingTagName(_ tag: Substring) -> String? {
+    let name = tag
+        .dropFirst()
+        .drop(while: { $0.isWhitespace })
+        .prefix(while: { !$0.isWhitespace && $0 != "/" })
+
+    guard !name.isEmpty else {
+        return nil
+    }
+
+    return name.lowercased()
+}
+
+private let blockElementsRequiringSeparation: Set<String> = ["p", "div"]
+
+func insertActivityPubBlockLineBreaks(in element: HTMLElement) {
+    for child in element.children {
+        insertActivityPubBlockLineBreaks(in: child)
+    }
+
+    guard element.children.count > 1 else {
+        return
+    }
+
+    for index in element.children.indices.dropLast() {
+        let child = element.children[index]
+        guard blockElementsRequiringSeparation.contains(child.name) else {
             continue
         }
-        
-        guard let element = parseTag(tag) else {
-            continue
-        }
-        
-        let selfClosing = tag.hasSuffix("/") || element.isSelfClosing == true
-        
-        if selfClosing {
-            currentElement.children.append(element)
-        } else {
-            stack.append(currentElement)
-            currentElement = element
+
+        let existingLineBreaks = child.children
+            .reversed()
+            .prefix(while: { $0.name == "br" })
+            .count
+
+        for _ in existingLineBreaks..<2 {
+            child.children.append(HTMLElement(name: "br"))
         }
     }
-    
+}
+
+func parseHTML(_ html: String) -> HTMLElement {
+    let root = HTMLElement(name: "body")
+    var stack = [root]
+    var cursor = html.startIndex
+
+    while cursor < html.endIndex {
+        guard let openingBracket = html[cursor...].firstIndex(of: "<") else {
+            appendHTMLText(html[cursor...], to: stack[stack.count - 1])
+            break
+        }
+
+        appendHTMLText(html[cursor..<openingBracket], to: stack[stack.count - 1])
+
+        if html[openingBracket...].hasPrefix("<!--") {
+            let commentBody = html.index(openingBracket, offsetBy: 4)
+            guard let commentEnd = html.range(of: "-->", range: commentBody..<html.endIndex) else {
+                break
+            }
+
+            cursor = commentEnd.upperBound
+            continue
+        }
+
+        let tagStart = html.index(after: openingBracket)
+        guard let tagEnd = endOfHTMLTag(in: html, startingAt: tagStart) else {
+            appendHTMLText(html[openingBracket...], to: stack[stack.count - 1])
+            break
+        }
+
+        let tag = html[tagStart..<tagEnd]
+        cursor = html.index(after: tagEnd)
+
+        let trimmedTag = tag.drop(while: { $0.isWhitespace })
+        guard let firstCharacter = trimmedTag.first else {
+            continue
+        }
+
+        if firstCharacter == "!" || firstCharacter == "?" {
+            continue
+        }
+
+        if firstCharacter == "/" {
+            guard let tagName = closingTagName(trimmedTag),
+                  let matchingIndex = stack.lastIndex(where: { $0.name == tagName }),
+                  matchingIndex > stack.startIndex else {
+                continue
+            }
+
+            // Close the matching element together with any malformed nested
+            // elements above it. They were attached when their opening tags
+            // were parsed, so no content is lost.
+            stack.removeSubrange(matchingIndex...)
+            continue
+        }
+
+        guard let element = parseTag(String(trimmedTag)) else {
+            continue
+        }
+
+        stack[stack.count - 1].children.append(element)
+
+        let selfClosing = trimmedTag.last == "/" || element.isSelfClosing
+        if !selfClosing, stack.count < maximumHTMLNestingDepth {
+            stack.append(element)
+        }
+    }
+
+    insertActivityPubBlockLineBreaks(in: root)
     return root
 }
 
-// CustomText에서 UIImage를 포함하는 NSAttributedString 생성 예시
+struct ActivityPubEmojiDefinition: Equatable, Hashable {
+    let shortcode: String
+    let url: String
+}
+
+struct ActivityPubEmojiRenderRequest: Equatable, Hashable {
+    let definition: ActivityPubEmojiDefinition
+    let pointSize: CGFloat
+}
+
+func activityPubEmojiDefinitions(_ emojos: [EmojiAdaptor]) -> [ActivityPubEmojiDefinition] {
+    emojos.map {
+        ActivityPubEmojiDefinition(shortcode: $0.shortcode, url: $0.url)
+    }
+}
+
+func referencedActivityPubEmojos(
+    in element: HTMLElement,
+    definitions: [ActivityPubEmojiDefinition]
+) -> [ActivityPubEmojiDefinition] {
+    var definitionByShortcode: [String: ActivityPubEmojiDefinition] = [:]
+    for definition in definitions where definitionByShortcode[definition.shortcode] == nil {
+        definitionByShortcode[definition.shortcode] = definition
+    }
+
+    var result: [ActivityPubEmojiDefinition] = []
+    var insertedShortcodes: Set<String> = []
+
+    func visit(_ element: HTMLElement) {
+        if element.name == "__EMOJO__",
+           insertedShortcodes.insert(element.text).inserted,
+           let definition = definitionByShortcode[element.text] {
+            result.append(definition)
+        }
+
+        for child in element.children {
+            visit(child)
+        }
+    }
+
+    visit(element)
+    return result
+}
+
 struct ActivityPubMarkupText: View, Equatable {
     @Environment(\.appFontMetrics)
     var appFontMetrics: AppFontMetrics
 
     @State
-    var resolvedEmojos: [String: UIImage] = [:]
+    var resolvedEmojos: [ActivityPubEmojiRenderRequest: UIImage] = [:]
 
     var element: HTMLElement
     var emojos: [EmojiAdaptor]
 
     init(content: String, emojos: [EmojiAdaptor]) {
-        let element = parseHTML(content)
-        Self.insertLineBreak(element: element)
-        
-        self.element = element
+        self.element = parseHTML(content)
         self.emojos = emojos
     }
     
@@ -341,56 +474,59 @@ struct ActivityPubMarkupText: View, Equatable {
     }
     
     var body: some View {
-        buildTextView(element: element, emojis: emojos)
+        let requests = emojiRenderRequests
+
+        buildTextView(element: element, emojiRequests: requests)
             .font(appFontMetrics.body)
-    }
-
-    func resolveEmojo(url: String, for code: String) async {
-        guard let image = await CachedImageLoader.shared.loadImage(url: url) else {
-            print("failed to resolve emojo \"\(code)\": (\(url))")
-            return
-        }
-
-        let scaledImage = image.scale(to: appFontMetrics.emojiPointSize)
-
-        resolvedEmojos[code] = scaledImage
-    }
-    
-    /// 웹 브라우저의 display: block; 속성을 흉내내기 위해 p, div 태그 뒤에 두 개의 br 태그를 추가합니다.
-    /// FIXME: 이 함수는 여러 depth의 요소를 가진 HTML을 처리하지 못합니다.
-    static func insertLineBreak(element: HTMLElement) {
-        if (element.name == "body") {
-            for (index, child) in element.children.enumerated() {
-                if (index == element.children.count - 1) {
-                    break
-                }
-                
-                insertLineBreak(element: child)
+            .task(id: requests) {
+                await resolveEmojos(requests)
             }
+    }
+
+    private var emojiRenderRequests: [ActivityPubEmojiRenderRequest] {
+        referencedActivityPubEmojos(
+            in: element,
+            definitions: activityPubEmojiDefinitions(emojos)
+        ).map {
+            ActivityPubEmojiRenderRequest(
+                definition: $0,
+                pointSize: appFontMetrics.emojiPointSize
+            )
         }
-        
-        if (element.name == "__TEXT__" || element.name == "__EMOJO__") {
-            return
-        }
-        
-        if (element.name == "p" || element.name == "div") {
-            element.children.append(.init(name: "br"))
-            element.children.append(.init(name: "br"))
+    }
+
+    @MainActor
+    private func resolveEmojos(_ requests: [ActivityPubEmojiRenderRequest]) async {
+        for request in requests where resolvedEmojos[request] == nil {
+            guard !Task.isCancelled else {
+                return
+            }
+
+            guard let image = await CachedImageLoader.shared.loadImage(url: request.definition.url) else {
+                print("failed to resolve emojo \"\(request.definition.shortcode)\": (\(request.definition.url))")
+                continue
+            }
+
+            guard !Task.isCancelled else {
+                return
+            }
+
+            resolvedEmojos[request] = image.scale(to: request.pointSize)
         }
     }
     
-    func buildTextView(element: HTMLElement, emojis: [EmojiAdaptor]) -> Text {
+    func buildTextView(
+        element: HTMLElement,
+        emojiRequests: [ActivityPubEmojiRenderRequest]
+    ) -> Text {
         if (element.name == "__TEXT__") {
             return Text(element.text.replacingOccurrences(of: "\\n", with: "", options: .regularExpression))
         } else if (element.name == "__EMOJO__") {
-            guard let emojoDef = emojis.first(where: { $0.shortcode == element.text }) else {
+            guard let request = emojiRequests.first(where: { $0.definition.shortcode == element.text }) else {
                 return Text(":\(element.text):")
             }
-            
-            guard let emojoImage = self.resolvedEmojos[element.text] else {
-                Task {
-                    await resolveEmojo(url: emojoDef.url, for: element.text)
-                }
+
+            guard let emojoImage = resolvedEmojos[request] else {
                 return Text(":\(element.text):")
             }
 
@@ -405,26 +541,35 @@ struct ActivityPubMarkupText: View, Equatable {
             var result: Text = Text("")
             
             for child in element.children {
-                result = result + buildTextView(element: child, emojis: emojis)
+                result = result + buildTextView(element: child, emojiRequests: emojiRequests)
             }
             
             return result.bold()
         } else if (element.name == "a") {
-            // FIXME: a 태그 안에 emoji 있으면 표시 안됨
             let result = NSMutableAttributedString()
+            let imagesByShortcode = Dictionary(
+                uniqueKeysWithValues: emojiRequests.compactMap { request in
+                    resolvedEmojos[request].map { (request.definition.shortcode, $0) }
+                }
+            )
 
             for child in element.children {
-                result.append(child.asNSAttributedString(emojis: emojis, fontSize: appFontMetrics.linkPointSize))
+                result.append(child.asNSAttributedString(
+                    resolvedEmojos: imagesByShortcode,
+                    fontSize: appFontMetrics.linkPointSize
+                ))
             }
 
-            result.addAttributes([.link: element.attributes["href"] ?? ""], range: NSRange(location: 0, length: result.length))
+            if let url = validatedActivityPubLinkURL(element.attributes["href"]) {
+                result.addAttributes([.link: url], range: NSRange(location: 0, length: result.length))
+            }
 
             return Text(AttributedString(result))
         } else {
             var result: Text = Text("")
             
             for child in element.children {
-                result = result + buildTextView(element: child, emojis: emojis)
+                result = result + buildTextView(element: child, emojiRequests: emojiRequests)
             }
             
             return result
@@ -432,8 +577,8 @@ struct ActivityPubMarkupText: View, Equatable {
     }
     
     static func == (lhs: ActivityPubMarkupText, rhs: ActivityPubMarkupText) -> Bool {
-        // FIXME: compare emojos
-        return (lhs.element == rhs.element)
+        lhs.element == rhs.element &&
+        activityPubEmojiDefinitions(lhs.emojos) == activityPubEmojiDefinitions(rhs.emojos)
     }
 }
 
@@ -453,7 +598,8 @@ struct ActivityPubMarkupTextSimple: View, Equatable {
     }
     
     static func == (lhs: ActivityPubMarkupTextSimple, rhs: ActivityPubMarkupTextSimple) -> Bool {
-        return lhs.content == rhs.content
+        lhs.content == rhs.content &&
+        activityPubEmojiDefinitions(lhs.emojos) == activityPubEmojiDefinitions(rhs.emojos)
     }
 }
 

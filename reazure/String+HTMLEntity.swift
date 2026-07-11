@@ -11,6 +11,8 @@ fileprivate let ENTITY_TABLES = [
     "amp": "&",
     "lt": "<",
     "gt": ">",
+    "quot": "\"",
+    "apos": "'",
     
     "nbsp": " ",
     "iexcl": "¡",
@@ -88,39 +90,52 @@ fileprivate let ENTITY_TABLES = [
 
 extension String {
     func decodeHTMLEntity() -> String {
-        let scanner = Scanner(string: self)
-        scanner.charactersToBeSkipped = nil
-        
         var result = ""
-        
-        while !scanner.isAtEnd {
-            if let string = scanner.scanUpToString("&") {
-                result.append(string)
+        var cursor = startIndex
+
+        while let ampersand = self[cursor...].firstIndex(of: "&") {
+            result.append(contentsOf: self[cursor..<ampersand])
+
+            let entityStart = index(after: ampersand)
+            guard let semicolon = self[entityStart...].firstIndex(of: ";") else {
+                result.append(contentsOf: self[ampersand...])
+                return result
             }
-            
-            if scanner.scanString("&") != nil {
-                if let entity = scanner.scanUpToString(";") {
-                    if entity.hasPrefix("#x") {
-                        if let code = UInt32(entity.dropFirst(2), radix: 16) {
-                            result.append(String(UnicodeScalar(code)!))
-                        }
-                    } else if entity.hasPrefix("#") {
-                        if let code = UInt32(entity.dropFirst(), radix: 10) {
-                            result.append(String(UnicodeScalar(code)!))
-                        }
-                    } else {
-                        if let decoded = ENTITY_TABLES[entity] {
-                            result.append(decoded)
-                        } else {
-                            result.append("&\(entity);")
-                        }
-                    }
-                }
-                
-                scanner.scanString(";")
+
+            let entity = self[entityStart..<semicolon]
+
+            // A second ampersand means the first one was not a complete entity.
+            // Preserve it and let the next loop decode the later candidate.
+            guard entity.count <= 64, !entity.contains("&") else {
+                result.append("&")
+                cursor = entityStart
+                continue
             }
+
+            let decoded: String?
+
+            if entity.hasPrefix("#x") || entity.hasPrefix("#X") {
+                decoded = UInt32(entity.dropFirst(2), radix: 16)
+                    .flatMap(UnicodeScalar.init)
+                    .map(String.init)
+            } else if entity.hasPrefix("#") {
+                decoded = UInt32(entity.dropFirst(), radix: 10)
+                    .flatMap(UnicodeScalar.init)
+                    .map(String.init)
+            } else {
+                decoded = ENTITY_TABLES[String(entity)]
+            }
+
+            if let decoded {
+                result.append(decoded)
+            } else {
+                result.append(contentsOf: self[ampersand...semicolon])
+            }
+
+            cursor = index(after: semicolon)
         }
-        
+
+        result.append(contentsOf: self[cursor...])
         return result
     }
 }
