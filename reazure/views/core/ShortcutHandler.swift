@@ -87,9 +87,30 @@ class ShortcutHandlerInternal: UIViewController {
         router.handleShortcut(key: .t)
     }
     
+    /// 익스클루시브 가드 (아래 참조)
+    @MainActor
+    private var __XXX__UIKIT_BUG_WORKAROUND_ACCESS_GUARD: Bool = false
+    
+    /// BUG: UIKeyCommand 핸들러 '그 자체'와 몇 틱 이내에 programmatic한 방법으로 UIButton의 컨텍스트 메뉴를 열면 Key release를 감지하지 못해서 무한 루프가 발생합니다.
+    ///      (= 메뉴를 아무리 닫아도 키가 눌린 상태로 남아, 계속해서 컨텍스트 메뉴를 열려고 시도합니다)
+    ///      부득이하게 0.2초 정도 딜레이를 두고 컨텍스트 메뉴를 열도록 하여 이 문제를 해결합니다.
+    ///
+    ///      - 이 문제는 macOS 26 (via Designed for iPad)에서 확인되었으며, iPadOS에서는 아직 확인하지 못했습니다.
+    @MainActor
     @objc
     func handlerV() {
-        router.handleShortcut(key: .v)
+        // HACK: @MainActor로 보호된 익스클루시브 가드를 생성한다
+        guard !__XXX__UIKIT_BUG_WORKAROUND_ACCESS_GUARD else {
+            return
+        }
+        
+        self.__XXX__UIKIT_BUG_WORKAROUND_ACCESS_GUARD = true
+        
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+            self.router.handleShortcut(key: .v)
+            
+            self.__XXX__UIKIT_BUG_WORKAROUND_ACCESS_GUARD = false
+        }
     }
     
     @objc
