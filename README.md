@@ -42,7 +42,7 @@ https://testflight.apple.com/join/qmFPWXtS 로부터 TestFlight에 참여할 수
 
 ### [team unstablers Inc.](https://unstabler.pl)
 
-- Gyuhwan Park (@cheesekun@ppiy.ac)
+- Gyuhwan Park (@cheesekun@twingyeo.kr)
 
 # LICENSE
 
@@ -60,7 +60,7 @@ https://testflight.apple.com/join/qmFPWXtS 로부터 TestFlight에 참여할 수
 
 - [**notify32.aif**](reazure/assets/notification_sounds/notify32.aif)
 
-  ©️ 2024 Gyuhwan Park (@cheesekun@ppiy.ac) • [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/)
+  ©️ 2024 Gyuhwan Park (@cheesekun@twingyeo.kr) • [CC0 1.0 Universal](https://creativecommons.org/publicdomain/zero/1.0/)
 
 # THANKS TO
 
