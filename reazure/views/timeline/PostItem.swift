@@ -30,9 +30,6 @@ struct PostItemFlags: RawRepresentable, OptionSet {
 }
 
 struct PostItem: View, Equatable {
-    @Environment(\.openURL)
-    var openURL
-    
     @Environment(\.palette)
     var palette: AppPalette
     
@@ -65,36 +62,9 @@ struct PostItem: View, Equatable {
     var attachment: some View {
         Group {
             if !status.attachments.isEmpty {
-                HStack {
-                    ForEach(status.attachments, id: \.id) { attachment in
-                        // FIXME: preview_url에 가드를 넣는 것보단 흰색 placeholder라도 표시하는게 좋아
-                        if attachment.type == "image",
-                           let previewUrl = attachment.previewUrl
-                        {
-                            AsyncImage(url: URL(string: previewUrl)) { image in
-                                image
-                                    .resizable()
-                                    .scaledToFill()
-                                    .aspectRatio(contentMode: .fit)
-                                    .frame(width: 64, height: 64)
-                                    .clipped()
-                                    .contentShape(Rectangle())
-                            } placeholder: {
-                                ProgressView()
-                                    .frame(width: 64, height: 64)
-                            }
-                            .onTapGesture {
-                                guard let url = URL(string: attachment.originUrl ?? attachment.url) else {
-                                    return
-                                }
-                                
-                                openURL(url)
-                            }
-                        }
-                    }
-                }
+                AttachmentRow(attachments: status.attachments)
             }
-            
+
             if let relatedAccount = self.relatedAccount {
                 if self.flags.contains(.favouritedByOthers) {
                     ActivityPubMarkupTextSimple(content: "Favourited by \(relatedAccount.displayName) (@\(relatedAccount.acct))", emojos: relatedAccount.emojis)
@@ -119,22 +89,10 @@ struct PostItem: View, Equatable {
         } else {
             HStack(alignment: .top, spacing: 0) {
                 HStack(spacing: 0) {
-                    if let relatedAccount = self.relatedAccount {
-                        ZStack {
-                            Rectangle()
-                                .foregroundStyle(.clear)
-                                .frame(width: 56, height: 56)
-                            ProfileImage(url: status.account.avatar, size: 48)
-                                .equatable()
-                                .offset(x: -4, y: -4)
-                            ProfileImage(url: relatedAccount.avatar, size: 32)
-                                .equatable()
-                                .offset(x: 12, y: 12)
-                        }
-                    } else {
-                        ProfileImage(url: status.account.avatar)
-                            .equatable()
-                    }
+                    ProfileImageStack(
+                        primary: status.account.avatar,
+                        secondary: relatedAccount?.avatar
+                    )
                 }
                     .padding(.trailing, 12)
                     .fixedSize()
@@ -215,8 +173,57 @@ struct PostItem: View, Equatable {
             lhs.status.favourited == rhs.status.favourited &&
             lhs.status.reblogged == rhs.status.reblogged &&
             lhs.status.deleted == rhs.status.deleted &&
+            lhs.status.account.avatar == rhs.status.account.avatar &&
+            lhs.relatedAccount?.avatar == rhs.relatedAccount?.avatar &&
             lhs.flags == rhs.flags
         )
+    }
+}
+
+/// 첨부된 이미지 썸네일을 가로로 나열합니다.
+struct AttachmentRow: View {
+    var attachments: [AttachmentAdaptor]
+
+    var body: some View {
+        HStack {
+            ForEach(attachments, id: \.id) { attachment in
+                if attachment.type == "image" {
+                    AttachmentThumbnail(attachment: attachment)
+                }
+            }
+        }
+    }
+}
+
+/// 개별 첨부 이미지 썸네일. 로딩/캐싱은 `RemoteImage`에 위임하며,
+/// preview_url이 없거나 로딩 중일 때는 중립 placeholder를 표시합니다.
+private struct AttachmentThumbnail: View {
+    @Environment(\.openURL)
+    var openURL
+
+    var attachment: AttachmentAdaptor
+
+    var body: some View {
+        RemoteImage(url: attachment.previewUrl ?? "") { image in
+            image
+                .resizable()
+                .scaledToFill()
+                .aspectRatio(contentMode: .fit)
+                .frame(width: 64, height: 64)
+                .clipped()
+                .contentShape(Rectangle())
+        } placeholder: {
+            Rectangle()
+                .fill(Color(uiColor: .systemGray5))
+                .frame(width: 64, height: 64)
+        }
+        .onTapGesture {
+            guard let url = URL(string: attachment.originUrl ?? attachment.url) else {
+                return
+            }
+
+            openURL(url)
+        }
     }
 }
 
@@ -254,143 +261,12 @@ fileprivate extension String {
 }
 
 #Preview {
-    let status = MastodonStatusAdaptor(from: Mastodon.Status(
-        id: "1",
-        created_at: "2019-11-26T23:27:32.000Z",
-        
-        in_reply_to_id: nil,
-        
-        url: "",
-        visibility: .publicType,
-        content: "Hello, World!",
-        account: Mastodon.UserProfile(
-            id: "1",
-            username: "cheesekun",
-            acct: "cheesekun",
-            
-            url: "",
-            
-            display_name: "치즈군★",
-            
-            avatar: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-            emojis: []
-        ),
-        
-        favourited: false,
-        reblogged: false,
-        
-        reblog: nil,
-        emojis: [],
-        mentions: [],
-        media_attachments: [
-            Mastodon.MediaAttachment(
-                id: "1234",
-                type: "image",
-                url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-                preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-                remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
-            ),
-            Mastodon.MediaAttachment(
-                id: "1235",
-                type: "image",
-                url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-                preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-                remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
-            ),
-            Mastodon.MediaAttachment(
-                id: "1236",
-                type: "image",
-                url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-                preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-                remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
-            ),
-            Mastodon.MediaAttachment(
-                id: "1237",
-                type: "image",
-                url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-                preview_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-                remote_url: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg"
-            ),
-        ],
-        application: Mastodon.Application(name: "re;azure")
-    ))
-    
-    let mentionStatus = MastodonStatusAdaptor(from: Mastodon.Status(
-        id: "42",
-        created_at: "2019-11-26T23:27:32.000Z",
-        
-        in_reply_to_id: nil,
-        
-        url: "",
-        visibility: .publicType,
-        content: "@cheesekun Hello, World!",
-        account: Mastodon.UserProfile(
-            id: "2",
-            username: "ppiyac",
-            acct: "ppiyac",
-            
-            url: "",
-            
-            display_name: "삐약이",
-            
-            avatar: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-            emojis: []
-        ),
-        
-        favourited: false,
-        reblogged: false,
-        
-        reblog: nil,
-        emojis: [],
-        mentions: [
-            Mastodon.Mention(id: "1", username: "cheesekun", acct: "cheesekun")
-        ],
-        media_attachments: [],
-        application: Mastodon.Application(name: "re;azure")
-    ))
-    
-    let reblogStatus = MastodonStatusAdaptor(from: Mastodon.Status(
-        id: "2",
-        created_at: "2019-11-26T23:27:32.000Z",
-        
-        in_reply_to_id: nil,
-        
-        url: "",
-        visibility: .publicType,
-        content: "Hello, World!",
-        account: Mastodon.UserProfile(
-            id: "2",
-            username: "ppiyac",
-            acct: "ppiyac",
-            
-            url: "",
-            
-            display_name: "삐약이",
-            
-            avatar: "https://ppiy.ac/system/accounts/avatars/110/796/233/076/688/314/original/df6e9ebf6bb70ef2.jpg",
-            emojis: []
-        ),
-        
-        favourited: false,
-        reblogged: false,
-        
-        reblog: Box(status._status),
-        emojis: [],
-        mentions: [],
-        media_attachments: [],
-        application: Mastodon.Application(name: "re;azure")
-    ))
-    
+    let status = PreviewSamples.status
+
     VStack(spacing: 0) {
         PostItem(status: status)
-        PostItem(status: reblogStatus)
+        PostItem(status: PreviewSamples.reblogStatus)
         PostItem(status: status, relatedAccount: status.account, flags: .favouritedByOthers)
-        /*
-         Button {} label: {
-         PostItem(status: mentionStatus, selfId: "1", type: .favourite, relatedUser: status.account)
-         }
-         .buttonStyle(.plain)
-         */
     }
 }
 
