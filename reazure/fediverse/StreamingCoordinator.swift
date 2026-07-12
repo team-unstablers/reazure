@@ -204,7 +204,9 @@ final class StreamingCoordinator {
         if let existing = streamingClient {
             client = existing
         } else {
-            let created = StreamingClient(using: account, socketProvider: socketProvider)
+            let created = StreamingClient(using: account,
+                                          socketProvider: socketProvider,
+                                          adapter: account.server.streamingAdapter(for: account))
             created.delegate = self
             streamingClient = created
             client = created

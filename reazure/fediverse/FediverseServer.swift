@@ -32,6 +32,9 @@ enum FediverseServer: Codable {
         case "mastodon":
             let address = try container.decode(String.self, forKey: .address)
             self = .mastodon(address: address)
+        case "misskey":
+            let address = try container.decode(String.self, forKey: .address)
+            self = .misskey(address: address)
         default:
             throw DecodingError.dataCorruptedError(forKey: .serverSoftware, in: container, debugDescription: "Unknown server software")
         }
@@ -56,26 +59,47 @@ enum FediverseServer: Codable {
         case .mastodon(let address):
             let instance = try await MastodonClient.instanceInfo(of: address)
             return instance.configuration.asCompatibleConfiguration()
-        case .misskey(_):
-            throw FediverseAPIError.notImplemented
+        case .misskey(let address):
+            let meta = try await MisskeyClient.meta(of: address)
+            // Misskey streams over the same host (wss://<host>/streaming), so the
+            // streaming endpoint is just the address.
+            return FediverseServerConfiguration(streamingEndpoint: address,
+                                                maxPostLength: meta.maxNoteTextLength ?? 3000)
+        }
+    }
+
+    /// Builds the REST client for this server kind. The single per-server switch
+    /// that keeps `SessionManager` and the action performer server-agnostic.
+    func makeClient(for account: Account) -> any FediverseClient {
+        switch self {
+        case .mastodon:
+            return MastodonClient(using: account)
+        case .misskey:
+            return MisskeyClient(using: account)
+        }
+    }
+
+    /// The streaming protocol strategy (URL / on-connect / frame translation) for
+    /// this server kind, injected into the shared `StreamingClient`.
+    func streamingAdapter(for account: Account) -> StreamingProtocolAdapter {
+        switch self {
+        case .mastodon:
+            return MastodonStreamingAdapter()
+        case .misskey:
+            return MisskeyStreamingAdapter()
         }
     }
 
     /// The payload decode seam for this server's streaming events. Selecting the
-    /// decoder here keeps `SharedClient` unaware of the server kind. (Note the
-    /// streaming envelope/demux in `EventIngestor` is still Mastodon-shaped, so a
-    /// real Misskey backend needs more than a decoder here — see
-    /// `StreamingEventDecoder`.)
+    /// decoder here keeps `SharedClient` unaware of the server kind. Misskey's
+    /// streaming *envelope* is normalized to the shared `{event, payload}` shape by
+    /// `MisskeyStreamingAdapter`, so the same `EventIngestor` demux drives both.
     func streamingEventDecoder() -> StreamingEventDecoder {
         switch self {
         case .mastodon:
             return MastodonEventDecoder()
         case .misskey:
-            // Inert today: Misskey `configuration()` throws, so streaming never
-            // starts and this decoder is never exercised. Kept as a placeholder
-            // rather than a throwing stub because it is unreachable; a real
-            // `MisskeyEventDecoder` replaces it when Misskey streaming lands.
-            return MastodonEventDecoder()
+            return MisskeyEventDecoder()
         }
     }
 }
