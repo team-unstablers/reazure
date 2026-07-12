@@ -37,7 +37,7 @@ class SharedClient: ObservableObject {
     /// The active session's REST client, mirrored from `AccountSession` on
     /// `use(account:)`. Its `didSet` keeps the action performer pointed at the
     /// live client.
-    var client: MastodonClient? {
+    var client: (any FediverseClient)? {
         didSet {
             actionPerformer.client = client
         }
@@ -82,9 +82,9 @@ class SharedClient: ObservableObject {
     let replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
 
     /// Concrete executor for status-model write actions (reblog/favourite/reply/
-    /// delete/resolve). Owns the active `MastodonClient` reference, which is
+    /// delete/resolve). Owns the active `FediverseClient` reference, which is
     /// mirrored in via `client`'s `didSet` on account change.
-    lazy var actionPerformer = MastodonActionPerformer(replyTo: replyTo)
+    lazy var actionPerformer = FediverseActionPerformer(replyTo: replyTo)
 
     /// Presentation side effects (unread accrual + sound/haptic) for incoming
     /// streaming notifications. The unread count stays a `@Published` property

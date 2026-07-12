@@ -297,7 +297,45 @@ class MastodonClient {
     }
 }
 
-fileprivate extension String {
+extension MastodonClient: FediverseClient {
+    func fetchHomeTimeline() async throws -> [any StatusAdaptor] {
+        try await homeTimeline().map { MastodonStatusAdaptor(from: $0) }
+    }
+
+    func fetchNotifications() async throws -> [any NotificationAdaptor] {
+        try await notifications().map { MastodonNotificationAdaptor(from: $0) }
+    }
+
+    func resolveStatus(id: String) async throws -> any StatusAdaptor {
+        MastodonStatusAdaptor(from: try await status(of: id))
+    }
+
+    func post(content: String, visibility: StatusVisibility, replyTo: String?) async throws {
+        _ = try await postStatus(content, visibility: Mastodon.Visibility(visibility), replyTo: replyTo)
+    }
+
+    func favourite(id: String) async throws {
+        _ = try await favourite(statusId: id)
+    }
+
+    func unfavourite(id: String) async throws {
+        _ = try await unfavourite(statusId: id)
+    }
+
+    func reblog(id: String) async throws {
+        _ = try await reblog(statusId: id)
+    }
+
+    func unreblog(id: String) async throws {
+        _ = try await unreblog(statusId: id)
+    }
+
+    func delete(id: String) async throws {
+        try await deleteStatus(statusId: id)
+    }
+}
+
+extension String {
     func sanitizeServerAddress() -> String {
         var server = self
         if server.hasPrefix("https://") {

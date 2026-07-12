@@ -14,14 +14,14 @@ import Foundation
 /// (the facade force-unwraps those two keys).
 final class AccountSession {
     let account: Account
-    let client: MastodonClient
+    let client: any FediverseClient
     let timelines: [TimelineType: TimelineModel]
 
     private let eventIngestor: EventIngestor
     private let coordinator: StreamingCoordinator
 
     init(account: Account,
-         client: MastodonClient,
+         client: any FediverseClient,
          timelines: [TimelineType: TimelineModel],
          eventIngestor: EventIngestor,
          coordinator: StreamingCoordinator) {
@@ -115,7 +115,7 @@ final class SessionManager {
     }
 
     private func makeSession(for account: Account) -> AccountSession {
-        let client = MastodonClient(using: account)
+        let client: any FediverseClient = account.server.makeClient(for: account)
         let timelines = makeTimelines(client: client)
 
         let ingestor = EventIngestor(
@@ -151,18 +151,18 @@ final class SessionManager {
     /// Builds the (empty) home / notifications timelines for a session, fetching
     /// over the session's own REST client. Mirrors the pre-refactor
     /// `constructTimelineModel` construction.
-    private func makeTimelines(client: MastodonClient) -> [TimelineType: TimelineModel] {
+    private func makeTimelines(client: any FediverseClient) -> [TimelineType: TimelineModel] {
         let performer = environment.performer
         let focus = environment.focusPostArea
 
         let home = TimelineModel(focusPostArea: focus) { [weak performer] _ in
-            let statuses = try await client.homeTimeline()
-            return statuses.map { StatusModel(adaptor: MastodonStatusAdaptor(from: $0), performer: performer) }
+            let adaptors = try await client.fetchHomeTimeline()
+            return adaptors.map { StatusModel(adaptor: $0, performer: performer) }
         }
 
         let notifications = TimelineModel(focusPostArea: focus) { [weak performer] _ in
-            let notifications = try await client.notifications()
-            return notifications.compactMap { NotificationModel(adaptor: MastodonNotificationAdaptor(from: $0), performer: performer) }
+            let adaptors = try await client.fetchNotifications()
+            return adaptors.compactMap { NotificationModel(adaptor: $0, performer: performer) }
         }
 
         return [

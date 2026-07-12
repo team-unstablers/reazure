@@ -170,19 +170,14 @@ extension StatusVisibility {
             self = .publicType
         }
     }
-    
-    // FIXME: 임시 대응
-    func __DONOTUSE__asMastodonVisibility() -> Mastodon.Visibility {
-        switch self {
-        case .publicType:
-            return .publicType
-        case .unlisted:
-            return .unlisted
-        case .privateType:
-            return .privateType
-        case .direct:
-            return .direct
-        }
+}
+
+extension Mastodon.Visibility {
+    /// Maps the server-agnostic visibility back to Mastodon's wire value. The raw
+    /// values coincide (`public`/`unlisted`/`private`/`direct`), so this is a
+    /// straight raw-value bridge.
+    init(_ visibility: StatusVisibility) {
+        self = Mastodon.Visibility(rawValue: visibility.rawValue)
     }
 }
 

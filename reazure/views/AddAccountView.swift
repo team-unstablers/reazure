@@ -37,6 +37,15 @@ fileprivate class AddAccountViewModel: NSObject, ObservableObject, ASWebAuthenti
 
     private var application: Mastodon.OAuthApplication? = nil
 
+    /// Which auth flow is in flight, so the shared callback handler finalizes the
+    /// right way. Mastodon carries no extra state (the code returns on the callback
+    /// URL); Misskey carries the MiAuth session UUID it needs to exchange.
+    private enum PendingAuth {
+        case mastodon
+        case misskey(session: String)
+    }
+    private var pendingAuth: PendingAuth?
+
     /// The in-flight authentication session. Held strongly so it is not torn down
     /// (and thus cancelled) before the user finishes authorizing.
     private var authSession: ASWebAuthenticationSession?
@@ -58,21 +67,34 @@ fileprivate class AddAccountViewModel: NSObject, ObservableObject, ASWebAuthenti
                     throw FediverseAPIError.unsupportedServerSoftware
                 }
 
-                try await sanityCheck(using: nodeInfo)
+                let authorizeURL: URL
 
-                let application = try await createApplication()
-                self.application = application
+                switch nodeInfo.software.name {
+                case "mastodon":
+                    let application = try await createApplication()
+                    self.application = application
+                    self.pendingAuth = .mastodon
 
-                var authorizeURL = MastodonEndpoint.oauthAuthorize.url(for: serverAddress)
+                    var url = MastodonEndpoint.oauthAuthorize.url(for: serverAddress)
+                    let scopes = application.scopes ?? MastodonClient.defaultScope(for: nodeInfo.software.version)
+                    url.append(queryItems: [
+                        URLQueryItem(name: "client_id", value: application.client_id),
+                        URLQueryItem(name: "response_type", value: "code"),
+                        URLQueryItem(name: "redirect_uri", value: MastodonClient.oauthRedirectURI),
+                        URLQueryItem(name: "scope", value: scopes.joined(separator: " "))
+                    ])
+                    authorizeURL = url
 
-                let scopes = application.scopes ?? MastodonClient.defaultScope(for: nodeInfo.software.version)
+                case "misskey":
+                    // MiAuth: generate a session id, send the user to approve it,
+                    // then exchange it for a token in the callback.
+                    let session = UUID().uuidString
+                    self.pendingAuth = .misskey(session: session)
+                    authorizeURL = buildMiAuthURL(session: session)
 
-                authorizeURL.append(queryItems: [
-                    URLQueryItem(name: "client_id", value: application.client_id),
-                    URLQueryItem(name: "response_type", value: "code"),
-                    URLQueryItem(name: "redirect_uri", value: MastodonClient.oauthRedirectURI),
-                    URLQueryItem(name: "scope", value: scopes.joined(separator: " "))
-                ])
+                default:
+                    throw FediverseAPIError.unsupportedServerSoftware
+                }
 
                 DispatchQueue.main.async {
                     self.startAuthSession(with: authorizeURL)
@@ -120,21 +142,33 @@ fileprivate class AddAccountViewModel: NSObject, ObservableObject, ASWebAuthenti
             return
         }
 
-        guard let callbackURL = callbackURL,
-              let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
-                .queryItems?
-                .first(where: { $0.name == "code" })?
-                .value
-        else {
+        switch pendingAuth {
+        case .mastodon:
+            guard let callbackURL = callbackURL,
+                  let code = URLComponents(url: callbackURL, resolvingAgainstBaseURL: false)?
+                    .queryItems?
+                    .first(where: { $0.name == "code" })?
+                    .value
+            else {
+                self.error = FediverseAPIError.unknownError(originError: nil)
+                self.isBusy = false
+                return
+            }
+            finalizeMastodon(code: code)
+
+        case .misskey(let session):
+            // The callback firing means the user approved the session; the id we
+            // generated is the credential to exchange. (Misskey also echoes it as a
+            // `session` query item, but we already hold it.)
+            finalizeMisskey(session: session)
+
+        case nil:
             self.error = FediverseAPIError.unknownError(originError: nil)
             self.isBusy = false
-            return
         }
-
-        finalizeAddAccount(code: code)
     }
 
-    private func finalizeAddAccount(code: String) {
+    private func finalizeMastodon(code: String) {
         guard let application = self.application else {
             self.isBusy = false
             return
@@ -176,10 +210,51 @@ fileprivate class AddAccountViewModel: NSObject, ObservableObject, ASWebAuthenti
         }
     }
 
-    func sanityCheck(using nodeInfo: Mastodon.NodeInfo) async throws {
-        if nodeInfo.software.name != "mastodon" {
-            throw FediverseAPIError.unsupportedServerSoftware
+    private func finalizeMisskey(session: String) {
+        Task {
+            do {
+                let result = try await MisskeyClient.miAuthCheck(host: serverAddress, session: session)
+
+                guard result.ok, let token = result.token, let user = result.user else {
+                    throw FediverseAPIError.unknownError(originError: nil)
+                }
+
+                let account = Account(
+                    id: user.id,
+                    username: user.username,
+                    server: .misskey(address: serverAddress),
+                    accessToken: token
+                )
+
+                DispatchQueue.main.async {
+                    self.accountManager.add(account)
+                    self.isBusy = false
+
+                    self.completionHandler?()
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    self.error = error
+                    self.isBusy = false
+                }
+            }
         }
+    }
+
+    /// Builds the MiAuth authorization URL. The requested permissions cover
+    /// home/notifications read, note create/delete/renote (`write:notes`), and the
+    /// ⭐ favourite reaction (`write:reactions`).
+    private func buildMiAuthURL(session: String) -> URL {
+        var components = URLComponents()
+        components.scheme = "https"
+        components.host = serverAddress.sanitizeServerAddress()
+        components.path = "/miauth/\(session)"
+        components.queryItems = [
+            URLQueryItem(name: "name", value: "re;azure"),
+            URLQueryItem(name: "callback", value: MastodonClient.oauthRedirectURI),
+            URLQueryItem(name: "permission", value: "read:account,write:notes,read:notifications,write:reactions")
+        ]
+        return components.url!
     }
 
     func createApplication() async throws -> Mastodon.OAuthApplication {

@@ -5,12 +5,12 @@
 //  Created by Gyuhwan Park on 11/16/24.
 //
 
-enum StatusVisibility {
-    case publicType
-    case unlisted
-    case privateType
-    case direct
-    
+enum StatusVisibility: String, Codable {
+    case publicType = "public"
+    case unlisted = "unlisted"
+    case privateType = "private"
+    case direct = "direct"
+
     var isRebloggable: Bool {
         switch self {
         case .publicType, .unlisted:

@@ -190,6 +190,37 @@ final class FakeRequestPerformer: RequestPerforming {
     }
 }
 
+// MARK: - MisskeyRequestPerforming
+
+/// Records each Misskey REST call and decodes a canned JSON body into the
+/// requested type. Mirrors `FakeRequestPerformer` for the Misskey JSON-body seam;
+/// an empty/absent `responseJSON` decodes as `{}` so the void endpoints
+/// (`Misskey.EmptyResponse`) are exercised without a network.
+final class FakeMisskeyRequestPerformer: MisskeyRequestPerforming {
+    struct Call {
+        let url: URL
+        let body: [String: Any]
+    }
+
+    private(set) var calls: [Call] = []
+    var lastCall: Call? { calls.last }
+
+    var responseJSON: String?
+    var error: Error?
+
+    func perform<Response: Decodable & Sendable>(
+        url: URL,
+        body: [String: Any],
+        expecting type: Response.Type
+    ) async throws -> Response {
+        calls.append(Call(url: url, body: body))
+        if let error { throw error }
+        let raw = responseJSON ?? ""
+        let data = raw.isEmpty ? Data("{}".utf8) : (raw.data(using: .utf8) ?? Data("{}".utf8))
+        return try JSONDecoder().decode(type, from: data)
+    }
+}
+
 // MARK: - Performer
 
 enum FakePerformerError: Error {

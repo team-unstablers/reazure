@@ -63,10 +63,49 @@ struct StarscreamWebSocketProvider: WebSocketProviding {
     }
 }
 
+/// Per-server strategy for the otherwise shared `StreamingClient` state machine.
+///
+/// The reconnect/backoff/ping-pong/delegate machinery is identical across
+/// backends; only three things differ — the socket URL, an optional on-connect
+/// step (Mastodon needs none; Misskey subscribes to channels), and how an inbound
+/// text frame becomes a `Mastodon.StreamingEvent` envelope. Keeping this a
+/// strategy (rather than protocolizing the whole client) leaves the delegate
+/// signatures — and every streaming test — unchanged.
+protocol StreamingProtocolAdapter {
+    /// The WebSocket URL to dial for this account/configuration.
+    func url(account: Account, configuration: FediverseServerConfiguration) -> URL
+    /// Called once the socket connects. `send` writes a text frame back over the
+    /// socket. Mastodon is a no-op; Misskey sends its channel-subscription frames.
+    func onConnected(send: (String) -> Void)
+    /// Translates an inbound text frame into the shared streaming envelope, or
+    /// `nil` to drop the frame.
+    func translate(text: String) -> Mastodon.StreamingEvent?
+}
+
+/// Mastodon strategy: the `user` stream over `/api/v1/streaming`, no on-connect
+/// step, and a straight envelope parse — i.e. the pre-strategy behaviour.
+struct MastodonStreamingAdapter: StreamingProtocolAdapter {
+    func url(account: Account, configuration: FediverseServerConfiguration) -> URL {
+        var url = MastodonEndpoint.streaming.url(for: configuration.streamingEndpoint)
+        url = url.appending(queryItems: [
+            URLQueryItem(name: "access_token", value: account.accessToken),
+            URLQueryItem(name: "stream", value: "user")
+        ])
+        return url
+    }
+
+    func onConnected(send: (String) -> Void) {}
+
+    func translate(text: String) -> Mastodon.StreamingEvent? {
+        try? JSON.parse(text, to: Mastodon.StreamingEvent.self)
+    }
+}
+
 class StreamingClient {
     let account: Account
 
     private let socketProvider: WebSocketProviding
+    private let adapter: StreamingProtocolAdapter
 
     private(set) public var socket: WebSocketConnecting?
     private(set) public var state: StreamingState = .disconnected {
@@ -77,17 +116,16 @@ class StreamingClient {
 
     weak var delegate: StreamingClientDelegate?
 
-    init(using account: Account, socketProvider: WebSocketProviding = StarscreamWebSocketProvider()) {
+    init(using account: Account,
+         socketProvider: WebSocketProviding = StarscreamWebSocketProvider(),
+         adapter: StreamingProtocolAdapter = MastodonStreamingAdapter()) {
         self.account = account
         self.socketProvider = socketProvider
+        self.adapter = adapter
     }
 
     func start(_ configuration: FediverseServerConfiguration) {
-        var url = MastodonEndpoint.streaming.url(for: configuration.streamingEndpoint)
-        url = url.appending(queryItems: [
-            URLQueryItem(name: "access_token", value: self.account.accessToken),
-            URLQueryItem(name: "stream", value: "user")
-        ])
+        let url = adapter.url(account: self.account, configuration: configuration)
 
         let socket = socketProvider.webSocket(with: URLRequest(url: url))
 
@@ -113,14 +151,16 @@ extension StreamingClient: WebSocketDelegate {
         switch event {
         case .connected(let headers):
             self.state = .connected
+            // Per-server on-connect step (Mastodon: none; Misskey: subscribe to
+            // its `homeTimeline` / `main` channels).
+            self.adapter.onConnected(send: { [weak self] message in
+                self?.socket?.write(string: message, completion: nil)
+            })
         case .disconnected(let reason, let code):
             self.state = .disconnected
         case .text(let string):
-            do {
-                let event = try JSON.parse(string, to: Mastodon.StreamingEvent.self)
+            if let event = self.adapter.translate(text: string) {
                 self.delegate?.didReceive(event: event, client: self)
-            } catch {
-                print("StreamingClient Error: \(error)")
             }
         case .binary(let data):
             break

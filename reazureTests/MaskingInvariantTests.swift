@@ -100,9 +100,10 @@ struct MaskingInvariantTests {
         #expect(base.deleted == false)
     }
 
-    @Test func delete_swallowsPerformerError_andStillMasks() async throws {
-        // `StatusModelBase.delete` intentionally uses `try?`, so a failing delete
-        // request must still leave the row optimistically marked as deleted.
+    @Test func delete_rollsBackOnPerformerError() async throws {
+        // The optimistic overlay marks the row deleted immediately, but a failing
+        // delete request must roll the row back so it reappears (the post was not
+        // actually deleted on the server).
         let performer = FakePerformer()
         performer.errorToThrow = FakePerformerError.noResolveResult
         let base = FakeStatusAdaptor(id: "s")
@@ -112,7 +113,8 @@ struct MaskingInvariantTests {
         await flushMainQueue()
 
         #expect(performer.deleteCount == 1)
-        #expect(model.status.deleted == true)
+        #expect(model.status.deleted == false)
+        #expect(base.deleted == false)
     }
 
     // MARK: - mask() merge semantics

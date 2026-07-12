@@ -11,8 +11,8 @@ fileprivate let FEEDBACK_FORM_URL = "https://docs.google.com/forms/d/e/1FAIpQLSf
 
 struct PostRequest: Codable {
     var content: String
-    var visibility: Mastodon.Visibility
-    
+    var visibility: StatusVisibility
+
     var replyTo: String?
 }
 
@@ -30,24 +30,24 @@ struct PostArea: View {
     
     
     @State
-    var visibility: Mastodon.Visibility = .publicType
-    
+    var visibility: StatusVisibility = .publicType
+
     @State
     var content: String = ""
-    
+
     @State
     var replyTo: StatusAdaptor? = nil {
         didSet {
             if let replyTo = replyTo {
-                visibilityMask = replyTo.visibility.__DONOTUSE__asMastodonVisibility()
+                visibilityMask = replyTo.visibility
             } else {
                 visibilityMask = nil
             }
         }
     }
-    
+
     @State
-    var visibilityMask: Mastodon.Visibility? = nil
+    var visibilityMask: StatusVisibility? = nil
     
     @State
     var visibilityMenuVisible: Bool = false
@@ -220,7 +220,7 @@ fileprivate extension StreamingState {
     }
 }
 
-fileprivate extension Mastodon.Visibility {
+fileprivate extension StatusVisibility {
     var asLocalizedText: String {
         switch self {
         case .publicType:
@@ -231,8 +231,6 @@ fileprivate extension Mastodon.Visibility {
             return NSLocalizedString("POST_VISIBILITY_PRIVATE", comment: "")
         case .direct:
             return NSLocalizedString("POST_VISIBILITY_DIRECT", comment: "")
-        default:
-            return NSLocalizedString("POST_VISIBILITY_PUBLIC", comment: "")
         }
     }
 }
