@@ -75,8 +75,10 @@ struct CompactPostItem: View, Equatable {
     }
 }
 
+#if DEBUG
 #Preview {
     VStack(spacing: 0) {
         CompactPostItem(status: PreviewSamples.status)
     }
 }
+#endif

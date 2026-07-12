@@ -287,6 +287,7 @@ fileprivate extension String {
     }
 }
 
+#if DEBUG
 #Preview {
     let status = PreviewSamples.status
 
@@ -296,5 +297,5 @@ fileprivate extension String {
         PostItem(status: status, relatedAccount: status.account, flags: .favouritedByOthers)
     }
 }
-
+#endif
 
