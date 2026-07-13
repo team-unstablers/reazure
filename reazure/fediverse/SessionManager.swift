@@ -64,7 +64,9 @@ final class SessionManager {
         let stateDidChange: (StreamingState) -> Void
         let configurationDidLoad: (FediverseServerConfiguration) -> Void
         let isNotificationTabActive: () -> Bool
-        let backfillHome: () -> Void
+        /// REST-refreshes the timelines to recover what the stream missed while it
+        /// was down. Run by the coordinator on every path that reopens the stream.
+        let backfill: () -> Void
     }
 
     private let environment: Environment
@@ -137,7 +139,7 @@ final class SessionManager {
                 stateDidChange: environment.stateDidChange,
                 configurationDidLoad: environment.configurationDidLoad,
                 didReceiveEvent: { [weak ingestor] event in ingestor?.ingest(event) },
-                backfillHome: environment.backfillHome
+                backfill: environment.backfill
             )
         )
 

@@ -86,9 +86,9 @@ struct SharedClientSessionTests {
     }
 
     /// Foreground return drives an immediate reconnect through the facade: a
-    /// dropped stream is reopened via `reconnectStreamingIfNeeded()` without
+    /// dropped stream is reopened via `resumeFromBackground()` without
     /// waiting on the backoff.
-    @Test func reconnectStreamingIfNeeded_reconnectsCurrentSession() async {
+    @Test func resumeFromBackground_reconnectsCurrentSession() async {
         let provider = FakeWebSocketProvider()
         let hub = makeHub(provider)
 
@@ -97,7 +97,7 @@ struct SharedClientSessionTests {
         provider.latest?.emit(.connected([:]))
         provider.latest?.emit(.disconnected("x", 1006))   // stream drops
 
-        hub.reconnectStreamingIfNeeded()                   // app returns to foreground
+        hub.resumeFromBackground()                   // app returns to foreground
 
         #expect(provider.createdSockets.count == 2)        // reconnected immediately
 

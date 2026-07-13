@@ -32,7 +32,7 @@ struct EventIngestorTests {
         home: TimelineModel,
         notifications: TimelineModel,
         isNotificationTabActive: Bool = false,
-        unread: @escaping () -> Void = {}
+        unread: @escaping (Int) -> Void = { _ in }
     ) -> EventIngestor {
         let presenter = NotificationPresenter(
             preferences: silentPreferences(),
@@ -102,7 +102,7 @@ struct EventIngestorTests {
         let decoder = FakeStreamingEventDecoder(notification: adaptor)
         let ingestor = makeIngestor(
             decoder: decoder, home: home, notifications: notifications,
-            isNotificationTabActive: false, unread: { unread += 1 }
+            isNotificationTabActive: false, unread: { unread += $0 }
         )
 
         ingestor.ingest(event("notification"))
@@ -123,7 +123,7 @@ struct EventIngestorTests {
         let adaptor = FakeNotificationAdaptor(id: "n-2", type: .follow, status: nil)
         let decoder = FakeStreamingEventDecoder(notification: adaptor)
         let ingestor = makeIngestor(
-            decoder: decoder, home: home, notifications: notifications, unread: { unread += 1 }
+            decoder: decoder, home: home, notifications: notifications, unread: { unread += $0 }
         )
 
         ingestor.ingest(event("notification"))
@@ -141,7 +141,7 @@ struct EventIngestorTests {
         let decoder = FakeStreamingEventDecoder(notification: adaptor)
         let ingestor = makeIngestor(
             decoder: decoder, home: home, notifications: notifications,
-            isNotificationTabActive: true, unread: { unread += 1 }
+            isNotificationTabActive: true, unread: { unread += $0 }
         )
 
         ingestor.ingest(event("notification"))
@@ -165,7 +165,7 @@ struct EventIngestorTests {
         let presenter = NotificationPresenter(
             preferences: silentPreferences(),
             effects: NotificationPresenter.Effects(playSound: { _ in }, vibrate: {}),
-            incrementUnread: { presentedOnMain = Thread.isMainThread }
+            incrementUnread: { _ in presentedOnMain = Thread.isMainThread }
         )
         let ingestor = EventIngestor(
             decoder: FakeStreamingEventDecoder(notification: FakeNotificationAdaptor(status: FakeStatusAdaptor(id: "s-1"))),

@@ -43,7 +43,7 @@ struct NotificationPresenterTests {
         let presenter = NotificationPresenter(
             preferences: preferences(playSound: false, vibrate: false),
             effects: EffectSpy().effects,
-            incrementUnread: { unread += 1 }
+            incrementUnread: { unread += $0 }
         )
 
         presenter.present(isNotificationTabActive: false)
@@ -56,7 +56,7 @@ struct NotificationPresenterTests {
         let presenter = NotificationPresenter(
             preferences: preferences(playSound: false, vibrate: false),
             effects: EffectSpy().effects,
-            incrementUnread: { unread += 1 }
+            incrementUnread: { unread += $0 }
         )
 
         presenter.present(isNotificationTabActive: true)
@@ -71,7 +71,7 @@ struct NotificationPresenterTests {
         let presenter = NotificationPresenter(
             preferences: preferences(playSound: true, vibrate: true, sound: .reazure),
             effects: spy.effects,
-            incrementUnread: {}
+            incrementUnread: { _ in }
         )
 
         presenter.present(isNotificationTabActive: false)
@@ -85,7 +85,7 @@ struct NotificationPresenterTests {
         let presenter = NotificationPresenter(
             preferences: preferences(playSound: false, vibrate: true),
             effects: spy.effects,
-            incrementUnread: {}
+            incrementUnread: { _ in }
         )
 
         presenter.present(isNotificationTabActive: false)
@@ -99,7 +99,7 @@ struct NotificationPresenterTests {
         let presenter = NotificationPresenter(
             preferences: preferences(playSound: false, vibrate: false),
             effects: spy.effects,
-            incrementUnread: {}
+            incrementUnread: { _ in }
         )
 
         presenter.present(isNotificationTabActive: false)

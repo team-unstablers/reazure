@@ -41,7 +41,7 @@ struct StreamingCoordinatorTests {
                 stateDidChange: { self.states.append($0) },
                 configurationDidLoad: { self.configurations.append($0) },
                 didReceiveEvent: { self.events.append($0) },
-                backfillHome: { self.backfillCount += 1 }
+                backfill: { self.backfillCount += 1 }
             )
         }
     }
@@ -140,7 +140,7 @@ struct StreamingCoordinatorTests {
         #expect(h.scheduler.pendingCount == 1)
     }
 
-    @Test func reconnect_backfillsHomeThenOpensAFreshSocket() async {
+    @Test func reconnect_backfillsThenOpensAFreshSocket() async {
         let h = await startedHarness()
         h.socket?.emit(.connected([:]))
         h.socket?.emit(.disconnected("x", 1006))
@@ -150,6 +150,49 @@ struct StreamingCoordinatorTests {
 
         #expect(h.spy.backfillCount == 1)
         #expect(h.provider.createdSockets.count == 2)
+    }
+
+    // MARK: - backfill on every reopen path
+
+    /// The one that matters most. `reconnectNow()` skips the reconnect when the
+    /// socket claims to be healthy — but a socket that survived a suspend can report
+    /// `.connected` over a connection that is already dead, and the events missed in
+    /// the meantime are gone either way (streaming never replays them). So the
+    /// backfill must run *ahead* of that check: gating it on the socket's own view of
+    /// its health would silently drop the recovery in exactly the case a foreground
+    /// return is meant to handle.
+    @Test func reconnectNow_backfillsEvenWhileSocketStillReportsConnected() async {
+        let h = await startedHarness()
+        h.socket?.emit(.connected([:]))
+        let socketsBefore = h.provider.createdSockets.count
+
+        h.coordinator.reconnectNow()   // app returns to the foreground
+
+        #expect(h.spy.backfillCount == 1)                            // gap recovered
+        #expect(h.provider.createdSockets.count == socketsBefore)    // healthy socket left alone
+    }
+
+    /// A restored network path is the other way back in, and misses the same window.
+    @Test func networkRestore_backfills() async {
+        let h = await startedHarness()
+        h.socket?.emit(.connected([:]))
+        h.socket?.emit(.disconnected("x", 1006))
+
+        h.pathMonitor.emit(satisfied: false)
+        h.pathMonitor.emit(satisfied: true)
+
+        #expect(h.spy.backfillCount == 1)
+    }
+
+    /// Signed out / torn down: nothing left to recover into, and a late foreground
+    /// return must not resurrect the session.
+    @Test func reconnectNow_afterStop_doesNotBackfill() async {
+        let h = await startedHarness()
+        h.coordinator.stop()
+
+        h.coordinator.reconnectNow()
+
+        #expect(h.spy.backfillCount == 0)
     }
 
     // MARK: - defect 1: backoff + attempt cap
@@ -303,7 +346,7 @@ struct StreamingCoordinatorTests {
                 stateDidChange: { _ in },
                 configurationDidLoad: { _ in configOnMain.append(Thread.isMainThread) },
                 didReceiveEvent: { _ in },
-                backfillHome: { backfillOnMain.append(Thread.isMainThread) }
+                backfill: { backfillOnMain.append(Thread.isMainThread) }
             )
         )
 
@@ -371,7 +414,11 @@ struct StreamingCoordinatorTests {
 
     /// A path change while the stream is healthy must not churn the socket: a
     /// Wi-Fi↔cellular handoff (`satisfied` throughout) leaves the connection alone.
-    @Test func pathChange_whileConnected_isNoop() async {
+    ///
+    /// The restore edge still backfills — the link *did* drop, so the stream may have
+    /// missed events regardless of what the socket believes about itself — but that
+    /// is a REST refresh, not a reconnect. The socket is what must stay untouched.
+    @Test func pathChange_whileConnected_doesNotChurnSocket() async {
         let h = await startedHarness()
         h.socket?.emit(.connected([:]))
         let socketsBefore = h.provider.createdSockets.count

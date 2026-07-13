@@ -25,6 +25,14 @@ struct reazureApp: App {
     @Environment(\.scenePhase)
     private var scenePhase
 
+    /// Whether the app has been in the background since the last resume. Tracked as
+    /// a flag rather than read from `onChange`'s `oldPhase`, because a resume
+    /// arrives as `.background → .inactive → .active`: by the time `.active` lands,
+    /// the previous phase is `.inactive`, and comparing against `.background` there
+    /// would never match.
+    @State
+    private var wasBackgrounded = false
+
     var body: some Scene {
         WindowGroup {
             AppRootView()
@@ -44,11 +52,25 @@ struct reazureApp: App {
                         .dynamicTypeSize(.large ... .large)
                 }
                 .onChange(of: scenePhase) { _, newPhase in
-                    // Streaming sockets die while suspended; reconnect on return to
-                    // the foreground so the timeline resumes without waiting on the
-                    // backoff (or after it has given up).
-                    if newPhase == .active {
-                        sharedClient.reconnectStreamingIfNeeded()
+                    // Streaming sockets die while suspended, and the stream never
+                    // replays what it missed — so a return from the background both
+                    // reconnects (without waiting on the backoff, or after it has
+                    // given up) and backfills the timelines over REST.
+                    //
+                    // Gated on an actual background round-trip: `.active` alone fires
+                    // for notification banners, the app switcher, Control Center and
+                    // iPad split-view resizes, none of which drop the stream, and
+                    // refreshing on each would be pure churn.
+                    switch newPhase {
+                    case .background:
+                        wasBackgrounded = true
+                    case .active:
+                        if wasBackgrounded {
+                            wasBackgrounded = false
+                            sharedClient.resumeFromBackground()
+                        }
+                    default:
+                        break
                     }
                 }
         }

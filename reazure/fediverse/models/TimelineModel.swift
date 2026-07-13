@@ -46,37 +46,70 @@ class TimelineModel: ObservableObject {
 
     var fetchFunction: FetchFunction?
 
+    /// Guards against overlapping REST refreshes. A backfill can be triggered from
+    /// several sources at once — a foreground return and a restored network path
+    /// routinely land together — and the duplicate fetches would be pure waste,
+    /// since the merge dedupes them anyway. Main-thread confined, like every other
+    /// mutation here.
+    private var isFetching: Bool = false
+
     init(focusPostArea: @escaping () -> Void = {}, fetchFunction: FetchFunction? = nil) {
         self.focusPostArea = focusPostArea
         self.fetchFunction = fetchFunction
     }
-    
+
     func clear() {
         focusState = nil
         statuses = []
     }
-    
-    func update() {
+
+    /// REST-fetches the timeline and merges the result into `statuses`.
+    ///
+    /// - Parameter completion: run on the main thread with the number of entries
+    ///   that were *newly* inserted — zero when the timeline was already up to
+    ///   date, when a fetch is already in flight, or when the fetch failed. Lets a
+    ///   caller tell "caught up on N missed entries" apart from a no-op refresh.
+    ///   Note the initial load reports its count through this too, so a caller that
+    ///   only cares about backfills must make that distinction itself.
+    func update(completion: ((Int) -> Void)? = nil) {
         guard let fetchFunction = fetchFunction else {
+            completion?(0)
             return
         }
-        
+
+        guard !isFetching else {
+            completion?(0)
+            return
+        }
+        isFetching = true
+
         var args = TimelineFetchArgs()
 
         Task {
             do {
                 let statuses = try await fetchFunction(args)
-                
+
                 DispatchQueue.main.async {
+                    var inserted = 0
                     for status in statuses {
-                        self.statuses.insert(status, at: 0)
+                        if self.statuses.insert(status, at: 0).inserted {
+                            inserted += 1
+                        }
                     }
 
                     self.statuses.sort { $0.sortKey > $1.sortKey }
+
+                    self.isFetching = false
+                    completion?(inserted)
                 }
             } catch {
                 // FIXME
                 print(error)
+
+                DispatchQueue.main.async {
+                    self.isFetching = false
+                    completion?(0)
+                }
             }
         }
     }

@@ -38,13 +38,13 @@ struct SessionManagerTests {
             presenter: NotificationPresenter(
                 preferences: silentPreferences(),
                 effects: NotificationPresenter.Effects(playSound: { _ in }, vibrate: {}),
-                incrementUnread: {}
+                incrementUnread: { _ in }
             ),
             focusPostArea: {},
             stateDidChange: { recorder.states.append($0) },
             configurationDidLoad: { recorder.configurations.append($0) },
             isNotificationTabActive: { false },
-            backfillHome: { recorder.backfillCount += 1 }
+            backfill: { recorder.backfillCount += 1 }
         )
     }
 

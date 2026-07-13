@@ -88,8 +88,10 @@ final class StreamingCoordinator {
         var configurationDidLoad: (FediverseServerConfiguration) -> Void
         /// Hand a decoded streaming event to the facade for ingest.
         var didReceiveEvent: (Mastodon.StreamingEvent) -> Void
-        /// Refresh the home timeline over REST just before a reconnect attempt.
-        var backfillHome: () -> Void
+        /// REST-refresh the timelines to recover what the stream missed while it was
+        /// down. Run on every path that reopens the stream, since streaming delivers
+        /// only what arrives after it connects and never replays the gap.
+        var backfill: () -> Void
     }
 
     private let account: Account
@@ -247,7 +249,7 @@ final class StreamingCoordinator {
             // client so the identity guard has exactly one socket to fence.
             client.stop()
 
-            self.callbacks.backfillHome()
+            self.callbacks.backfill()
             self.openConnection()
         }
 
@@ -288,6 +290,16 @@ final class StreamingCoordinator {
     /// untouched so a mere path change never churns a working socket.
     func reconnectNow() {
         guard !stopped else { return }
+
+        // Backfill first, ahead of the socket-state check below. Both callers — a
+        // foreground return and a restored network path — imply the stream was away
+        // for some interval, and streaming never replays what it missed while away.
+        // The socket's *own* view of its health cannot rule that gap out: a suspend
+        // can leave it reporting `.connected` on a connection that is already dead,
+        // and returning early on that would drop the recovery entirely. A redundant
+        // refresh merely dedupes to zero new entries; a permanently missing status
+        // has no such second chance.
+        callbacks.backfill()
 
         attempt = 0
         cancelPendingReconnect()

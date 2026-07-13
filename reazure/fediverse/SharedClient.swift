@@ -89,8 +89,8 @@ class SharedClient: ObservableObject {
     /// Presentation side effects (unread accrual + sound/haptic) for incoming
     /// streaming notifications. The unread count stays a `@Published` property
     /// here; the presenter nudges it through the injected `incrementUnread`.
-    lazy var notificationPresenter = NotificationPresenter(incrementUnread: { [weak self] in
-        self?.unreadNotificationCount += 1
+    lazy var notificationPresenter = NotificationPresenter(incrementUnread: { [weak self] count in
+        self?.unreadNotificationCount += count
     })
 
     // Streaming seams handed to each session's `StreamingCoordinator`. `.shared`
@@ -114,7 +114,7 @@ class SharedClient: ObservableObject {
             stateDidChange: { [weak self] state in self?.streamingState = state },
             configurationDidLoad: { [weak self] configuration in self?.configuration = configuration },
             isNotificationTabActive: { [weak self] in self?.currentTab == .notification },
-            backfillHome: { [weak self] in self?.timeline[.home]?.update() }
+            backfill: { [weak self] in self?.backfillTimelines() }
         ),
         socketProvider: streamingSocketProvider,
         scheduler: streamingScheduler,
@@ -148,11 +148,54 @@ class SharedClient: ObservableObject {
         self.timeline = session.timelines
     }
 
-    /// Forces the active session's stream to reconnect immediately, bypassing the
-    /// backoff. Called when the app returns to the foreground; a no-op while signed
-    /// out or when the stream is already healthy.
-    func reconnectStreamingIfNeeded() {
+    /// Resumes the session after the app has been away: backfills the timelines and
+    /// forces the stream to reconnect immediately, bypassing the backoff. Call this
+    /// on the background → foreground edge; a no-op while signed out.
+    ///
+    /// Both halves are needed. The socket is dead after a suspend, so the stream has
+    /// to be reopened — but reopening alone recovers nothing, because streaming only
+    /// delivers events from the moment it connects and never replays the gap. In a
+    /// client with no offline cache, a REST backfill is the *only* thing that can
+    /// close it.
+    func resumeFromBackground() {
         sessionManager.reconnectStreaming()
+    }
+
+    /// REST-refreshes home + notifications to recover whatever the stream missed
+    /// while it was down (app suspended, network dropped, socket dead).
+    ///
+    /// Driven by `StreamingCoordinator` — every path that reopens the stream runs
+    /// this first, so the gap is closed no matter which one triggered it: the
+    /// foreground return, a restored network path, or a backoff reconnect.
+    ///
+    /// Recovered notifications accrue unread exactly like streamed ones, but the
+    /// alert fires at most once for the whole batch (see
+    /// `NotificationPresenter.presentBackfill`). Timelines dedupe on insert, so a
+    /// redundant call is cheap and reports zero new entries.
+    func backfillTimelines() {
+        timeline[.home]?.update()
+
+        guard let notifications = timeline[.notifications] else {
+            return
+        }
+
+        // An empty notifications timeline means the user has never opened the tab
+        // (its `onAppear` does the first fetch), so this refresh is its *first* fill,
+        // not a recovery: what it returns is the account's existing notification
+        // history, which was never "missed" and must not land as unread. Only a
+        // timeline that already had entries can meaningfully have fallen behind.
+        let isFirstFill = notifications.statuses.isEmpty
+
+        notifications.update { [weak self] recovered in
+            guard let self, !isFirstFill else {
+                return
+            }
+
+            self.notificationPresenter.presentBackfill(
+                count: recovered,
+                isNotificationTabActive: self.currentTab == .notification
+            )
+        }
     }
 
     /// Tears down the current session and returns the facade to its signed-out
