@@ -71,8 +71,8 @@ class TimelineModel: ObservableObject {
                     for status in statuses {
                         self.statuses.insert(status, at: 0)
                     }
-                    
-                    self.statuses.sort { $0.id > $1.id }
+
+                    self.statuses.sort { $0.sortKey > $1.sortKey }
                 }
             } catch {
                 // FIXME
