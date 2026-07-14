@@ -88,14 +88,24 @@ protocol StatusAdaptor: AnyObject {
     
     // extension
     var deleted: Bool { get }
-    
+    /// Whether this post is hidden because its author was blocked.
+    var blocked: Bool { get }
+
     var reblog: (any StatusAdaptor)? { get }
-    
+
     var emojis: [EmojiAdaptor] { get }
     var mentions: [MentionAdaptor] { get }
-    
+
     var attachments: [AttachmentAdaptor] { get }
     var application: ApplicationAdaptor? { get }
+}
+
+extension StatusAdaptor {
+    /// No wire format carries a "the reader blocked this author" flag — a blocked
+    /// post simply stops being delivered. It only ever becomes `true` through
+    /// `MaskedStatusAdaptor`, when a block is applied to rows already on screen,
+    /// so every backend adaptor inherits `false` from here.
+    var blocked: Bool { false }
 }
 
 protocol NotificationAdaptor: AnyObject {
@@ -128,6 +138,10 @@ class MaskedStatusAdaptor: StatusAdaptor {
         
         var deleted: Bool {
             _parent.deleted
+        }
+
+        var blocked: Bool {
+            _parent.blocked
         }
 
         var id: String { status.id }
@@ -163,9 +177,10 @@ class MaskedStatusAdaptor: StatusAdaptor {
     
     var favourited: Bool
     var reblogged: Bool
-    
+
     var deleted: Bool
-    
+    var blocked: Bool
+
     var id: String { status.id }
     var createdAt: String { status.createdAt }
     
@@ -187,13 +202,14 @@ class MaskedStatusAdaptor: StatusAdaptor {
     var attachments: [AttachmentAdaptor] { status.attachments }
     var application: ApplicationAdaptor? { status.application }
     
-    init(status: StatusAdaptor, favourited: Bool? = nil, reblogged: Bool? = nil, deleted: Bool? = nil) {
+    init(status: StatusAdaptor, favourited: Bool? = nil, reblogged: Bool? = nil, deleted: Bool? = nil, blocked: Bool? = nil) {
         self.status = status
-        
+
         self.favourited = favourited ?? status.favourited
         self.reblogged = reblogged ?? status.reblogged
         self.deleted = deleted ?? false
-        
+        self.blocked = blocked ?? false
+
         if let reblog = status.reblog {
             self.reblog = ReblogMaskedStatusAdaptor(self)
         }

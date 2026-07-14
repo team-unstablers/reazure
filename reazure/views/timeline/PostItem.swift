@@ -160,6 +160,11 @@ struct PostItem: View, Equatable {
             .if(status.deleted) {
                 $0.strikethrough()
             }
+            // 차단된 사용자의 포스트: 서버는 더 이상 내려주지 않지만, 이미 화면에
+            // 올라온 행은 남으므로 흐리게 처리한다.
+            .if(status.blocked) {
+                $0.strikethrough().opacity(0.35)
+            }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             // .containerRelativeFrame([.horizontal], alignment: .topLeading)
@@ -177,6 +182,7 @@ struct PostItem: View, Equatable {
             lhs.status.favourited == rhs.status.favourited &&
             lhs.status.reblogged == rhs.status.reblogged &&
             lhs.status.deleted == rhs.status.deleted &&
+            lhs.status.blocked == rhs.status.blocked &&
             lhs.status.account.avatar == rhs.status.account.avatar &&
             lhs.relatedAccount?.avatar == rhs.relatedAccount?.avatar &&
             lhs.flags == rhs.flags

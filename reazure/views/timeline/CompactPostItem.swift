@@ -54,6 +54,9 @@ struct CompactPostItem: View, Equatable {
             .if(status.deleted) {
                 $0.strikethrough()
             }
+            .if(status.blocked) {
+                $0.strikethrough().opacity(0.35)
+            }
             // .containerRelativeFrame([.horizontal], alignment: .topLeading)
             .frame(maxWidth: .infinity, alignment: .topLeading)
             .contentShape(Rectangle())
@@ -68,6 +71,7 @@ struct CompactPostItem: View, Equatable {
             lhs.status.favourited == rhs.status.favourited &&
             lhs.status.reblogged == rhs.status.reblogged &&
             lhs.status.deleted == rhs.status.deleted &&
+            lhs.status.blocked == rhs.status.blocked &&
             lhs.status.account.avatar == rhs.status.account.avatar &&
             lhs.relatedAccount?.avatar == rhs.relatedAccount?.avatar &&
             lhs.flags == rhs.flags

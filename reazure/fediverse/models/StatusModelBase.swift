@@ -14,10 +14,17 @@ protocol StatusModelActionPerformer: AnyObject {
     func statusModel(wantsUnfavourite status: StatusAdaptor, model: any StatusModelBase) async throws
     
     func statusModel(wantsDelete status: StatusAdaptor, model: any StatusModelBase) async throws
-    
+
     func statusModel(wantsResolve statusId: String, model: any StatusModelBase) async throws -> StatusAdaptor
-    
+
     func statusModel(wantsComposeReplyTo status: StatusAdaptor, model: any StatusModelBase) async throws
+
+    /// Blocks the author of `status`. Unlike the other actions this one is not
+    /// scoped to `model`: once the block lands, *every* row by that author has to
+    /// be masked, which the performer's owner does on its behalf.
+    func statusModel(wantsBlockAuthorOf status: StatusAdaptor, model: any StatusModelBase) async throws
+
+    func statusModel(wantsReport request: ReportRequest, model: any StatusModelBase) async throws
 }
 
 protocol StatusModelBase: AnyObject, Identifiable, Hashable {
@@ -149,8 +156,39 @@ extension StatusModelBase {
         guard let status = resolve(depth: depth) else {
             return
         }
-        
+
         try await performer?.statusModel(wantsComposeReplyTo: status, model: self)
+    }
+
+    /// Blocks the author of the status at `depth` (the boosted author for a
+    /// boost, matching every other action in the context menu).
+    ///
+    /// Deliberately *not* optimistic: a block hides content, so the rows are
+    /// masked only once the server has confirmed it — and the masking is a
+    /// timeline-wide sweep the performer's owner runs, not something this single
+    /// model can do to itself.
+    func blockAuthor(of depth: Int) async throws {
+        guard let status = resolve(depth: depth) else {
+            return
+        }
+
+        try await performer?.statusModel(wantsBlockAuthorOf: status.canonical, model: self)
+    }
+
+    func report(_ request: ReportRequest) async throws {
+        try await performer?.statusModel(wantsReport: request, model: self)
+    }
+
+    /// Masks every status in this row authored — or boosted — by `accountId`.
+    /// Main-thread confined, like every other mutation here.
+    func applyBlock(accountId: String) {
+        if let status = resolve(depth: 0), status.involves(accountId: accountId), !status.blocked {
+            replace(at: 0, with: status.mask(blocked: true))
+        }
+
+        for (index, parent) in parents.enumerated() where parent.involves(accountId: accountId) && !parent.blocked {
+            parents[index] = parent.mask(blocked: true)
+        }
     }
     
     func resolveParent(of status: StatusAdaptor) async throws {

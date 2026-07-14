@@ -221,6 +221,40 @@ final class FakeMisskeyRequestPerformer: MisskeyRequestPerforming {
     }
 }
 
+// MARK: - FediverseClient
+
+/// Records the calls the action performer routes through the `FediverseClient`
+/// seam, so the performer can be exercised without a live Mastodon/Misskey client.
+final class FakeFediverseClient: FediverseClient {
+    private(set) var blockedAccountIds: [String] = []
+    private(set) var reports: [ReportRequest] = []
+
+    /// When set, the write-path methods throw this after recording the call.
+    var errorToThrow: Error?
+
+    func fetchHomeTimeline() async throws -> [any StatusAdaptor] { [] }
+    func fetchNotifications() async throws -> [any NotificationAdaptor] { [] }
+    func resolveStatus(id: String) async throws -> any StatusAdaptor { FakeStatusAdaptor(id: id) }
+
+    func post(content: String, visibility: StatusVisibility, replyTo: String?) async throws {}
+
+    func favourite(id: String) async throws {}
+    func unfavourite(id: String) async throws {}
+    func reblog(id: String) async throws {}
+    func unreblog(id: String) async throws {}
+    func delete(id: String) async throws {}
+
+    func block(accountId: String) async throws {
+        blockedAccountIds.append(accountId)
+        if let errorToThrow { throw errorToThrow }
+    }
+
+    func report(_ request: ReportRequest) async throws {
+        reports.append(request)
+        if let errorToThrow { throw errorToThrow }
+    }
+}
+
 // MARK: - Performer
 
 enum FakePerformerError: Error {
@@ -238,6 +272,8 @@ final class FakePerformer: StatusModelActionPerformer {
     private(set) var deleteCount = 0
     private(set) var resolveCount = 0
     private(set) var composeReplyCount = 0
+    private(set) var blockCount = 0
+    private(set) var reportCount = 0
 
     private(set) var lastReblogId: String?
     private(set) var lastUnreblogId: String?
@@ -246,6 +282,8 @@ final class FakePerformer: StatusModelActionPerformer {
     private(set) var lastDeleteId: String?
     private(set) var lastResolveId: String?
     private(set) var lastComposeReplyId: String?
+    private(set) var lastBlockedAccountId: String?
+    private(set) var lastReport: ReportRequest?
 
     /// When set, `wantsResolve` returns this adaptor; otherwise it throws.
     var resolveResult: StatusAdaptor?
@@ -294,6 +332,18 @@ final class FakePerformer: StatusModelActionPerformer {
     func statusModel(wantsComposeReplyTo status: StatusAdaptor, model: any StatusModelBase) async throws {
         composeReplyCount += 1
         lastComposeReplyId = status.id
+        if let errorToThrow { throw errorToThrow }
+    }
+
+    func statusModel(wantsBlockAuthorOf status: StatusAdaptor, model: any StatusModelBase) async throws {
+        blockCount += 1
+        lastBlockedAccountId = status.account.id
+        if let errorToThrow { throw errorToThrow }
+    }
+
+    func statusModel(wantsReport request: ReportRequest, model: any StatusModelBase) async throws {
+        reportCount += 1
+        lastReport = request
         if let errorToThrow { throw errorToThrow }
     }
 }

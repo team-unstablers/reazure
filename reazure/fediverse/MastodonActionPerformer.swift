@@ -28,9 +28,18 @@ final class FediverseActionPerformer: StatusModelActionPerformer {
     /// `PostArea`; this performer only publishes onto it.
     private let replyTo: CurrentValueSubject<StatusAdaptor?, Never>
 
-    init(client: (any FediverseClient)? = nil, replyTo: CurrentValueSubject<StatusAdaptor?, Never>) {
+    /// Called with the blocked account id once the server has accepted a block.
+    /// A block is the one action whose effect is not confined to the model that
+    /// raised it — every row by that author has to be hidden — so the owner
+    /// (`SharedClient`, which holds the timelines) applies it.
+    private let didBlockAccount: (String) -> Void
+
+    init(client: (any FediverseClient)? = nil,
+         replyTo: CurrentValueSubject<StatusAdaptor?, Never>,
+         didBlockAccount: @escaping (String) -> Void = { _ in }) {
         self.client = client
         self.replyTo = replyTo
+        self.didBlockAccount = didBlockAccount
     }
 
     func statusModel(wantsReblog status: any StatusAdaptor, model: any StatusModelBase) async throws {
@@ -63,6 +72,21 @@ final class FediverseActionPerformer: StatusModelActionPerformer {
 
     func statusModel(wantsComposeReplyTo status: any StatusAdaptor, model: any StatusModelBase) async throws {
         self.replyTo.send(status)
+    }
+
+    func statusModel(wantsBlockAuthorOf status: any StatusAdaptor, model: any StatusModelBase) async throws {
+        guard let client = self.client else {
+            return
+        }
+
+        let accountId = status.account.id
+
+        try await client.block(accountId: accountId)
+        self.didBlockAccount(accountId)
+    }
+
+    func statusModel(wantsReport request: ReportRequest, model: any StatusModelBase) async throws {
+        try await self.client?.report(request)
     }
 
     /// Submits a new post through the active REST client.

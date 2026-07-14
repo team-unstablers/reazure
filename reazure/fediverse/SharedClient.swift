@@ -82,9 +82,14 @@ class SharedClient: ObservableObject {
     let replyTo = CurrentValueSubject<StatusAdaptor?, Never>(nil)
 
     /// Concrete executor for status-model write actions (reblog/favourite/reply/
-    /// delete/resolve). Owns the active `FediverseClient` reference, which is
-    /// mirrored in via `client`'s `didSet` on account change.
-    lazy var actionPerformer = FediverseActionPerformer(replyTo: replyTo)
+    /// delete/resolve/block/report). Owns the active `FediverseClient` reference,
+    /// which is mirrored in via `client`'s `didSet` on account change.
+    lazy var actionPerformer = FediverseActionPerformer(
+        replyTo: replyTo,
+        didBlockAccount: { [weak self] accountId in
+            self?.applyBlock(accountId: accountId)
+        }
+    )
 
     /// Presentation side effects (unread accrual + sound/haptic) for incoming
     /// streaming notifications. The unread count stays a `@Published` property
@@ -195,6 +200,19 @@ class SharedClient: ObservableObject {
                 count: recovered,
                 isNotificationTabActive: self.currentTab == .notification
             )
+        }
+    }
+
+    /// Hides every row by a just-blocked account across the live timelines.
+    ///
+    /// Driven by the action performer once the server has accepted the block.
+    /// Streaming will not deliver that account's posts again, so this only has to
+    /// deal with what is already on screen.
+    func applyBlock(accountId: String) {
+        DispatchQueue.main.async {
+            for timeline in self.timeline.values {
+                timeline.applyBlock(accountId: accountId)
+            }
         }
     }
 

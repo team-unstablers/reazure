@@ -117,4 +117,16 @@ class TimelineModel: ObservableObject {
     func prepend(_ status: StatusModel) {
         statuses.insert(status, at: 0)
     }
+
+    /// Masks every row authored or boosted by `accountId`.
+    ///
+    /// The server stops *delivering* a blocked account's posts, but it cannot
+    /// retract what the stream already handed us — and with no offline cache there
+    /// is nothing to re-read the timeline from. So the rows on screen are masked in
+    /// place rather than refetched.
+    func applyBlock(accountId: String) {
+        for status in statuses {
+            status.applyBlock(accountId: accountId)
+        }
+    }
 }
