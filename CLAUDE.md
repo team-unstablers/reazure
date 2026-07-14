@@ -45,7 +45,7 @@ A singleton (`SharedClient.shared`) that owns nearly all app state and wears thr
 
 1. **State container** — the active `MastodonClient`, `StreamingClient`, the `[TimelineType: TimelineModel]` map, current `Tab`, `streamingState`, unread count, and the `replyTo` subject. Setting `account` (via `didAccountChanged`) tears down and rebuilds the clients + timelines and reconnects streaming.
 2. **`StreamingClientDelegate`** — receives decoded `update`/`notification` events and `prepend`s new `StatusModel`/`NotificationModel`s to the right timeline; plays sound / haptics on notifications. On disconnect it auto-reconnects after ~1s.
-3. **`StatusModelActionPerformer`** (in `SharedClient+StatusModelActionPerformer.swift`) — the concrete executor for reblog/favourite/reply/delete/resolve, delegating to `MastodonClient`.
+3. **`StatusModelActionPerformer`** — the concrete executor (`FediverseActionPerformer` in `fediverse/MastodonActionPerformer.swift`) for reblog/favourite/reply/delete/resolve/block/report, delegating to the active `FediverseClient`.
 
 It also routes keyboard shortcuts: `handleShortcut` → `currentTimeline.handleShortcut`.
 
@@ -56,11 +56,13 @@ It also routes keyboard shortcuts: `handleShortcut` → `currentTimeline.handleS
 
 ### Fediverse abstraction + Adaptor pattern (`fediverse/`)
 
-The `fediverse/` layer is deliberately server-agnostic so backends beyond Mastodon can be added. `FediverseServer` is a `.mastodon` / `.misskey` enum — **Misskey is stubbed** (`throw FediverseAPIError.notImplemented`); Mastodon is the only real implementation.
+The `fediverse/` layer is deliberately server-agnostic so backends beyond Mastodon can be added. `FediverseServer` is a `.mastodon` / `.misskey` enum, and **both are implemented**: `MastodonClient` and `MisskeyClient` each conform to `FediverseClient` (`fediverse/FediverseClient.swift`), hiding their differences (Misskey favourite ⇔ `⭐` reaction, boost ⇔ renote, report ⇔ user-level `users/report-abuse`) behind uniform method names. Adding an API call means touching both conformers.
 
 Views and models never touch `Mastodon.Status` directly. They depend on **protocols** in `fediverse/models/adaptors.swift` (`StatusAdaptor`, `NotificationAdaptor`, `AccountAdaptor`, `AttachmentAdaptor`, …). `MastodonStatusAdaptor`/`MastodonNotificationAdaptor` (in `mastodon/objdef/Status.swift`) wrap the raw `Mastodon.*` decodable types (namespaced under the `Mastodon` enum in `mastodon/objdef/`).
 
-**Optimistic UI via masking:** favourite/reblog/delete do not mutate the underlying adaptor. `StatusModelBase` (`fediverse/models/StatusModelBase.swift`) calls the performer, then replaces the status with a `MaskedStatusAdaptor` overlay (`status.mask(favourited:reblogged:deleted:)`) that reports the new flag while proxying everything else. When editing action logic, preserve this "call API, then swap in a masked copy" flow.
+**Optimistic UI via masking:** favourite/reblog/delete do not mutate the underlying adaptor. `StatusModelBase` (`fediverse/models/StatusModelBase.swift`) calls the performer, then replaces the status with a `MaskedStatusAdaptor` overlay (`status.mask(favourited:reblogged:deleted:blocked:)`) that reports the new flag while proxying everything else. When editing action logic, preserve this "call API, then swap in a masked copy" flow.
+
+**Moderation (App Store guideline 1.2):** the post context menu offers **report** and **block** on other people's posts. Both are confirmed before they run (`PostRowPresentation` → `SetupContextMenuModifier`), and unlike the other actions they are **not** optimistic — a block masks rows only after the server accepts it, via a timeline-wide sweep (`SharedClient.applyBlock(accountId:)` → `TimelineModel.applyBlock`) that greys out every row the account authored *or* boosted. There is no persistent block list: the server stops delivering the account's posts, so only what is already on screen needs hiding.
 
 ### Models (`fediverse/models/`)
 
