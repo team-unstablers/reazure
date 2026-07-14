@@ -22,12 +22,17 @@ struct NativePostContextMenuInner: View {
 
     let depth: Int
 
+    /// Asks the row to present a modal (confirmation / report sheet).
+    let present: (PostRowPresentation) -> Void
+
     var body: some View {
         if let descriptor = PostContextMenuDescriptor.build(
             for: model,
             depth: depth,
             ownAccountId: sharedClient.account?.id,
-            openURL: { openURL($0) }
+            openURL: { openURL($0) },
+            supportsReportForwarding: sharedClient.account?.server.supportsReportForwarding ?? false,
+            present: present
         ) {
             Group {
                 ActivityPubMarkupText(content: descriptor.header.text,

@@ -28,6 +28,9 @@ struct ProgrammaticContextMenuHost: UIViewRepresentable {
     let depth: Int
     let presentRequest: AnyPublisher<TimelineModel.FocusState, Never>
 
+    /// Asks the row to present a modal (confirmation / report sheet).
+    let present: (PostRowPresentation) -> Void
+
     func makeUIView(context: Context) -> PassthroughMenuButton {
         let button = PassthroughMenuButton()
         button.showsMenuAsPrimaryAction = true
@@ -44,14 +47,21 @@ struct ProgrammaticContextMenuHost: UIViewRepresentable {
         let depth = self.depth
         let ownAccountId = sharedClient.account?.id
         let openURL = self.openURL
+        let present = self.present
+        let supportsReportForwarding = sharedClient.account?.server.supportsReportForwarding ?? false
 
         let focusInfo = TimelineModel.FocusState(id: model.id, depth: depth)
 
         context.coordinator.focusInfo = focusInfo
         context.coordinator.makeMenu = {
-            PostContextMenuDescriptor.build(for: model, depth: depth, ownAccountId: ownAccountId) {
-                openURL($0)
-            }?.asUIMenu()
+            PostContextMenuDescriptor.build(
+                for: model,
+                depth: depth,
+                ownAccountId: ownAccountId,
+                openURL: { openURL($0) },
+                supportsReportForwarding: supportsReportForwarding,
+                present: present
+            )?.asUIMenu()
         }
     }
 

@@ -40,11 +40,21 @@ struct PostContextMenuDescriptor {
 extension PostContextMenuDescriptor {
     /// Builds the menu for the status at `depth` of `model`. Returns `nil`
     /// while the status at that depth is not resolved yet.
+    ///
+    /// - Parameters:
+    ///   - supportsReportForwarding: whether this account's server can forward a
+    ///     report to the instance hosting the reported account (Mastodon can,
+    ///     Misskey cannot).
+    ///   - present: asks the row to present a modal. The moderation actions go
+    ///     through this rather than acting immediately, because they are
+    ///     destructive and are confirmed (block/delete) or composed (report) first.
     static func build(
         for model: StatusModel,
         depth: Int,
         ownAccountId: String?,
-        openURL: @escaping (URL) -> Void
+        openURL: @escaping (URL) -> Void,
+        supportsReportForwarding: Bool = false,
+        present: @escaping (PostRowPresentation) -> Void = { _ in }
     ) -> PostContextMenuDescriptor? {
         guard let status = model.resolve(depth: depth) else {
             return nil
@@ -109,10 +119,43 @@ extension PostContextMenuDescriptor {
         if canonical.account.id == ownAccountId {
             sections.append([
                 .action(Action(title: NSLocalizedString("CONTEXT_MENU_DELETE", comment: ""), destructive: true) {
-                    Task {
-                        try? await model.delete(depth: depth)
-                    }
+                    present(.confirm(PostRowConfirmation(kind: .delete, acct: canonical.account.acct) {
+                        Task {
+                            try? await model.delete(depth: depth)
+                        }
+                    }))
                 })
+            ])
+        } else {
+            // Moderation. Only ever offered for someone else's post: a report of
+            // your own post is meaningless, and both backends refuse a self-block.
+            sections.append([
+                .action(Action(title: NSLocalizedString("CONTEXT_MENU_REPORT", comment: ""), destructive: true) {
+                    present(.report(PostReportTarget(
+                        accountId: canonical.account.id,
+                        acct: canonical.account.acct,
+                        statusId: canonical.id,
+                        statusUrl: canonical.url,
+                        // Only a remote account (`user@host`) has another instance
+                        // a report could be forwarded to.
+                        canForward: supportsReportForwarding && canonical.account.acct.contains("@"),
+                        submit: { request in
+                            do {
+                                try await model.report(request)
+                                return true
+                            } catch {
+                                return false
+                            }
+                        }
+                    )))
+                }),
+                .action(Action(title: NSLocalizedString("CONTEXT_MENU_BLOCK", comment: ""), destructive: true) {
+                    present(.confirm(PostRowConfirmation(kind: .block, acct: canonical.account.acct) {
+                        Task {
+                            try? await model.blockAuthor(of: depth)
+                        }
+                    }))
+                }),
             ])
         }
 
