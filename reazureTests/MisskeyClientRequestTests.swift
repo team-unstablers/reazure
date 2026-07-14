@@ -97,6 +97,51 @@ struct MisskeyClientRequestTests {
         #expect(fake.lastCall?.body["replyId"] as? String == "42")
     }
 
+    // MARK: - moderation
+
+    @Test func block_callsBlockingCreateWithUserId() async throws {
+        let fake = FakeMisskeyRequestPerformer()
+        let client = MisskeyClient(using: account(), performer: fake)
+
+        try await client.block(accountId: "u1")
+
+        #expect(fake.lastCall?.url.absoluteString == "https://ex.example/api/blocking/create")
+        #expect(fake.lastCall?.body["userId"] as? String == "u1")
+    }
+
+    /// Misskey reports a *user*, not a note, and rejects an empty comment — so the
+    /// category and the reported note's URL have to be folded into the comment.
+    @Test func report_foldsCategoryAndNoteURLIntoTheComment() async throws {
+        let fake = FakeMisskeyRequestPerformer()
+        let client = MisskeyClient(using: account(), performer: fake)
+
+        try await client.report(ReportRequest(
+            accountId: "u1",
+            statusId: "n1",
+            statusUrl: "https://ex.example/notes/n1",
+            comment: "harassment",
+            category: .violation,
+            forward: true       // no Misskey equivalent; must not break the call
+        ))
+
+        #expect(fake.lastCall?.url.absoluteString == "https://ex.example/api/users/report-abuse")
+        #expect(fake.lastCall?.body["userId"] as? String == "u1")
+        #expect(fake.lastCall?.body["comment"] as? String == "[violation]\nharassment\nhttps://ex.example/notes/n1")
+    }
+
+    /// The comment is optional in our UI but mandatory (≥ 1 character) on the
+    /// server, so the folded-in category alone must keep it non-empty.
+    @Test func report_withoutComment_stillSendsANonEmptyComment() async throws {
+        let fake = FakeMisskeyRequestPerformer()
+        let client = MisskeyClient(using: account(), performer: fake)
+
+        try await client.report(ReportRequest(accountId: "u1", category: .other))
+
+        let comment = try #require(fake.lastCall?.body["comment"] as? String)
+        #expect(comment == "[other]")
+        #expect(!comment.isEmpty)
+    }
+
     @Test func delete_decodesEmptyBodyWithoutThrowing() async throws {
         let fake = FakeMisskeyRequestPerformer()
         fake.responseJSON = ""   // empty body → treated as {} and decoded as EmptyResponse

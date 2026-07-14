@@ -29,4 +29,14 @@ protocol FediverseClient: AnyObject {
     func reblog(id: String) async throws
     func unreblog(id: String) async throws
     func delete(id: String) async throws
+
+    // MARK: - moderation
+
+    /// Blocks an account. Both backends stop delivering the blocked account's
+    /// posts afterwards; hiding what is already on screen is the caller's job
+    /// (see `SharedClient.applyBlock(accountId:)`).
+    func block(accountId: String) async throws
+
+    /// Files an abuse report with the user's own server moderators.
+    func report(_ request: ReportRequest) async throws
 }

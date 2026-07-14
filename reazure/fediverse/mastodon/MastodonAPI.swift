@@ -22,9 +22,14 @@ struct MastodonEndpoint: RawRepresentable {
     static let notifications = MastodonEndpoint(rawValue: "/api/v1/notifications")
     static let homeTimeline = MastodonEndpoint(rawValue: "/api/v1/timelines/home")
     static let streaming = MastodonEndpoint(rawValue: "/api/v1/streaming")
-    
+    static let reports = MastodonEndpoint(rawValue: "/api/v1/reports")
+
     static func status(of statusId: String) -> MastodonEndpoint {
         return MastodonEndpoint(rawValue: "/api/v1/statuses/\(statusId)")
+    }
+
+    static func block(account accountId: String) -> MastodonEndpoint {
+        return MastodonEndpoint(rawValue: "/api/v1/accounts/\(accountId)/block")
     }
     
     static func favourite(of statusId: String) -> MastodonEndpoint {
@@ -295,6 +300,37 @@ class MastodonClient {
                                  expects: Mastodon.Status.self,
                                  method: .post)
     }
+
+    func blockAccount(accountId: String) async throws -> Mastodon.Relationship {
+        return try await request(to: MastodonEndpoint.block(account: accountId),
+                                 expects: Mastodon.Relationship.self,
+                                 method: .post)
+    }
+
+    /// `POST /api/v1/reports`. The status is passed as the Rails-style
+    /// `status_ids[]` array parameter — a report always concerns exactly one post
+    /// here, so the single-element form is enough.
+    func submitReport(_ report: ReportRequest) async throws -> Mastodon.Report {
+        var parameters: [String: String] = [
+            "account_id": report.accountId,
+            "category": report.category.rawValue,
+            "forward": report.forward ? "true" : "false"
+        ]
+
+        if !report.comment.isEmpty {
+            // The server rejects comments longer than 1000 characters.
+            parameters["comment"] = String(report.comment.prefix(1000))
+        }
+
+        if let statusId = report.statusId {
+            parameters["status_ids[]"] = statusId
+        }
+
+        return try await request(to: MastodonEndpoint.reports,
+                                 expects: Mastodon.Report.self,
+                                 method: .post,
+                                 parameters: parameters)
+    }
 }
 
 extension MastodonClient: FediverseClient {
@@ -332,6 +368,14 @@ extension MastodonClient: FediverseClient {
 
     func delete(id: String) async throws {
         try await deleteStatus(statusId: id)
+    }
+
+    func block(accountId: String) async throws {
+        _ = try await blockAccount(accountId: accountId)
+    }
+
+    func report(_ request: ReportRequest) async throws {
+        _ = try await submitReport(request)
     }
 }
 

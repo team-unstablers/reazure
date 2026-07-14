@@ -25,6 +25,8 @@ struct MisskeyEndpoint: RawRepresentable {
     static let notesUnrenote = MisskeyEndpoint(rawValue: "/api/notes/unrenote")
     static let reactionsCreate = MisskeyEndpoint(rawValue: "/api/notes/reactions/create")
     static let reactionsDelete = MisskeyEndpoint(rawValue: "/api/notes/reactions/delete")
+    static let blockingCreate = MisskeyEndpoint(rawValue: "/api/blocking/create")
+    static let usersReportAbuse = MisskeyEndpoint(rawValue: "/api/users/report-abuse")
     static let meta = MisskeyEndpoint(rawValue: "/api/meta")
 
     static func miAuthCheck(session: String) -> MisskeyEndpoint {
@@ -168,6 +170,21 @@ class MisskeyClient {
                               expects: Misskey.EmptyResponse.self)
     }
 
+    func blockingCreate(userId: String) async throws {
+        _ = try await request(to: .blockingCreate,
+                              body: ["userId": userId],
+                              expects: Misskey.EmptyResponse.self)
+    }
+
+    /// `POST /api/users/report-abuse`. The server requires a non-empty comment
+    /// (1–2048 characters) and takes no note reference, so the caller is expected
+    /// to have folded the reported note into `comment` (see `misskeyComment`).
+    func reportAbuse(userId: String, comment: String) async throws {
+        _ = try await request(to: .usersReportAbuse,
+                              body: ["userId": userId, "comment": String(comment.prefix(2048))],
+                              expects: Misskey.EmptyResponse.self)
+    }
+
     // MARK: - static (config / login)
 
     /// Instance metadata (`POST /api/meta`, unauthenticated) — supplies the max
@@ -226,5 +243,35 @@ extension MisskeyClient: FediverseClient {
 
     func delete(id: String) async throws {
         try await deleteNote(noteId: id)
+    }
+
+    func block(accountId: String) async throws {
+        try await blockingCreate(userId: accountId)
+    }
+
+    /// Report ⇔ `users/report-abuse`, which reports a *user*, not a note.
+    func report(_ request: ReportRequest) async throws {
+        try await reportAbuse(userId: request.accountId, comment: request.misskeyComment)
+    }
+}
+
+private extension ReportRequest {
+    /// Misskey has no per-note report endpoint: `users/report-abuse` takes a user
+    /// id and one free-form comment, which must be non-empty. So the category and
+    /// the reported note's URL are folded into the comment — the same thing the
+    /// Misskey web UI does when you report from a note.
+    var misskeyComment: String {
+        var lines: [String] = ["[\(category.rawValue)]"]
+
+        let comment = self.comment.trimmingCharacters(in: .whitespacesAndNewlines)
+        if !comment.isEmpty {
+            lines.append(comment)
+        }
+
+        if let statusUrl = statusUrl {
+            lines.append(statusUrl)
+        }
+
+        return lines.joined(separator: "\n")
     }
 }

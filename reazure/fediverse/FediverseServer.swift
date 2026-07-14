@@ -18,6 +18,18 @@ enum FediverseServer: Codable {
             return address
         }
     }
+
+    /// Whether an abuse report can be forwarded to the instance hosting the
+    /// reported account. Mastodon's `forward` flag; Misskey's `users/report-abuse`
+    /// has no equivalent, so the toggle is hidden there rather than ignored.
+    var supportsReportForwarding: Bool {
+        switch self {
+        case .mastodon:
+            return true
+        case .misskey:
+            return false
+        }
+    }
     
     enum CodingKeys: String, CodingKey {
         case serverSoftware

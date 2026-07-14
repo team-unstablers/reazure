@@ -70,6 +70,59 @@ struct MastodonClientRequestTests {
         #expect(call?.parameters["in_reply_to_id"] == "42")
     }
 
+    // MARK: - moderation
+
+    @Test func block_postsToTheAccountBlockEndpoint() async throws {
+        let fake = FakeRequestPerformer()
+        fake.responseJSON = #"{"id":"acc-1"}"#
+        let client = MastodonClient(using: account(), performer: fake)
+
+        try await client.block(accountId: "acc-1")
+
+        #expect(fake.lastCall?.method == "POST")
+        #expect(fake.lastCall?.url.absoluteString == "https://ex.example/api/v1/accounts/acc-1/block")
+    }
+
+    /// The reported status rides along as the Rails-style `status_ids[]` array
+    /// parameter — plain `status_ids` would be dropped by the server.
+    @Test func report_forwardsAccountStatusCategoryAndForwardFlag() async throws {
+        let fake = FakeRequestPerformer()
+        fake.responseJSON = #"{"id":"report-1"}"#
+        let client = MastodonClient(using: account(), performer: fake)
+
+        try await client.report(ReportRequest(
+            accountId: "acc-1",
+            statusId: "s1",
+            statusUrl: "https://other.example/@villain/s1",
+            comment: "spam",
+            category: .spam,
+            forward: true
+        ))
+
+        let call = fake.lastCall
+        #expect(call?.method == "POST")
+        #expect(call?.url.absoluteString == "https://ex.example/api/v1/reports")
+        #expect(call?.parameters["account_id"] == "acc-1")
+        #expect(call?.parameters["status_ids[]"] == "s1")
+        #expect(call?.parameters["comment"] == "spam")
+        #expect(call?.parameters["category"] == "spam")
+        #expect(call?.parameters["forward"] == "true")
+    }
+
+    /// A comment is optional on Mastodon; an empty one must be left out entirely
+    /// rather than sent as an empty string.
+    @Test func report_withoutComment_omitsTheParameter() async throws {
+        let fake = FakeRequestPerformer()
+        fake.responseJSON = #"{"id":"report-1"}"#
+        let client = MastodonClient(using: account(), performer: fake)
+
+        try await client.report(ReportRequest(accountId: "acc-1", category: .other))
+
+        #expect(fake.lastCall?.parameters["comment"] == nil)
+        #expect(fake.lastCall?.parameters["status_ids[]"] == nil)
+        #expect(fake.lastCall?.parameters["forward"] == "false")
+    }
+
     /// A decode mismatch surfaces as a thrown error rather than a trap — the class
     /// of failure the `deleteStatus` bug fell into.
     @Test func request_onDecodeMismatch_throwsRatherThanCrashing() async {
