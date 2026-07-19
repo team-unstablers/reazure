@@ -64,6 +64,8 @@ Views and models never touch `Mastodon.Status` directly. They depend on **protoc
 
 **Moderation (App Store guideline 1.2):** the post context menu offers **report** and **block** on other people's posts. Both are confirmed before they run (`PostRowPresentation` → `SetupContextMenuModifier`), and unlike the other actions they are **not** optimistic — a block masks rows only after the server accepts it, via a timeline-wide sweep (`SharedClient.applyBlock(accountId:)` → `TimelineModel.applyBlock`) that greys out every row the account authored *or* boosted. There is no persistent block list: the server stops delivering the account's posts, so only what is already on screen needs hiding.
 
+The other two halves of the guideline are the **EULA gate** and **content filtering**. `EULASheet` (`views/about/EULASheet.swift`) is presented from `AddAccountView` *before* OAuth starts and gates it — agreement is deliberately **not** persisted, since the sheet is shown on every account add. Filtering is content warnings and sensitive media: `StatusAdaptor.spoilerText` / `.sensitive` (Mastodon `spoiler_text`/`sensitive`, Misskey `cw`/`files[].isSensitive`) fold the body and blur attachment thumbnails until the reader opts in. Neither property has a protocol-extension default — a default would be inherited by `MaskedStatusAdaptor` and silently unfold the warning the moment a post is favourited or boosted. Reveal state lives on `StatusModel.revealedDepths` (per depth, since parents carry their own warnings) so that taps and the `h`/`l` shortcuts share it; `PostItem` is `.equatable()`, so it must stay part of `==`.
+
 ### Models (`fediverse/models/`)
 
 - `TimelineModel` — holds an `OrderedSet<StatusModel>`, a `focusState` (`{id, depth}`), and a `fetchFunction`. Streaming `prepend`s; `update()` REST-fetches and merges (sorted by id desc).
@@ -73,7 +75,7 @@ Views and models never touch `Mastodon.Status` directly. They depend on **protoc
 
 Vim-style. `ShortcutHandler` is a `UIViewControllerRepresentable` whose view controller becomes first responder and registers `UIKeyCommand`s (this was recently reworked from a SwiftUI approach to fix iPad shortcut handling — prefer the UIKit path). `ShortcutKey` cases:
 
-- `h` / `l` — collapse / expand the focused thread depth
+- `h` / `l` — fold / reveal a content warning, then collapse / expand the focused thread depth (layered: on a CW'd post the first press acts on the warning, the next on the tree)
 - `j` / `k` — focus next / previous status (arrow keys are aliased to these)
 - `f` — toggle favourite · `t` — toggle reblog (boost) · `r` — reply
 - `u` — toggle the post-composer focus
