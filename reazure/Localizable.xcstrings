@@ -123,6 +123,50 @@
         }
       }
     },
+    "ACTION_AGREE_AND_CONTINUE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Agree and Continue"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同意して続ける"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "동의하고 계속"
+          }
+        }
+      }
+    },
+    "ACTION_DECLINE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Decline"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "同意しない"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "동의하지 않음"
+          }
+        }
+      }
+    },
     "ACTION_HIDE_CONTENT": {
       "localizations": {
         "en": {
@@ -871,6 +915,380 @@
           "stringUnit": {
             "state": "translated",
             "value": "오류: %@"
+          }
+        }
+      }
+    },
+    "EULA_INTRO": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Please review and agree to the following terms before signing in to a server."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "サーバーにログインする前に、以下の規約をご確認のうえ同意してください。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "서버에 로그인하기 전에, 아래 약관을 확인하고 동의해 주십시오."
+          }
+        }
+      }
+    },
+    "EULA_LINK_CONTACT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reports and inquiries: contact+reazure@unstabler.pl"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "通報・お問い合わせ: contact+reazure@unstabler.pl"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "신고 및 문의: contact+reazure@unstabler.pl"
+          }
+        }
+      }
+    },
+    "EULA_LINK_PRIVACY_POLICY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Privacy Policy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "プライバシーポリシー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개인정보 처리방침"
+          }
+        }
+      }
+    },
+    "EULA_LINK_SERVER_RULES": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "View the rules of the server you are joining"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "接続先サーバーの規則を確認する"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "접속할 서버의 규칙 확인하기"
+          }
+        }
+      }
+    },
+    "EULA_NAVIGATION_TITLE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Terms of Use & Community Policy"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用規約およびコミュニティポリシー"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이용약관 및 커뮤니티 정책"
+          }
+        }
+      }
+    },
+    "EULA_SECTION_ENFORCEMENT_BODY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reports submitted directly to the developer at the contact address below are reviewed within 24 hours of receipt. Content found to be in violation is removed, and the user who provided it is ejected from the app."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "以下の連絡先より開発者へ直接寄せられた通報は、受領から24時間以内に確認します。違反が認められたコンテンツは削除措置を行い、当該利用者による本アプリの利用を停止します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "아래 연락처로 개발자에게 직접 접수된 신고는, 접수 시점으로부터 24시간 이내에 검토합니다. 위반이 확인된 콘텐츠는 삭제 조치를 취하고, 해당 이용자의 앱 이용을 차단합니다."
+          }
+        }
+      }
+    },
+    "EULA_SECTION_ENFORCEMENT_TITLE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5. Handling of Reports"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5. 通報への対応"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "5. 신고 처리"
+          }
+        }
+      }
+    },
+    "EULA_SECTION_PROHIBITED_BODY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The developer maintains a zero-tolerance policy toward objectionable content and abusive behavior. The following are strictly prohibited while using this app:\n\n• Harassment, threats, or stalking of others\n• Discriminatory or hateful speech, and incitement to violence\n• Posting or distributing illegal content, including child sexual abuse material\n• Posting sexually explicit or graphically violent content without a content warning\n• Spam, fraud, or impersonation"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "開発者は、不快なコンテンツ（objectionable content）および虐待的な行為に対して一切容認しない方針をとります。本アプリの利用にあたり、以下の行為は固く禁じられます。\n\n• 他者への嫌がらせ、脅迫、ストーキング\n• 差別的・憎悪的な表現、暴力の扇動\n• 児童性的虐待コンテンツを含む違法コンテンツの投稿および拡散\n• 性的に露骨な、または残虐な内容を閲覧注意（CW）なしに投稿する行為\n• スパム、詐欺、なりすまし"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "개발자는 불쾌감을 주는 콘텐츠(objectionable content)와 학대적 행위에 대해 무관용 원칙을 적용합니다. 다음 행위는 이 앱의 이용 중에 일절 허용되지 않습니다.\n\n• 타인에 대한 괴롭힘, 협박, 스토킹\n• 차별·혐오 표현 및 폭력의 선동\n• 아동 성착취물을 비롯한 불법 콘텐츠의 게시 및 유포\n• 성적으로 노골적이거나 폭력적인 콘텐츠를 열람 경고 없이 게시하는 행위\n• 스팸, 사기, 타인 사칭"
+          }
+        }
+      }
+    },
+    "EULA_SECTION_PROHIBITED_TITLE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. Prohibited Content and Conduct"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. 禁止されるコンテンツおよび行為"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "2. 금지되는 콘텐츠 및 행위"
+          }
+        }
+      }
+    },
+    "EULA_SECTION_REPORTING_BODY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you encounter objectionable content, you can report it from the menu shown by long-pressing the post. Reports are delivered to the moderators of that server.\n\nWhen you block a user, posts written or boosted by that user are hidden from your timeline immediately and are no longer delivered to you."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "不快なコンテンツを見つけた場合は、該当の投稿を長押しして表示されるメニューから通報できます。通報内容は当該サーバーの運営者に送信されます。\n\n特定の利用者をブロックすると、その利用者が投稿またはブーストした投稿はタイムラインから即座に非表示となり、以後配信されなくなります。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "불쾌한 콘텐츠를 발견한 경우, 해당 포스트를 길게 눌러 표시되는 메뉴에서 신고할 수 있습니다. 신고 내용은 해당 서버의 운영자에게 전달됩니다.\n\n특정 이용자를 차단하면, 그 이용자가 작성하거나 부스트한 포스트는 타임라인에서 즉시 가려지며 이후로도 전달되지 않습니다."
+          }
+        }
+      }
+    },
+    "EULA_SECTION_REPORTING_TITLE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4. Reporting and Blocking"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4. 通報およびブロック"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "4. 신고 및 차단"
+          }
+        }
+      }
+    },
+    "EULA_SECTION_RESPONSIBILITY_BODY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You are solely responsible for all content you post. You must also comply with the rules of the server you connect to; where those rules and these terms conflict, the stricter of the two applies."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "利用者は、自らが投稿するすべてのコンテンツについて単独で責任を負います。また、接続先サーバーが定める規則も併せて遵守する必要があり、サーバー規則と本規約が抵触する場合はより厳格な方が適用されます。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이용자는 본인이 게시하는 모든 콘텐츠에 대하여 단독으로 책임을 집니다. 또한 접속한 서버가 정하는 규칙을 함께 준수해야 하며, 서버 규칙과 이 약관이 충돌하는 경우 보다 엄격한 쪽이 적용됩니다."
+          }
+        }
+      }
+    },
+    "EULA_SECTION_RESPONSIBILITY_TITLE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. User Responsibility"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. 利用者の責任"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "3. 이용자의 책임"
+          }
+        }
+      }
+    },
+    "EULA_SECTION_SERVICE_BODY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "re;azure is a client application for connecting to ActivityPub-based servers such as Mastodon and Misskey. The app does not host or relay any posts; all content shown belongs to the server you connect to."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "re;azureは、MastodonやMisskeyなどのActivityPub準拠サーバーに接続するためのクライアントアプリケーションです。本アプリは投稿をホストまたは中継せず、表示されるすべてのコンテンツは接続先のサーバーに帰属します。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "re;azure는 Mastodon, Misskey 등 ActivityPub 기반 서버에 접속하기 위한 클라이언트 애플리케이션입니다. 이 앱은 게시물을 호스팅하거나 중계하지 않으며, 표시되는 모든 콘텐츠는 이용자가 접속한 서버에 귀속됩니다."
+          }
+        }
+      }
+    },
+    "EULA_SECTION_SERVICE_TITLE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. Nature of the Service"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. サービスの性質"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1. 서비스의 성격"
+          }
+        }
+      }
+    },
+    "EULA_SECTION_TERMINATION_BODY": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you violate these terms, the developer may terminate your use of the app without prior notice. This software is provided \"as is\" under the MIT license, without warranty of any kind, express or implied."
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "本規約に違反した場合、開発者は事前の通知なく利用者による本アプリの利用を停止することがあります。本ソフトウェアはMITライセンスのもと「現状のまま」提供され、明示・黙示を問わずいかなる保証も行いません。"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "이 약관을 위반하는 경우, 개발자는 사전 통지 없이 이용자의 앱 이용을 중단시킬 수 있습니다. 이 소프트웨어는 MIT 라이선스에 따라 \"있는 그대로\" 제공되며, 명시적이든 묵시적이든 어떠한 보증도 하지 않습니다."
+          }
+        }
+      }
+    },
+    "EULA_SECTION_TERMINATION_TITLE": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6. Termination and Disclaimer"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6. 利用停止および免責"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "6. 이용 중단 및 면책"
           }
         }
       }

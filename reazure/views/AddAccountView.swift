@@ -290,6 +290,10 @@ struct AddAccountView: View {
     @StateObject
     private var viewModel = AddAccountViewModel()
 
+    /// 이용약관 동의 시트. OAuth 인증에 앞서 반드시 거쳐야 한다.
+    @State
+    private var showEULA = false
+
     var completionHandler: (() -> Void)?
 
     var body: some View {
@@ -303,9 +307,7 @@ struct AddAccountView: View {
 
                 HStack {
                     Button("ACTION_START_OAUTH") {
-                        viewModel.performAddAccount {
-                            completionHandler?()
-                        }
+                        showEULA = true
                     }
                     .disabled(!viewModel.validated || viewModel.isBusy)
 
@@ -357,6 +359,13 @@ struct AddAccountView: View {
                 .listRowInsets(EdgeInsets())
         }
         .navigationTitle("ADD_ACCOUNT_NAVIGATION_TITLE")
+        .sheet(isPresented: $showEULA) {
+            EULASheet(serverAddress: viewModel.serverAddress) {
+                viewModel.performAddAccount {
+                    completionHandler?()
+                }
+            }
+        }
         .onAppear {
             viewModel.setup(accountManager: accountManager)
         }
