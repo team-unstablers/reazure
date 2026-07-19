@@ -46,10 +46,21 @@ struct CompactPostItem: View, Equatable {
                         compact: true
                     )
                 }.padding(.trailing, 2)
-                ActivityPubMarkupText(element: status.parsedContent, emojos: status.emojis)
-                    .equatable()
-                    .foregroundColor(textColor)
+                // 컴팩트 모드는 한 줄만 표시하므로 펼치기 어포던스를 둘 자리가 없다.
+                // 열람 경고가 걸린 포스트는 본문 대신 경고 문구만 노출한다.
+                if let spoilerText = status.spoilerText {
+                    HStack(spacing: 4) {
+                        Image(systemName: "eye.slash.fill")
+                        Text(verbatim: spoilerText)
+                    }
+                    .foregroundColor(.secondary)
                     .lineLimit(1)
+                } else {
+                    ActivityPubMarkupText(element: status.parsedContent, emojos: status.emojis)
+                        .equatable()
+                        .foregroundColor(textColor)
+                        .lineLimit(1)
+                }
             }
             .if(status.deleted) {
                 $0.strikethrough()

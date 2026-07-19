@@ -123,6 +123,28 @@
         }
       }
     },
+    "ACTION_HIDE_CONTENT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hide"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "隠す"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "숨기기"
+          }
+        }
+      }
+    },
     "ACTION_LOGOUT": {
       "localizations": {
         "en": {
@@ -141,6 +163,28 @@
           "stringUnit": {
             "state": "translated",
             "value": "로그아웃"
+          }
+        }
+      }
+    },
+    "ACTION_SHOW_CONTENT": {
+      "localizations": {
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Show"
+          }
+        },
+        "ja": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "表示"
+          }
+        },
+        "ko": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "표시"
           }
         }
       }

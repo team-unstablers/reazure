@@ -43,7 +43,12 @@ struct PostItem: View, Equatable {
     // var type: PostItemType = .normal
     
     var expandButtonHandler: (StatusAdaptor) -> Void = { _ in }
-    
+
+    /// 열람 경고(CW)가 걸린 본문의 펼침 여부. 어댑터를 마스킹하지 않고 뷰 로컬
+    /// 상태로 두어, 스트리밍 갱신이 행을 다시 그려도 사용자의 선택이 유지되도록 한다.
+    @State
+    private var contentRevealed: Bool = false
+
     var background: Color {
         if flags.contains(.rebloggedByOthers) {
             return palette.postItemRebloggedBackground
@@ -62,10 +67,35 @@ struct PostItem: View, Equatable {
         return palette.postItemNormalForeground
     }
     
+    /// 본문. 열람 경고가 있는 경우 경고 문구만 노출하고, 사용자가 명시적으로
+    /// 펼치기 전까지 본문을 감춘다.
+    @ViewBuilder
+    var contentBody: some View {
+        if let spoilerText = status.spoilerText {
+            ContentWarningBanner(spoilerText: spoilerText, revealed: contentRevealed) {
+                contentRevealed.toggle()
+            }
+
+            if contentRevealed {
+                ActivityPubMarkupText(element: status.parsedContent, emojos: status.emojis)
+                    .equatable()
+                    .foregroundColor(textColor)
+            }
+        } else {
+            ActivityPubMarkupText(element: status.parsedContent, emojos: status.emojis)
+                .equatable()
+                .foregroundColor(textColor)
+        }
+    }
+
     var attachment: some View {
         Group {
             if !status.attachments.isEmpty {
-                AttachmentRow(attachments: status.attachments, statusId: status.id)
+                AttachmentRow(
+                    attachments: status.attachments,
+                    statusId: status.id,
+                    sensitive: status.sensitive
+                )
             }
 
             if let relatedAccount = self.relatedAccount {
@@ -124,11 +154,9 @@ struct PostItem: View, Equatable {
                         }
                     }
                     .lineLimit(1)
-                    ActivityPubMarkupText(element: status.parsedContent, emojos: status.emojis)
-                        .equatable()
-                        .foregroundColor(textColor)
-                    
-                    
+
+                    self.contentBody
+
                     self.attachment
                     
                     HStack(alignment: .firstTextBaseline) {
@@ -190,6 +218,36 @@ struct PostItem: View, Equatable {
     }
 }
 
+/// 열람 경고(CW) 문구와 본문 펼침/접기 토글을 겸하는 헤더입니다.
+struct ContentWarningBanner: View {
+    @Environment(\.appFontMetrics)
+    var appFontMetrics: AppFontMetrics
+
+    var spoilerText: String
+    var revealed: Bool
+    var toggleHandler: () -> Void
+
+    var body: some View {
+        Button(action: toggleHandler) {
+            HStack(alignment: .firstTextBaseline, spacing: 4) {
+                Image(systemName: revealed ? "eye.fill" : "eye.slash.fill")
+                Text(verbatim: spoilerText)
+                    .bold()
+                    .multilineTextAlignment(.leading)
+                Spacer(minLength: 8)
+                Text(revealed ? "ACTION_HIDE_CONTENT" : "ACTION_SHOW_CONTENT")
+                    .underline()
+            }
+            .font(appFontMetrics.caption)
+            .foregroundColor(.secondary)
+            .padding(.vertical, 4)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
 /// 첨부된 이미지 썸네일을 가로로 나열합니다.
 struct AttachmentRow: View {
     @Environment(\.openWindow)
@@ -197,15 +255,27 @@ struct AttachmentRow: View {
 
     var attachments: [AttachmentAdaptor]
     var statusId: String
+    /// 민감한 콘텐츠로 표시된 첨부인지 여부. 참이면 사용자가 한 번 두드려
+    /// 해제하기 전까지 썸네일을 흐리게 가리고 갤러리도 열지 않는다.
+    var sensitive: Bool = false
 
     @State private var presentedGallery: AttachmentGalleryContext?
+    @State private var mediaRevealed: Bool = false
+
+    private var isObscured: Bool {
+        sensitive && !mediaRevealed
+    }
 
     var body: some View {
         HStack {
             ForEach(attachments, id: \.id) { attachment in
                 if attachment.type == "image" {
-                    AttachmentThumbnail(attachment: attachment) {
-                        openGallery(tappedId: attachment.id)
+                    AttachmentThumbnail(attachment: attachment, obscured: isObscured) {
+                        if isObscured {
+                            mediaRevealed = true
+                        } else {
+                            openGallery(tappedId: attachment.id)
+                        }
                     }
                 }
             }
@@ -238,6 +308,8 @@ struct AttachmentRow: View {
 /// preview_url이 없거나 로딩 중일 때는 중립 placeholder를 표시합니다.
 private struct AttachmentThumbnail: View {
     var attachment: AttachmentAdaptor
+    /// 민감한 콘텐츠로 가려진 상태인지 여부.
+    var obscured: Bool = false
     var onTap: () -> Void
 
     var body: some View {
@@ -254,6 +326,18 @@ private struct AttachmentThumbnail: View {
                 .fill(Color(uiColor: .systemGray5))
                 .frame(width: 64, height: 64)
         }
+        // blur는 뷰 경계 밖으로 번지므로, 흐리게 처리한 뒤 다시 잘라낸다.
+        .blur(radius: obscured ? 16 : 0)
+        .frame(width: 64, height: 64)
+        .clipped()
+        .overlay {
+            if obscured {
+                Image(systemName: "eye.slash.fill")
+                    .foregroundStyle(.white)
+                    .shadow(color: .black.opacity(0.6), radius: 2)
+            }
+        }
+        .contentShape(Rectangle())
         .onTapGesture {
             onTap()
         }
@@ -301,6 +385,7 @@ fileprivate extension String {
         PostItem(status: status)
         PostItem(status: PreviewSamples.reblogStatus)
         PostItem(status: status, relatedAccount: status.account, flags: .favouritedByOthers)
+        PostItem(status: PreviewSamples.sensitiveStatus)
     }
 }
 #endif

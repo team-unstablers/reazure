@@ -80,9 +80,16 @@ protocol StatusAdaptor: AnyObject {
     
     var content: String { get }
     var parsedContent: HTMLElement { get }
-    
+
+    /// The author-supplied content warning (Mastodon `spoiler_text`, Misskey `cw`).
+    /// A non-empty value means the body stays folded until the reader opts in.
+    var spoilerText: String? { get }
+    /// Whether the attached media is flagged as sensitive and must be obscured
+    /// until the reader opts in.
+    var sensitive: Bool { get }
+
     var account: AccountAdaptor { get }
-    
+
     var favourited: Bool { get }
     var reblogged: Bool { get }
     
@@ -155,9 +162,12 @@ class MaskedStatusAdaptor: StatusAdaptor {
         
         var content: String { status.content }
         var parsedContent: HTMLElement { status.parsedContent }
-        
+
+        var spoilerText: String? { status.spoilerText }
+        var sensitive: Bool { status.sensitive }
+
         var account: AccountAdaptor { status.account }
-        
+
         var reblog: (any StatusAdaptor)? { status.reblog }
         
         var emojis: [EmojiAdaptor] { status.emojis }
@@ -192,10 +202,13 @@ class MaskedStatusAdaptor: StatusAdaptor {
     
     var content: String { status.content }
     var parsedContent: HTMLElement { status.parsedContent }
-    
+
+    var spoilerText: String? { status.spoilerText }
+    var sensitive: Bool { status.sensitive }
+
     var account: AccountAdaptor { status.account }
-    
-    
+
+
     var emojis: [EmojiAdaptor] { status.emojis }
     var mentions: [MentionAdaptor] { status.mentions }
     

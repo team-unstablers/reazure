@@ -103,7 +103,12 @@ extension Mastodon {
         
         let content: String
         let account: UserProfile
-        
+
+        /// Decoded as optional: Mastodon always sends both, but Pleroma/Akkoma and
+        /// other compatible implementations are inconsistent about them.
+        let spoiler_text: String?
+        let sensitive: Bool?
+
         var favourited: Bool
         var reblogged: Bool
         
@@ -282,7 +287,17 @@ class MastodonStatusAdaptor: StatusAdaptor {
     
     var content: String { _status.content }
     var parsedContent: HTMLElement
-    
+
+    /// An empty `spoiler_text` means "no content warning"; normalize it to `nil`
+    /// so the views only have to check for the presence of a value.
+    var spoilerText: String? {
+        guard let spoilerText = _status.spoiler_text, !spoilerText.isEmpty else {
+            return nil
+        }
+        return spoilerText
+    }
+    var sensitive: Bool { _status.sensitive ?? false }
+
     var account: AccountAdaptor
     
     var favourited: Bool { _status.favourited }

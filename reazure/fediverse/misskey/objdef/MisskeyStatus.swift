@@ -108,6 +108,18 @@ class MisskeyStatusAdaptor: StatusAdaptor {
     var content: String
     var parsedContent: HTMLElement
 
+    /// Misskey's `cw` is the direct counterpart of Mastodon's `spoiler_text`; an
+    /// empty string is normalized to `nil` the same way.
+    var spoilerText: String? {
+        guard let cw = _note.cw, !cw.isEmpty else {
+            return nil
+        }
+        return cw
+    }
+    /// Misskey flags sensitivity per drive file rather than per note, so the note
+    /// counts as sensitive when any of its attachments is.
+    var sensitive: Bool { (_note.files ?? []).contains { $0.isSensitive == true } }
+
     var account: AccountAdaptor
 
     /// Misskey has no Mastodon-style favourite; the app maps favourite onto a
@@ -135,7 +147,8 @@ class MisskeyStatusAdaptor: StatusAdaptor {
         self.visibility = StatusVisibility(misskey: note.visibility)
 
         // No MFM parsing: escape the plaintext and turn newlines into <br>, then
-        // reuse the shared HTML parser. CW/spoiler folding is out of scope.
+        // reuse the shared HTML parser. The `cw` text itself is surfaced through
+        // `spoilerText` and rendered as plain text by the views.
         let html = misskeyHTMLEscape(note.text ?? "")
             .replacingOccurrences(of: "\n", with: "<br>")
         self.content = html

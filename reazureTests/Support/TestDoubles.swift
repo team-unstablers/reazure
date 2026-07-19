@@ -62,6 +62,8 @@ final class FakeStatusAdaptor: StatusAdaptor {
     var visibility: StatusVisibility
     var content: String
     var parsedContent: HTMLElement
+    var spoilerText: String?
+    var sensitive: Bool
     var account: AccountAdaptor
     var favourited: Bool
     var reblogged: Bool
@@ -79,6 +81,8 @@ final class FakeStatusAdaptor: StatusAdaptor {
         url: String? = nil,
         visibility: StatusVisibility = .publicType,
         content: String = "",
+        spoilerText: String? = nil,
+        sensitive: Bool = false,
         account: AccountAdaptor? = nil,
         favourited: Bool = false,
         reblogged: Bool = false,
@@ -96,6 +100,8 @@ final class FakeStatusAdaptor: StatusAdaptor {
         self.visibility = visibility
         self.content = content
         self.parsedContent = HTMLElement(name: "__ROOT__")
+        self.spoilerText = spoilerText
+        self.sensitive = sensitive
         self.account = account ?? FakeAccountAdaptor()
         self.favourited = favourited
         self.reblogged = reblogged

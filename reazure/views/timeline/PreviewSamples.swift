@@ -29,6 +29,8 @@ enum PreviewSamples {
                 avatar: avatarURL,
                 emojis: []
             ),
+            spoiler_text: nil,
+            sensitive: false,
             favourited: false,
             reblogged: false,
             reblog: nil,
@@ -65,6 +67,8 @@ enum PreviewSamples {
                 avatar: avatarURL,
                 emojis: []
             ),
+            spoiler_text: nil,
+            sensitive: false,
             favourited: false,
             reblogged: false,
             reblog: nil,
@@ -95,6 +99,8 @@ enum PreviewSamples {
                 avatar: avatarURL,
                 emojis: []
             ),
+            spoiler_text: nil,
+            sensitive: false,
             favourited: false,
             reblogged: false,
             reblog: Box(rawStatus),
@@ -105,7 +111,46 @@ enum PreviewSamples {
         )
     }
 
+    /// 열람 경고(CW)와 민감한 미디어가 모두 걸린 상태.
+    static var rawSensitiveStatus: Mastodon.Status {
+        Mastodon.Status(
+            id: "3",
+            created_at: "2019-11-26T23:27:32.000Z",
+            in_reply_to_id: nil,
+            url: "",
+            visibility: .publicType,
+            content: "본문은 열람 경고를 해제해야 보입니다.",
+            account: Mastodon.UserProfile(
+                id: "1",
+                username: "cheesekun",
+                acct: "cheesekun",
+                url: "",
+                display_name: "치즈군★",
+                avatar: avatarURL,
+                emojis: []
+            ),
+            spoiler_text: "스포일러 주의",
+            sensitive: true,
+            favourited: false,
+            reblogged: false,
+            reblog: nil,
+            emojis: [],
+            mentions: [],
+            media_attachments: (2234...2235).map { id in
+                Mastodon.MediaAttachment(
+                    id: "\(id)",
+                    type: "image",
+                    url: avatarURL,
+                    preview_url: avatarURL,
+                    remote_url: avatarURL
+                )
+            },
+            application: Mastodon.Application(name: "re;azure")
+        )
+    }
+
     static var status: MastodonStatusAdaptor { MastodonStatusAdaptor(from: rawStatus) }
+    static var sensitiveStatus: MastodonStatusAdaptor { MastodonStatusAdaptor(from: rawSensitiveStatus) }
     static var mentionStatus: MastodonStatusAdaptor { MastodonStatusAdaptor(from: rawMentionStatus) }
     static var reblogStatus: MastodonStatusAdaptor { MastodonStatusAdaptor(from: rawReblogStatus) }
 }
