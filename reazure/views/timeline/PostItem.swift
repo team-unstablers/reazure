@@ -42,12 +42,12 @@ struct PostItem: View, Equatable {
     var flags: PostItemFlags = []
     // var type: PostItemType = .normal
     
-    var expandButtonHandler: (StatusAdaptor) -> Void = { _ in }
+    /// 열람 경고(CW)가 걸린 본문이 펼쳐져 있는지 여부. 상태의 소유자는
+    /// `StatusModel`이며, 탭과 단축키(`h`/`l`)가 같은 값을 공유한다.
+    var contentRevealed: Bool = false
 
-    /// 열람 경고(CW)가 걸린 본문의 펼침 여부. 어댑터를 마스킹하지 않고 뷰 로컬
-    /// 상태로 두어, 스트리밍 갱신이 행을 다시 그려도 사용자의 선택이 유지되도록 한다.
-    @State
-    private var contentRevealed: Bool = false
+    var expandButtonHandler: (StatusAdaptor) -> Void = { _ in }
+    var revealButtonHandler: () -> Void = { }
 
     var background: Color {
         if flags.contains(.rebloggedByOthers) {
@@ -72,9 +72,7 @@ struct PostItem: View, Equatable {
     @ViewBuilder
     var contentBody: some View {
         if let spoilerText = status.spoilerText {
-            ContentWarningBanner(spoilerText: spoilerText, revealed: contentRevealed) {
-                contentRevealed.toggle()
-            }
+            ContentWarningBanner(spoilerText: spoilerText, revealed: contentRevealed, toggleHandler: revealButtonHandler)
 
             if contentRevealed {
                 ActivityPubMarkupText(element: status.parsedContent, emojos: status.emojis)
@@ -118,7 +116,12 @@ struct PostItem: View, Equatable {
     
     var body: some View {
         if let reblog = status.reblog {
-            PostItem(status: reblog, relatedAccount: status.account, flags: flags.union(.reblogged), expandButtonHandler: expandButtonHandler)
+            PostItem(status: reblog,
+                     relatedAccount: status.account,
+                     flags: flags.union(.reblogged),
+                     contentRevealed: contentRevealed,
+                     expandButtonHandler: expandButtonHandler,
+                     revealButtonHandler: revealButtonHandler)
         } else {
             HStack(alignment: .top, spacing: 0) {
                 HStack(spacing: 0) {
@@ -213,7 +216,10 @@ struct PostItem: View, Equatable {
             lhs.status.blocked == rhs.status.blocked &&
             lhs.status.account.avatar == rhs.status.account.avatar &&
             lhs.relatedAccount?.avatar == rhs.relatedAccount?.avatar &&
-            lhs.flags == rhs.flags
+            lhs.flags == rhs.flags &&
+            // 이 비교를 빠뜨리면 .equatable()이 갱신을 삼켜, 펼침 상태가 바뀌어도
+            // 행이 다시 그려지지 않는다.
+            lhs.contentRevealed == rhs.contentRevealed
         )
     }
 }

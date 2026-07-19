@@ -126,7 +126,15 @@ extension TimelineModel {
         let focusedStatus: any StatusAdaptor = (focusState.depth == 0) ?
             model.status :
             model.parents[focusState.depth - 1]
-        
+
+        // 열람 경고가 걸린 포스트에서는 먼저 본문을 펼친다. 스레드 확장은 그 다음
+        // 눌렀을 때 일어난다 — 경고를 지나치지 않고 한 번 멈추게 하기 위함이다.
+        if model.hasContentWarning(at: focusState.depth),
+           !model.isRevealed(at: focusState.depth) {
+            model.revealedDepths.insert(focusState.depth)
+            return
+        }
+
         if focusedStatus.replyToId == nil {
             return
         }
@@ -149,9 +157,15 @@ extension TimelineModel {
         }
         
         let model = statuses[index]
-        
+
+        // 펼쳐 둔 열람 경고가 있으면 그것부터 되돌린다. (expandFocused의 역순)
+        if model.isRevealed(at: focusState.depth) {
+            model.revealedDepths.remove(focusState.depth)
+            return
+        }
+
         model.expandedDepth = Swift.max(0, focusState.depth - 1)
-        
+
         self.focusState = FocusState(id: model.id, depth: model.expandedDepth)
     }
     

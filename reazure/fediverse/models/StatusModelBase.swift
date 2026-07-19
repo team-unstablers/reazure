@@ -37,12 +37,41 @@ protocol StatusModelBase: AnyObject, Identifiable, Hashable {
     var parents: [StatusAdaptor] { get set }
     
     var expandedDepth: Int { get set }
-    
-    
+
+    /// 열람 경고(CW)를 펼쳐 둔 depth의 집합.
+    ///
+    /// 뷰 로컬 상태가 아니라 모델에 두는 이유는, 탭과 단축키(`h`/`l`)라는 두 경로가
+    /// 같은 상태를 공유해야 하기 때문이다. 부모 글도 각자 열람 경고를 가질 수 있으므로
+    /// 포스트 단위가 아닌 depth 단위로 관리한다.
+    var revealedDepths: Set<Int> { get set }
+
     var resolving: Bool { get set }
 }
 
 extension StatusModelBase {
+    /// `depth`의 포스트에 열람 경고가 걸려 있는지 여부. 부스트인 경우 감춰야 할
+    /// 본문은 부스트된 원본 쪽이므로 `canonical`을 기준으로 판정한다.
+    func hasContentWarning(at depth: Int) -> Bool {
+        resolve(depth: depth)?.canonical.spoilerText != nil
+    }
+
+    func isRevealed(at depth: Int) -> Bool {
+        revealedDepths.contains(depth)
+    }
+
+    /// 열람 경고가 걸린 포스트에 한해 본문 펼침 상태를 뒤집는다.
+    func toggleReveal(at depth: Int) {
+        guard hasContentWarning(at: depth) else {
+            return
+        }
+
+        if revealedDepths.contains(depth) {
+            revealedDepths.remove(depth)
+        } else {
+            revealedDepths.insert(depth)
+        }
+    }
+
     func resolve(depth: Int) -> StatusAdaptor? {
         if depth == 0 {
             return status

@@ -75,19 +75,28 @@ struct PostGroup: View {
                 .setupFocusHandler(with: focusInfo, handler: focusChangeHandler)
                 .setupContextMenu(model, depth: depth, presentRequest: contextMenuRequest)
         } else {
-            let item = PostItem(status: status, relatedAccount: relatedAccount, flags: flags) { _ in
-                if (expanded) {
-                    model.expandedDepth = depth
-                } else {
-                    model.expandedDepth = depth + 1
-                }
-                
-                if (model.parents.count < depth + 1) {
-                    Task {
-                        try? await model.resolveParent(of: status)
+            let item = PostItem(
+                status: status,
+                relatedAccount: relatedAccount,
+                flags: flags,
+                contentRevealed: model.isRevealed(at: depth),
+                expandButtonHandler: { _ in
+                    if (expanded) {
+                        model.expandedDepth = depth
+                    } else {
+                        model.expandedDepth = depth + 1
                     }
+
+                    if (model.parents.count < depth + 1) {
+                        Task {
+                            try? await model.resolveParent(of: status)
+                        }
+                    }
+                },
+                revealButtonHandler: {
+                    model.toggleReveal(at: depth)
                 }
-            }
+            )
                 .equatable()
                 .setupPostItemView(depth: depth, focused: focused, palette: palette)
                 .setupFocusHandler(with: focusInfo, handler: focusChangeHandler)

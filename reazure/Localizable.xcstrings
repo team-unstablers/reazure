@@ -2432,19 +2432,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Collapse reply tree"
+            "value": "Fold content warning · collapse reply tree"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "返信ツリーを閉じる"
+            "value": "閲覧注意を閉じる・返信ツリーを閉じる"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "답글 트리 닫기"
+            "value": "열람 경고 접기 · 답글 트리 닫기"
           }
         }
       }
@@ -2498,19 +2498,19 @@
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "Expand reply tree"
+            "value": "Reveal content warning · expand reply tree"
           }
         },
         "ja": {
           "stringUnit": {
             "state": "translated",
-            "value": "返信ツリーを開く"
+            "value": "閲覧注意を開く・返信ツリーを開く"
           }
         },
         "ko": {
           "stringUnit": {
             "state": "translated",
-            "value": "답글 트리 열기"
+            "value": "열람 경고 펼치기 · 답글 트리 열기"
           }
         }
       }

@@ -32,6 +32,9 @@ class StatusModel: StatusModelBase, ObservableObject {
     var expandedDepth: Int = 0
 
     @Published
+    var revealedDepths: Set<Int> = []
+
+    @Published
     var resolving: Bool = false
 
     convenience init(adaptor status: StatusAdaptor, performer: Performer? = nil) {
