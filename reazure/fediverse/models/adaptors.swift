@@ -51,6 +51,9 @@ protocol AttachmentAdaptor {
     var previewUrl: String? { get }
     var url: String { get }
     var originUrl: String? { get }
+    /// The author-supplied alternative text (Mastodon `description`, Misskey
+    /// `comment`). Empty descriptions are normalised to `nil`.
+    var altText: String? { get }
 }
 
 protocol AccountAdaptor {

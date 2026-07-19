@@ -47,6 +47,36 @@ final class FakeAccountAdaptor: AccountAdaptor {
     }
 }
 
+// MARK: - AttachmentAdaptor
+
+/// Minimal `AttachmentAdaptor` stand-in. `type` follows Mastodon's vocabulary
+/// (`image` / `video` / `gifv` / `audio` / …), which is what both backends
+/// report.
+final class FakeAttachmentAdaptor: AttachmentAdaptor {
+    var id: String
+    var type: String
+    var previewUrl: String?
+    var url: String
+    var originUrl: String?
+    var altText: String?
+
+    init(
+        id: String = "attachment-1",
+        type: String = "image",
+        previewUrl: String? = "https://example.com/preview.png",
+        url: String = "https://example.com/media.png",
+        originUrl: String? = nil,
+        altText: String? = nil
+    ) {
+        self.id = id
+        self.type = type
+        self.previewUrl = previewUrl
+        self.url = url
+        self.originUrl = originUrl
+        self.altText = altText
+    }
+}
+
 // MARK: - StatusAdaptor
 
 /// A pure in-memory `StatusAdaptor` with no networking or parsing dependencies.

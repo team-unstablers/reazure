@@ -87,6 +87,12 @@ class MisskeyAttachmentAdaptor: AttachmentAdaptor {
     var url: String { _file.url }
     var previewUrl: String? { _file.thumbnailUrl }
     var originUrl: String? { nil }
+    var altText: String? {
+        guard let comment = _file.comment, !comment.isEmpty else {
+            return nil
+        }
+        return comment
+    }
 
     init(from file: Misskey.DriveFile) {
         self._file = file

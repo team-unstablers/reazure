@@ -49,16 +49,28 @@ struct NativePostContextMenuInner: View {
         }
     }
 
-    @ViewBuilder
-    private func render(_ entry: PostContextMenuDescriptor.Entry) -> some View {
+    /// Erased to `AnyView` because `.submenu` renders its own entries: an opaque
+    /// return type cannot recursively reference itself. Menus hold a handful of
+    /// rows and are rebuilt per presentation, so the erasure costs nothing here.
+    private func render(_ entry: PostContextMenuDescriptor.Entry) -> AnyView {
         switch entry {
         case .label(let text):
-            Text(text)
+            return AnyView(Text(text))
         case .action(let action):
-            Button(action.title, role: action.destructive ? .destructive : nil) {
-                action.handler()
-            }
-            .disabled(action.disabled)
+            return AnyView(
+                Button(action.title, role: action.destructive ? .destructive : nil) {
+                    action.handler()
+                }
+                .disabled(action.disabled)
+            )
+        case .submenu(let submenu):
+            return AnyView(
+                Menu(submenu.title) {
+                    ForEach(Array(submenu.entries.enumerated()), id: \.offset) { _, entry in
+                        render(entry)
+                    }
+                }
+            )
         }
     }
 }

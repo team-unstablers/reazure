@@ -25,12 +25,20 @@ struct PostContextMenuDescriptor {
         let handler: () -> Void
     }
 
+    /// A nested menu, opened from a row of the parent menu (SwiftUI `Menu` /
+    /// a non-inline `UIMenu`).
+    struct Submenu {
+        let title: String
+        let entries: [Entry]
+    }
+
     /// Entries are grouped into sections; renderers insert a separator
     /// (SwiftUI `Divider` / inline `UIMenu`) between them.
     enum Entry {
         /// Non-interactive text row (e.g. the post URL).
         case label(String)
         case action(Action)
+        case submenu(Submenu)
     }
 
     let header: Header
@@ -67,7 +75,13 @@ extension PostContextMenuDescriptor {
             emojis: canonical.account.emojis
         )
 
-        var sections: [[Entry]] = [
+        var sections: [[Entry]] = []
+
+        if let attachments = attachmentSubmenu(for: canonical, openURL: openURL, present: present) {
+            sections.append([.submenu(attachments)])
+        }
+
+        sections.append(
             [
                 .action(Action(title: NSLocalizedString("CONTEXT_MENU_REPLY", comment: "")) {
                     Task {
@@ -96,7 +110,7 @@ extension PostContextMenuDescriptor {
                     }
                 }),
             ]
-        ]
+        )
 
         if let urlString = canonical.url,
            let url = URL(string: urlString) {
@@ -161,6 +175,128 @@ extension PostContextMenuDescriptor {
 
         return PostContextMenuDescriptor(header: header, sections: sections)
     }
+
+    /// The submenu listing the post's attachments, or `nil` when it has none.
+    ///
+    /// This is the only way to reach a post's media from the keyboard (the `v`
+    /// shortcut), and the only way at all in compact rows, which render no
+    /// thumbnails. Non-image media is unreachable otherwise: the timeline draws
+    /// thumbnails for images only.
+    private static func attachmentSubmenu(
+        for status: any StatusAdaptor,
+        openURL: @escaping (URL) -> Void,
+        present: @escaping (PostRowPresentation) -> Void
+    ) -> Submenu? {
+        guard !status.attachments.isEmpty else {
+            return nil
+        }
+
+        let attachments = status.attachments
+        // Numbered per kind, so a post carrying two photos and a video reads
+        // "사진 #1 / 사진 #2 / 동영상 #1".
+        var ordinals: [AttachmentKind: Int] = [:]
+
+        let entries: [Entry] = attachments.map { attachment in
+            let kind = AttachmentKind(type: attachment.type)
+            let ordinal = (ordinals[kind] ?? 0) + 1
+            ordinals[kind] = ordinal
+
+            return .action(Action(title: kind.title(ordinal: ordinal, altText: attachment.altText)) {
+                if kind.isViewable {
+                    // Deliberately bypasses the sensitive-media reveal the
+                    // thumbnails enforce: picking an attachment by name out of a
+                    // menu is already an explicit request to see it.
+                    guard let context = AttachmentGalleryContext.make(
+                        statusId: status.id,
+                        attachments: attachments,
+                        tappedId: attachment.id
+                    ) else {
+                        return
+                    }
+
+                    present(.gallery(context))
+                } else if let url = URL(string: attachment.url) {
+                    // The in-app viewer is image-only, so everything else is
+                    // handed to the browser.
+                    openURL(url)
+                }
+            })
+        }
+
+        return Submenu(title: NSLocalizedString("CONTEXT_MENU_ATTACHMENTS", comment: ""),
+                       entries: entries)
+    }
+}
+
+/// The coarse media kinds the attachment submenu labels and routes differently.
+/// Both backends report `AttachmentAdaptor.type` in Mastodon's vocabulary —
+/// `MisskeyAttachmentAdaptor` reduces its MIME type to the leading component.
+private enum AttachmentKind: Hashable {
+    case image
+    case video
+    /// Mastodon's silent looping MP4 (an uploaded GIF, transcoded).
+    case gifv
+    case audio
+    case unknown
+
+    init(type: String) {
+        switch type {
+        case "image":
+            self = .image
+        case "video":
+            self = .video
+        case "gifv":
+            self = .gifv
+        case "audio":
+            self = .audio
+        default:
+            self = .unknown
+        }
+    }
+
+    /// Whether the in-app gallery can display it. Images only; the viewer has no
+    /// player.
+    var isViewable: Bool {
+        self == .image
+    }
+
+    private var titleKey: String {
+        switch self {
+        case .image:
+            return "ATTACHMENT_MENU_IMAGE"
+        case .video:
+            return "ATTACHMENT_MENU_VIDEO"
+        case .gifv:
+            return "ATTACHMENT_MENU_GIF"
+        case .audio:
+            return "ATTACHMENT_MENU_AUDIO"
+        case .unknown:
+            return "ATTACHMENT_MENU_FILE"
+        }
+    }
+
+    /// e.g. `사진 #1: 창가에 앉은 고양이`, falling back to `사진 #1` when the
+    /// author supplied no alternative text.
+    func title(ordinal: Int, altText: String?) -> String {
+        let label = String(format: NSLocalizedString(titleKey, comment: ""), ordinal)
+
+        guard let altText else {
+            return label
+        }
+
+        return String(format: NSLocalizedString("ATTACHMENT_MENU_ITEM_WITH_ALT", comment: ""),
+                      label,
+                      altText.singleLine)
+    }
+}
+
+private extension String {
+    /// Menu rows are a single line; a multi-line alternative text is flattened so
+    /// it does not get truncated at its first newline.
+    var singleLine: String {
+        split(whereSeparator: \.isNewline)
+            .joined(separator: " ")
+    }
 }
 
 extension PostContextMenuDescriptor {
@@ -172,26 +308,33 @@ extension PostContextMenuDescriptor {
         }
 
         let children = sections.map { section in
-            UIMenu(options: .displayInline, children: section.map { entry in
-                switch entry {
-                case .label(let text):
-                    return UIAction(title: text, attributes: .disabled) { _ in }
-                case .action(let action):
-                    var attributes: UIMenuElement.Attributes = []
-                    if action.destructive {
-                        attributes.insert(.destructive)
-                    }
-                    if action.disabled {
-                        attributes.insert(.disabled)
-                    }
-
-                    return UIAction(title: action.title, attributes: attributes) { _ in
-                        action.handler()
-                    }
-                }
-            })
+            UIMenu(options: .displayInline, children: section.map { $0.asUIMenuElement })
         }
 
         return UIMenu(title: title, children: children)
+    }
+}
+
+private extension PostContextMenuDescriptor.Entry {
+    var asUIMenuElement: UIMenuElement {
+        switch self {
+        case .label(let text):
+            return UIAction(title: text, attributes: .disabled) { _ in }
+        case .action(let action):
+            var attributes: UIMenuElement.Attributes = []
+            if action.destructive {
+                attributes.insert(.destructive)
+            }
+            if action.disabled {
+                attributes.insert(.disabled)
+            }
+
+            return UIAction(title: action.title, attributes: attributes) { _ in
+                action.handler()
+            }
+        case .submenu(let submenu):
+            return UIMenu(title: submenu.title,
+                          children: submenu.entries.map { $0.asUIMenuElement })
+        }
     }
 }

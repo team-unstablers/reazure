@@ -8,6 +8,7 @@
 import Combine
 import Foundation
 import SwiftUI
+import UIKit
 
 
 extension View {
@@ -29,9 +30,13 @@ struct SetupContextMenuModifier: ViewModifier {
     /// The row hosts the modals its own context menu asks for: both menu
     /// renderers hand back a `PostRowPresentation` instead of acting, and these
     /// hold whichever one is on screen.
+    @Environment(\.openWindow)
+    private var openWindow
+
     @State private var confirmation: PostRowConfirmation?
     @State private var reportTarget: PostReportTarget?
     @State private var reportOutcome: PostReportOutcome?
+    @State private var gallery: AttachmentGalleryContext?
 
     @ViewBuilder
     func body(content: Content) -> some View {
@@ -75,6 +80,9 @@ struct SetupContextMenuModifier: ViewModifier {
             } message: { outcome in
                 Text(outcome.message)
             }
+            .fullScreenCover(item: $gallery) { context in
+                AttachmentGalleryView(context: context)
+            }
     }
 
     /// Handlers fire while the context menu is still on screen, and SwiftUI will
@@ -87,6 +95,14 @@ struct SetupContextMenuModifier: ViewModifier {
                 self.confirmation = confirmation
             case .report(let target):
                 self.reportTarget = target
+            case .gallery(let context):
+                // iPad/macOS는 별도 윈도우로, 멀티 씬을 지원하지 않는 iPhone에서는
+                // 풀스크린 커버로 연다 (`AttachmentRow`의 썸네일 탭과 동일한 분기).
+                if UIApplication.shared.supportsMultipleScenes {
+                    self.openWindow(value: context)
+                } else {
+                    self.gallery = context
+                }
             }
         }
     }

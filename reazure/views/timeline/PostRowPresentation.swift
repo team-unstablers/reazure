@@ -15,6 +15,10 @@ import Foundation
 enum PostRowPresentation {
     case confirm(PostRowConfirmation)
     case report(PostReportTarget)
+    /// The attachment viewer, opened from the attachment submenu. The row
+    /// decides between a separate window and an in-app full-screen cover, the
+    /// same way `AttachmentRow` does for a thumbnail tap.
+    case gallery(AttachmentGalleryContext)
 }
 
 /// A destructive action held back until the user confirms it.

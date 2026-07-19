@@ -42,7 +42,8 @@ enum PreviewSamples {
                     type: "image",
                     url: avatarURL,
                     preview_url: avatarURL,
-                    remote_url: avatarURL
+                    remote_url: avatarURL,
+                    description: "미리보기용 첨부 이미지 #\(id)"
                 )
             },
             application: Mastodon.Application(name: "re;azure")
@@ -142,7 +143,8 @@ enum PreviewSamples {
                     type: "image",
                     url: avatarURL,
                     preview_url: avatarURL,
-                    remote_url: avatarURL
+                    remote_url: avatarURL,
+                    description: "미리보기용 첨부 이미지 #\(id)"
                 )
             },
             application: Mastodon.Application(name: "re;azure")

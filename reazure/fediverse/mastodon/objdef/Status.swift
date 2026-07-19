@@ -89,6 +89,8 @@ extension Mastodon {
         let url: String?
         let preview_url: String?
         let remote_url: String?
+        /// Alternative text. Optional: not every server sends the key.
+        let description: String?
     }
     
     struct Status: Codable {
@@ -253,10 +255,20 @@ class MastodonAttachmentAdaptor: AttachmentAdaptor {
     
     var id: String { _attachment.id }
     var type: String { _attachment.type }
-    var url: String { _attachment.url! }
+    /// Mastodon leaves `url` null while an upload is still being processed, and
+    /// for media it could not fetch from a remote instance, so it falls back to
+    /// the origin rather than trapping. An empty string yields no `URL`, which
+    /// callers already treat as "nothing to open".
+    var url: String { _attachment.url ?? _attachment.remote_url ?? "" }
     var previewUrl: String? { _attachment.preview_url }
     var originUrl: String? { _attachment.remote_url }
-    
+    var altText: String? {
+        guard let description = _attachment.description, !description.isEmpty else {
+            return nil
+        }
+        return description
+    }
+
     init(from attachment: Mastodon.MediaAttachment) {
         _attachment = attachment
     }
